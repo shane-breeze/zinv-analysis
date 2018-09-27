@@ -1,42 +1,79 @@
 import copy
 import numpy as np
+np.random.seed(123456)
+import pandas as pd
 import os
 import cPickle as pickle
-from .Lambda import Lambda
+from Lambda import Lambda
+import itertools
 
-class Histogram(object):
-    def __init__(self, name="h", variables=[], bins=[], weight="ev: 1.", selection=[]):
-        self.name = name
-        self.variables = variables
-        self.bins = bins
-        self.weight = weight
-        self.selection = selection
-
+class Histograms(object):
+    def __init__(self):
+        self.histograms = None
+        self.configs = []
         self.string_to_func = {}
-        self.histogram = {}
 
-    def begin(self, event):
-        functions = [var for var in self.variables+[self.weight]+self.selection]
-        self.string_to_func = {f: Lambda(f) for f in functions}
+    def extend(self, configs):
+        self.configs.extend(configs)
 
+    def begin(self, event, parents, selection):
         self.isdata = event.config.dataset.isdata
+
+        funcs = []
+        full_configs = []
+        for config in self.configs:
+            # deal with multiple processes per dataset
+            for parent in parents:
+                full_selection = config["selection"][:]
+                if parent in selection:
+                    full_selection += selection[parent]
+
+                funcs.extend([
+                    f for f in config["variables"]+full_selection+[config["weight"]]
+                ])
+
+                new_config = copy.deepcopy(config)
+                new_config["process"] = parent
+                new_config["selection"] = full_selection
+                full_configs.append(new_config)
+
+        self.string_to_func = {func: Lambda(func) for func in set(funcs)}
+        self.full_configs = full_configs
+        return self
 
     def end(self):
         self.string_to_func = {}
+        return self
 
     def event(self, event):
-        if self.isdata and ("Up" in self.weight or "Down" in self.weight):
-            return True
+        dfs = []
+        for config in self.full_configs:
+            if ("Up" in config["weight"] or "Down" in config["weight"]) and self.isdata:
+                continue
 
+            df = self.generate_dataframe(event, config)
+            dfs.append(df)
+
+        columns = [c for c in dfs[0].columns if c not in ["count", "yield", "variance"]]
+        histograms = pd.concat(dfs).groupby(columns).sum()
+        if self.histograms is None:
+            self.histograms = histograms
+        else:
+            self.histograms = pd.concat([self.histograms, histograms])\
+                    .groupby(columns)\
+                    .sum()
+        return self
+
+    def generate_dataframe(self, event, config):
         selection = reduce(lambda x,y: x & y, [
             self.string_to_func[s](event)
-            for s in self.selection
-        ]) if len(self.selection)>0 else np.array([True]*event.size)
+            for s in config["selection"]
+        ]) if len(config["selection"])>0 else np.array([True]*event.size)
 
-        weight = self.string_to_func[self.weight](event)[selection]
+        weight = self.string_to_func[config["weight"]](event)[selection]
 
         variables = []
-        for idx, v in enumerate(self.variables):
+        for idx, v in enumerate(config["variables"]):
             try:
                 variables.append(self.string_to_func[v](event)[selection])
             except AttributeError:
@@ -48,98 +85,62 @@ class Histogram(object):
         weights2 = weight**2
 
         variables = np.transpose(np.array(variables))
-        bins = [np.array(b) for b in self.bins]
+        bins = [np.array(b) for b in config["bins"]]
 
         hist_counts, hist_bins = np.histogramdd(variables, bins=bins)
         hist_yields = np.histogramdd(variables, bins=bins, weights=weights1)[0]
         hist_variance = np.histogramdd(variables, bins=bins, weights=weights2)[0]
 
-        if self.histogram == {}:
-            self.histogram = {
-                "bins": hist_bins,
-                "counts": hist_counts,
-                "yields": hist_yields,
-                "variance": hist_variance,
-            }
-        else:
-            self.histogram["counts"] += hist_counts
-            self.histogram["yields"] += hist_yields
-            self.histogram["variance"] += hist_variance
+        data = self.create_onedim_hists(
+            hist_bins, hist_counts, hist_yields, hist_variance,
+        )
+        bin_names = [["bin{}_low".format(idx), "bin{}_upp".format(idx)]
+                     for idx in reversed(list(range(len(hist_bins))))]
+        bin_names = reduce(lambda x,y: x+y, bin_names)
+        df = pd.DataFrame(
+            data,
+            columns = bin_names+["count", "yield", "variance"],
+        )
+
+        df["dataset"] = config["dataset"]
+        df["region"] = config["region"]
+        df["process"] = config["process"]
+        df["weight"] = config["weight"]
+        df["name"] = config["name"] if not isinstance(config["name"], list) else "__".join(config["name"])
+        for idx, variable in reversed(list(enumerate(config["variables"]))):
+            df["variable{}".format(idx)] = variable
+        columns = [c for c in df.columns if c not in ["count", "yield", "variance"] and "bin" not in c]
+        columns += bin_names + ["count", "yield", "variance"]
+        df = df[columns]
+        return df
+
+    def create_onedim_hists(self, bins, counts, yields, variance):
+        counts_1d = counts.T.ravel()
+        counts_1d = counts_1d.reshape((counts_1d.shape[0],1))
+        yields_1d = yields.T.ravel()
+        yields_1d = yields_1d.reshape((yields_1d.shape[0],1))
+        variance_1d = variance.T.ravel()
+        variance_1d = variance_1d.reshape((variance_1d.shape[0],1))
+
+        tbins = bins[::-1]
+        bin_idxs = itertools.product(*[range(len(bin)-1) for bin in tbins])
+        bins_1d = np.array([
+            reduce(lambda x,y: x+y, [
+                [tbins[dim][sub_bin_idx], tbins[dim][sub_bin_idx+1]]
+                for dim, sub_bin_idx in enumerate(bin_idx)
+            ])
+            for bin_idx in bin_idxs
+        ])
+        return np.hstack([bins_1d, counts_1d, yields_1d, variance_1d])
 
     def merge(self, other):
-        if self.name != other.name:
-            return
-
-        self.histogram = {
-            "bins": self.histogram["bins"],
-            "counts": self.histogram["counts"] + other.histogram["counts"],
-            "yields": self.histogram["yields"] + other.histogram["yields"],
-            "variance": self.histogram["variance"] + other.histogram["variance"],
-        }
-
-    def __add__(self, other):
-        assert self.name == other.name
-
-        new_histogram = Histogram(self.name)
-        new_histogram.histogram = {
-            "bins": self.histogram["bins"],
-            "counts": self.histogram["counts"] + other.histogram["counts"],
-            "yields": self.histogram["yields"] + other.histogram["yields"],
-            "variance": self.histogram["variance"] + other.histogram["variance"],
-        }
-        return new_histogram
-
-class Histograms(object):
-    def __init__(self):
-        self.histograms = []
-
-    def append(self, identifier, histogram):
-        self.histograms.append((identifier, histogram))
-        return self
-
-    def extend(self, id_hists):
-        self.histograms.extend(id_hists)
-        return self
-
-    def __getitem__(self, identifier):
-        try:
-            return next(h for n, h in self.histograms if n==identifier)
-        except StopIteration:
-            raise KeyError("{} not found".format(identifier))
-
-    def begin(self, event, parents, selection):
-        self.histograms = [((n[0], n[1], p, n[3], n[4]), copy.deepcopy(h))
-                           for n, h in self.histograms
-                           for p in parents]
-        for n, h in self.histograms:
-            if n[2] in selection:
-                h.selection += selection[n[2]]
-            h.begin(event)
-        return self
-
-    def end(self):
-        for n, h in self.histograms:
-            h.end()
-        return self
-
-    def event(self, event):
-        for n, h in self.histograms:
-            h.event(event)
-        return self
-
-    def merge(self, other):
-        names = []
-        for n, h in self.histograms:
-            try:
-                h.merge(other[n])
-            except KeyError:
-                pass
-            names.append(n)
-
-        for on, oh in other.histograms:
-            if on in names:
-                continue
-            self.append(on, oh)
+        if self.histograms.shape[0] == 0:
+            return other
+        elif other.histograms.shape[0] == 0:
+            return self
+        self.histograms = pd.concat([self.histograms, other.histograms])\
+                .groupby(self.histograms.index.names)\
+                .sum()
         return self
 
     def save(self, outdir):
