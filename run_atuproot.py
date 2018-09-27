@@ -27,7 +27,7 @@ def parse_args():
                         help="Dataset config to run over")
     parser.add_argument("sequence_cfg", type=str,
                         help="Config for how to process events")
-    parser.add_argument("--outdir", default="output", type=str,
+    parser.add_argument("-o", "--outdir", default="output", type=str,
                         help="Where to save the results")
     parser.add_argument("--mode", default="multiprocessing", type=str,
                         help="Which mode to run in (multiprocessing, htcondor, "
@@ -106,7 +106,7 @@ if __name__ == "__main__":
         os.makedirs(options.outdir)
     generate_report(options.outdir)
 
-    sequence = build_sequence(options.sequence_cfg)
+    sequence = build_sequence(options.sequence_cfg, options.outdir)
     datasets = get_datasets(options.dataset_cfg)
     if options.sample is not None:
         datasets = [d for d in datasets
