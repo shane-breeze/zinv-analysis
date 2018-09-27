@@ -49,9 +49,16 @@ class JecVariations(object):
         )
 
         # Get JER correction, delta JER up and down - relative values
-        jersf, delta_jerup, delta_jerdown = get_jer_sfs(self.jersfs, event.Jet)
-        event.Jet_jerCorrection = get_jer_correction(
-            jersf, event.Jet, event.GenJet, self.do_jer,
+        jersf, jerup, jerdown = get_jer_sfs(self.jersfs, event.Jet)
+        cjer, cjerup, cjerdown = get_jer_correction(
+            jersf, jerup, jerdown, event.Jet, event.GenJet,
+        )
+        delta_jerup = cjerup - cjer
+        delta_jerdown = cjer - cjerdown
+        if not self.do_jer:
+            cjer = np.ones(cjer.shape)
+        event.Jet_jerCorrection = uproot.interp.jagged.JaggedArray(
+            cjer, event.Jet.starts, event.Jet.stops,
         )
 
         # Get delta JES up and down - relative values
@@ -62,6 +69,7 @@ class JecVariations(object):
         delta_unclusty = event.MET_MetUnclustEnUpDeltaY
 
         # Apply jet pt and mass corrections
+        results = []
         for key, (jer_var, jes_var, unclust_var) in self.variations:
             djer = delta_jerup if jer_var>=0. else delta_jerdown
             djes = delta_jesup if jes_var>=0. else delta_jesdown
@@ -71,7 +79,13 @@ class JecVariations(object):
                 unclust_var*delta_unclustx, unclust_var*delta_unclusty,
                 event.Jet, event.MET,
             )
+            results.append((
+                key, (jets_pt, jets_mass, met_pt, met_phi),
+            ))
 
+        # Update nominal values AFTER all variations are calculated (they are
+        # assumed with no JER correction applied)
+        for key, (jets_pt, jets_mass, met_pt, met_phi) in results:
             setattr(event, "Jet_pt{}"  .format(key), jets_pt)
             setattr(event, "Jet_mass{}".format(key), jets_mass)
             setattr(event, "MET_pt{}"  .format(key), met_pt)
@@ -164,40 +178,40 @@ def jit_get_jer_sfs(bins, corrs, corrs_up, corrs_down, jets_eta):
     return sfs, sfs_up, sfs_down
 
 ################################################################################
-def get_jer_correction(jersf, jets, genjets, do_jer):
+def get_jer_correction(jersf, jersf_up, jersf_down, jets, genjets):
     """Function to modify arguments that are sent to a numba-jitted function"""
-    if do_jer:
-        return uproot.interp.jagged.JaggedArray(
-            jit_get_jer_correction(
-                jersf,
-                jets.pt.content, jets.genJetMatchIdx.content, jets.ptResolution.content,
-                jets.starts, jets.stops,
-                genjets.pt.content, genjets.starts, genjets.stops,
-            ),
-            jets.starts, jets.stops,
-        )
-    else:
-        return uproot.interp.jagged.JaggedArray(
-            np.ones(jets.pt.content.shape[0]),
-            jets.starts,
-            jets.stops,
-        )
+    return jit_get_jer_correction(
+        jersf, jersf_up, jersf_down,
+        jets.pt.content, jets.genJetMatchIdx.content, jets.ptResolution.content,
+        jets.starts, jets.stops,
+        genjets.pt.content, genjets.starts, genjets.stops,
+    )
 @njit
-def jit_get_jer_correction(jersf,
+def jit_get_jer_correction(jersf, jersf_up, jersf_down,
                            jets_pt, jets_genjetidx, jets_res, jets_starts, jets_stops,
                            genjets_pt, genjets_starts, genjets_stops):
     corrs = np.ones(jets_pt.shape[0], dtype=float32)
+    corrs_up = np.ones(jets_pt.shape[0], dtype=float32)
+    corrs_down = np.ones(jets_pt.shape[0], dtype=float32)
     for iev, (jb, je, gjb, gje) in enumerate(zip(jets_starts, jets_stops,
                                                  genjets_starts, genjets_stops)):
         for ij in range(jb, je):
             rel_genjetidx = jets_genjetidx[ij]
             if rel_genjetidx >= 0:
-                corr = 1.+(jersf[ij]-1.)*(jets_pt[ij]-genjets_pt[gjb+rel_genjetidx])/jets_pt[ij]
+                gen_var = (jets_pt[ij]-genjets_pt[gjb+rel_genjetidx])/jets_pt[ij]
+                corr = 1. + (jersf[ij]-1.)*gen_var
+                corr_up = 1. + (jersf_up[ij]-1.)*gen_var
+                corr_down = 1. + (jersf_down[ij]-1.)*gen_var
             else:
                 #corr = np.random.lognormal(0., jets_res[ij])*np.sqrt(max(jersf[ij]**2-1., 0.)))
-                corr = 1. + np.random.normal(0., jets_res[ij])*np.sqrt(max(jersf[ij]**2-1., 0.))
+                gaus_var = np.random.normal(0., jets_res[ij])
+                corr = 1. + gaus_var*np.sqrt(max(jersf[ij]**2-1., 0.))
+                corr_up = 1. + gaus_var*np.sqrt(max(jersf_up[ij]**2-1., 0.))
+                corr_down = 1. + gaus_var*np.sqrt(max(jersf_down[ij]**2-1., 0.))
             corrs[ij] = max(0., corr)
-    return corrs
+            corrs_up[ij] = max(0., corr_up)
+            corrs_down[ij] = max(0., corr_down)
+    return corrs, corrs_up, corrs_down
 
 ################################################################################
 def get_jes_sfs(jesuncs, jets):
@@ -227,7 +241,7 @@ def interp(x, xp, fp):
         return fp[-1]
 
     for ix in range(nx-1):
-        if xp[ix] < x < xp[ix+1]:
+        if xp[ix] <= x < xp[ix+1]:
             return (x - xp[ix]) * (fp[ix+1] - fp[ix]) / (xp[ix+1] - xp[ix]) + fp[ix]
     return np.nan
 
