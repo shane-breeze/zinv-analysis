@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
 from matplotlib.collections import PatchCollection
@@ -6,14 +7,13 @@ from matplotlib.patches import Rectangle
 from scipy.stats import norm
 from scipy.interpolate import spline
 
-def make_error_boxes(ax, xdata, ydata, xerror, yerror, facecolor='r',
+def make_error_boxes(ax, xlow, xhigh, ylow, yhigh, facecolor='r',
                      edgecolor='r', alpha=1.0):
     errorboxes = [
-        Rectangle((x-xe, y-ye), 2*xe, 2*ye,
-                  fc = facecolor,
-                  ec = edgecolor,
+        Rectangle((xl, yl),
+                  xh-xl, yh-yl,
                   alpha = alpha)
-        for x, y, xe, ye in zip(xdata, ydata, xerror, yerror)
+        for xl, xh, yl, yh in zip(xlow, xhigh, ylow, yhigh)
     ]
 
     pc = PatchCollection(errorboxes,
@@ -23,21 +23,72 @@ def make_error_boxes(ax, xdata, ydata, xerror, yerror, facecolor='r',
     ax.add_collection(pc)
     return errorboxes[0]
 
-def dist_scatter_pull(results, filepath, cfg):
+def dist_scatter_pull(df, variations, filepath, cfg):
+    datasets = ["MET", "SingleMuon", "SingleElectron"]
+    attr = df.columns[0]
+
+    # Remove underflow bin
+    df = df[~np.isinf(df.index.get_level_values("bin1_low"))]
+
+    # Split into data and MC
+    df_data = df[df.index.get_level_values('process').isin(datasets)]\
+            .reset_index("process", drop=True)
+    df_mc = df[df.index.get_level_values('process').isin(["MCSum"])]\
+            .reset_index("process", drop=True)
+
+    # Get binning
+    bin_edges = list(df_data.index.get_level_values("bin1_low").values)
+    bin_edges.append(2*bin_edges[-1] - bin_edges[-2])
+    bin_edges = np.array(bin_edges)
+    bin_cents = (bin_edges[1:] + bin_edges[:-1])/2
+    bin_widths = (bin_edges[1:] - bin_edges[:-1])
+
+    # total uncertainty
+    df_mc["{}_unc_up_total".format(attr)] = df_mc["{}_unc".format(attr)]**2
+    df_mc["{}_unc_down_total".format(attr)] = df_mc["{}_unc".format(attr)]**2
+    for var in variations:
+        if "up" in var.lower():
+            df_mc["{}_unc_up_total".format(attr)] += df_mc["{}_unc_{}".format(attr, var)]**2
+        elif "down" in var.lower():
+            df_mc["{}_unc_down_total".format(attr)] += df_mc["{}_unc_{}".format(attr, var)]**2
+    df_mc["{}_unc_up_total".format(attr)] = np.sqrt(df_mc["{}_unc_up_total".format(attr)])
+    df_mc["{}_unc_down_total".format(attr)] = np.sqrt(df_mc["{}_unc_down_total".format(attr)])
+    df_data["{}_unc_total".format(attr)] = df_data["{}_unc".format(attr)]
+
+    # Ratios
+    df_ratio = pd.concat(
+        [df_data[[attr, "{}_unc_total".format(attr)]],
+         df_mc[[attr, "{}_unc_up_total".format(attr), "{}_unc_down_total".format(attr)]]],
+        axis = 1,
+    )
+    df_ratio.columns = ["data", "data_unc", "mc", "mc_unc_up", "mc_unc_down"]
+    df_ratio["mc_unc"] = df_ratio.apply(lambda x: x["mc_unc_up"] if x["data"]>=x["mc"] else x["mc_unc_down"], axis=1)
+    df_ratio["ratio"] = df_ratio["data"]/df_ratio["mc"]
+    df_ratio["ratio_data_unc"] = df_ratio["data_unc"]/df_ratio["mc"]
+    df_ratio["ratio_mc_unc"] = df_ratio["mc_unc"]/df_ratio["mc"]
+    df_ratio = df_ratio[["ratio", "ratio_data_unc", "ratio_mc_unc"]]
+
+    # Pulls
+    df_pulls = pd.concat(
+        [df_data[attr], df_mc[attr],
+         df_data["{}_unc_total".format(attr)],
+         df_mc["{}_unc_up_total".format(attr)],
+         df_mc["{}_unc_down_total".format(attr)]],
+        axis = 1,
+    )
+    df_pulls.columns = ["data", "mc", "data_unc", "mc_unc_up", "mc_unc_down"]
+    df_pulls["diff"] = (df_pulls["data"] - df_pulls["mc"])
+    df_pulls["mc_unc"] = df_pulls.apply(lambda x: x["mc_unc_up"] if x["data"]>=x["mc"] else x["mc_unc_down"], axis=1)
+    df_pulls["pull"] = df_pulls["diff"] / np.sqrt(df_pulls["data_unc"]**2 + df_pulls["mc_unc"]**2)
+    df_pulls = df_pulls[["pull"]]
+
+    # Create figure and axes
     fig, ((axtop, axnull), (axbot, axrig)) = plt.subplots(
         nrows=2, ncols=2, sharex='col', sharey='row',
         gridspec_kw={'height_ratios': [3, 1], 'width_ratios': [6, 1]},
         figsize = (5.6, 6.4),
     )
     axnull.axis('off')
-    #axtop.set_xscale('log')
-
-    bins = list(results["bins"][1:])
-    bins = np.array(bins+[2*bins[-1]-bins[-2]])
-    data_yields = np.array([r[0] for r in results["data"]][1:])
-    data_errors = np.array([r[1] for r in results["data"]][1:])
-    mc_yields = np.array([r[0] for r in results["mc"]][1:])
-    mc_errors = np.array([r[1] for r in results["mc"]][1:])
 
     # top axes
     axtop.text(0, 1, r'$\mathbf{CMS}\ \mathit{Preliminary}$',
@@ -48,20 +99,41 @@ def dist_scatter_pull(results, filepath, cfg):
                ha='right', va='bottom', transform=axtop.transAxes,
                fontsize='large')
 
+    # absolute MC boxes
+    rect_eg = make_error_boxes(
+        axtop,
+        bin_cents - bin_widths/2,
+        bin_cents + bin_widths/2,
+        df_mc[attr] - df_mc["{}_unc_down_total".format(attr)],
+        df_mc[attr] + df_mc["{}_unc_up_total".format(attr)],
+        facecolor="#80b1d3",
+        edgecolor="#5a9ac6",
+    )
+
+    # absolute data points
     axtop.errorbar(
-        (bins[1:] + bins[:-1])/2, data_yields,
-        xerr=(bins[1:] - bins[:-1])/2, yerr=data_errors,
+        bin_cents, df_data[attr],
+        xerr=bin_widths/2, yerr=df_data["{}_unc_total".format(attr)],
         fmt='o', markersize=3, linewidth=1,
         capsize=1.8, color="black", label="Data",
     )
 
-    rect_eg = make_error_boxes(
-        axtop,
-        (bins[1:] + bins[:-1])/2, mc_yields,
-        (bins[1:] - bins[:-1])/2, mc_errors,
-        facecolor="#80b1d3",
-        edgecolor="#5a9ac6",
-    )
+    mc_down = (df_mc[attr] - df_mc["{}_unc_down_total".format(attr)]).values
+    mc_up = (df_mc[attr] + df_mc["{}_unc_up_total".format(attr)]).values
+    data_down = (df_data[attr] - df_data["{}_unc_total".format(attr)]).values
+    data_up = (df_data[attr] + df_data["{}_unc_total".format(attr)]).values
+    mc_down = mc_down[~(np.isinf(mc_down) | np.isnan(mc_down))]
+    mc_up = mc_up[~(np.isinf(mc_up) | np.isnan(mc_up))]
+    data_down = data_down[~(np.isinf(data_down) | np.isnan(data_down))]
+    data_up = data_up[~(np.isinf(data_up) | np.isnan(data_up))]
+
+    ylims = axtop.get_ylim()
+    axtop.set_ylim((
+        min(list(mc_down)+list(data_down)+[ylims[0]]),
+        max(list(mc_up)+list(data_up)+[ylims[1]]),
+    ))
+
+    # Set minimum y range
     ylims = axtop.get_ylim()
     dylims = ylims[1]-ylims[0]
     if dylims < 0.1:
@@ -72,35 +144,22 @@ def dist_scatter_pull(results, filepath, cfg):
     handles += [rect_eg]
     labels += ["MC"]
     axtop.legend(handles, labels)
-
-    variable = cfg.axis_label.get(results["name"][0], results["name"][0])\
-            .replace("(GeV)","")\
-            .replace("$","")
-
-    if filepath.endswith("response"):
-        ylabel = r'$\mu({})$ (GeV)'.format(variable)
-    elif filepath.endswith("resolution"):
-        ylabel = r'$\sigma({})$ (GeV)'.format(variable)
-    else:
-        ylabel = r'${}$ (GeV)'.format(variable)
-
-    axtop.set_ylabel(ylabel, fontsize = 'large')
+    axtop.set_ylabel(cfg.ylabel, fontsize='large')
 
     # bottom axes
-    pull = (data_yields - mc_yields) / np.sqrt(data_errors**2 + mc_errors**2)
-    axbot.plot((bins[1:] + bins[:-1])/2, pull,
-               'o', ms=3, mfc='black', mec='black')
-    axbot.set_xlabel(cfg.axis_label[results["name"][1]], fontsize='large')
+    axbot.plot(bin_cents, df_pulls["pull"], 'o', ms=3, mfc='black', mec='black')
+    axbot.set_xlabel(cfg.xlabel)
     axbot.set_ylabel("Pull", fontsize='large')
 
     ylim = max(map(abs, axbot.get_ylim()))
+    ylim = ylim if ylim>1.1 else 1.1
     axbot.set_ylim(-ylim, ylim)
     axbot.axhline(-1, ls='--', color='grey', lw=1)
     axbot.axhline(1, ls='--', color='grey', lw=1)
 
     # bottom right axes
     pull_bins = [-np.inf] + list(np.linspace(-5., 5., 21)) + [np.inf]
-    pull_hist, _ = np.histogram(pull, pull_bins)
+    pull_hist, _ = np.histogram(df_pulls["pull"], pull_bins)
     pull_hist[1] += pull_hist[0]
     pull_hist[-2] += pull_hist[-1]
     pull_hist = pull_hist[1:-1]
@@ -118,7 +177,8 @@ def dist_scatter_pull(results, filepath, cfg):
     axrig.axhline(-1, ls='--', color='grey', lw=1)
     axrig.axhline(1, ls='--', color='grey', lw=1)
 
-    (mu, sigma) = norm.fit(pull)
+    # Add gaussian fit
+    (mu, sigma) = norm.fit(df_pulls["pull"])
     pull_bins = np.array(pull_bins)
     xs = (pull_bins[1:] + pull_bins[:-1])/2.
     gaus = mlab.normpdf(xs, mu, sigma)
@@ -127,9 +187,9 @@ def dist_scatter_pull(results, filepath, cfg):
     axrig.plot(ynew, xnew, 'r--', lw=2)
 
     # Create the damn plots
-    print("Creating {}".format(filepath))
+    print("Creating {}.pdf".format(filepath))
     plt.tight_layout()
     fig.savefig(filepath+".pdf", format="pdf", bbox_inches="tight")
     plt.close(fig)
 
-    return "Success"
+    return df

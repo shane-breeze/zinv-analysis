@@ -1,8 +1,9 @@
 import os
 import operator
+import pandas as pd
 
 from drawing.dist_ratio import dist_ratio
-from utils.Histogramming import Histogram, Histograms
+from utils.Histogramming import Histograms
 
 # Take the cfg module and drop unpicklables
 class Config(object):
@@ -50,22 +51,18 @@ class HistReader(object):
                     identifier = (dataset, cutflow, None, cfg["name"], weightname)
 
                     configs.append({
-                        "identifier": identifier,
-                        "hist_config": {
-                            "name": cfg["name"],
-                            "variables": cfg["variables"],
-                            "bins": cfg["bins"],
-                            "weight": weight,
-                            "selection": selection,
-                        },
+                        "name": cfg["name"],
+                        "dataset": dataset,
+                        "region": cutflow,
+                        "weight": weight,
+                        "selection": selection,
+                        "variables": cfg["variables"],
+                        "bins": cfg["bins"],
                     })
 
         # Histograms collection
         histograms = Histograms()
-        histograms.extend([
-            (config["identifier"], Histogram(**config["hist_config"]))
-            for config in configs
-        ])
+        histograms.extend(configs)
         return histograms
 
     def begin(self, event):
@@ -99,11 +96,11 @@ class HistCollector(object):
         )
         self.__dict__.update(kwargs)
 
-        self.outdir = os.path.join("output", self.name)
+    def collect(self, dataset_readers_list):
+        self.outdir = os.path.join(self.outdir, self.name)
         if not os.path.exists(self.outdir):
             os.makedirs(self.outdir)
 
-    def collect(self, dataset_readers_list):
         histograms = None
         for dataset, readers in dataset_readers_list:
             # Get histograms
@@ -121,55 +118,29 @@ class HistCollector(object):
         return []
 
     def draw(self, histograms):
-        datasets = list(set(
-            n[0] for n, _ in histograms.histograms
-        ))
+        datasets = ["MET", "SingleMuon", "SingleElectron"]
 
-        # Set and sort to get all unique combinations of (dataset, cutflow, histname)
-        dataset_cutflow_histnames = set(
-            (n[0], n[1], n[3]) for n, _ in histograms.histograms
-        )
-        dataset_cutflow_histnames = sorted(
-            dataset_cutflow_histnames, key=operator.itemgetter(2, 1, 0),
-        )
+        df = histograms.histograms
+        all_columns = list(df.index.names)
+        columns_noproc = [c for c in all_columns if c != "process"]
+        columns_noproc_nobins = [c for c in columns_noproc if "bin" not in c]
+
+        # Group into (dataset, region, weight, names, variable0)
+        #df.groupby(columns_noproc_nobins).apply(dist_ratio, outdir, self.cfg)
 
         args = []
-        for dataset, cutflow, histname in dataset_cutflow_histnames:
-            if "remove" in cutflow:
-                path = os.path.join(self.outdir, dataset, cutflow.split("_remove_")[0], "removes")
-            else:
-                path = os.path.join(self.outdir, dataset, cutflow)
+        for categories, df_group in df.groupby(columns_noproc_nobins):
+            # Create output directory structure
+            path = os.path.join(self.outdir, "plots", *categories[:2])
+            if "_remove_" in path:
+                path = path.replace("_remove_", "/remove_")
             if not os.path.exists(path):
                 os.makedirs(path)
-            filepath = os.path.abspath(os.path.join(path, histname))
+            filepath = os.path.abspath(os.path.join(path, categories[3]))
 
-            hist_data = None
-            hists_mc = []
-            for n, h in histograms.histograms:
-                if (n[0], n[1], n[3]) != (dataset, cutflow, histname):
-                    continue
-
-                if n[2] in datasets and dataset != n[2]:
-                    continue
-
-                if n[2] in ["MET", "SingleMuon", "SingleElectron"] and dataset != n[2]:
-                    continue
-
-                plot_item = {
-                    "name": n[3],
-                    "sample": n[2],
-                    "bins": h.histogram["bins"],
-                    "counts": h.histogram["counts"],
-                    "yields": h.histogram["yields"],
-                    "variance": h.histogram["variance"],
-                }
-                if n[2] == dataset:
-                    hist_data = plot_item
-                else:
-                    hists_mc.append(plot_item)
-
-            args.append([hist_data, hists_mc, filepath, self.cfg])
-        return [(dist_ratio, arg) for arg in args]
+            # Create args list for post-processing drawing
+            args.append((dist_ratio, (df_group, filepath, self.cfg)))
+        return args
 
     def reload(self, outdir):
         histograms = Histograms()

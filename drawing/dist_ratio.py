@@ -1,66 +1,73 @@
+import os
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.interpolate import spline
 
-def taper_and_drop(hist):
-    """
-    Final bin is an overflow.
-    Remove underflow.
-    """
-    hist["counts"][-2] += hist["counts"][-1]
-    hist["yields"][-2] += hist["yields"][-1]
-    hist["variance"][-2] += hist["variance"][-1]
+def dist_ratio(df, filepath, cfg):
+    # Define columns
+    datasets = ["MET", "SingleMuon", "SingleElectron"]
+    all_columns = list(df.index.names)
+    columns_noproc = [c for c in all_columns if c != "process"]
+    columns_nobins = [c for c in all_columns if "bin" not in c]
+    columns_nobins_noproc = [c for c in columns_nobins if c != "process"]
 
-    if isinstance(hist["bins"], list):
-        hist["bins"] = hist["bins"][0]
-    hist["bins"] = hist["bins"][1:-1]
-    hist["counts"] = hist["counts"][1:-1]
-    hist["yields"] = hist["yields"][1:-1]
-    hist["variance"] = hist["variance"][1:-1]
+    # Remove under and overflow bins (add overflow into final bin)
+    def truncate(indf):
+        indf.iloc[-2] += indf.iloc[-1]
+        indf = indf.iloc[1:-1]
+        indf = indf.reset_index(columns_nobins, drop=True)
+        return indf
+    df = df.groupby(columns_nobins).apply(truncate)
 
-    return hist
+    # Sum (count, yield, variance) over all processes not data
+    if not df.index.get_level_values('process').isin(["MCSum"]).any():
+        df_mcsum = df[~df.index.get_level_values('process').isin(datasets+["MCSum"])]\
+                .groupby(columns_noproc)\
+                .sum()
+        df_mcsum["process"] = "MCSum"
+        df_mcsum = df_mcsum.set_index("process", append=True)\
+                .reorder_levels(all_columns)
+        df = pd.concat([df, df_mcsum])
 
-def dist_ratio(hist_data, hists_mc, filepath, cfg):
-    """
-    Draw distributions with a ratio plot beneath.
+    # Split dataframe into components
+    df_data = df[df.index.get_level_values('process').isin(datasets)]
+    df_data = df_data[df_data.index.get_level_values('process') \
+                      == df_data.index.get_level_values('dataset')]
+    df_mcsum = df[df.index.get_level_values('process').isin(["MCSum"])]
+    df_mcall = df[~df.index.get_level_values('process').isin(datasets+["MCSum"])]
 
-    Parameters
-    ----------
+    # Ratio
+    df_ratio = df_data["yield"].reset_index(level="process", drop=True)\
+            / df_mcsum["yield"].reset_index(level="process", drop=True)
+    df_ratio_data_var = df_data["variance"].reset_index(level="process", drop=True)\
+            / (df_mcsum["yield"].reset_index(level="process", drop=True)**2)
+    df_ratio_mc_var = df_mcsum["variance"].reset_index(level="process", drop=True)\
+            / (df_mcsum["yield"].reset_index(level="process", drop=True)**2)
 
-    hist_data : Dictionary holding the histogrammed information for the data
-    {
-        "name" : name of the distribution being plotted
-        "sample" : name of the sample (presumable 'data' or similar)
-        "bins" : numpy array of the bins edges used (size = (nbins+1,)). The
-                 first bin is taken as the underflow and the last bin the
-                 overflow
-        "counts" : numpy array (size = (nbins,)) of the counts per bin (not
-                   used for plotting yet)
-        "yields" : numpy array (size = (nbins,)) of the yields per bin (what is
-                  plotted)
-        "variance" : numpy array (size = (nbins,)) of the variance per bin.
-                     Sqrt of this is used for the error on the data. Symmetric
-                     errors only so far.
-        "function" : optional. numpy array (size = (nbins,)) for the y values
-                     in each bin for a normalized (to 1) function to be
-                     plotted (which will be smoothed)
-    }
-    hists_mc : List of dictionaries holding the histogrammed information for
-               echo MC sample. Each dictionary is the same format as hist_data.
-    filepath : str for the output file destination (without the extension)
-    cfg : object with the following attributes:
-        log : boolean. If True then the y-axis will be on a log-scale
-        sample_colours : dict. Conversion between sample names and colours (for
-                         MC samples only)
-        sample_names : dict. Conversion between sample names and their labels
-                       shown in the plot.
-        axis_label : dict. Conversion between axis names and their labels shown
-                     in the plot
+    # Combine df_mcall processes <1% together
+    df_mcall_int_fraction = df_mcall\
+            .groupby(columns_nobins)\
+            .sum()\
+            .groupby(columns_nobins_noproc)\
+            .apply(lambda x: x/x.sum())
+    df_mcall["to_merge"] = ~(
+        (df_mcall_int_fraction["yield"]>=0.01) \
+        | (df_mcall_int_fraction.index.get_level_values("process").isin(["QCD"]))
+    )
+    df_mcminor = df_mcall[df_mcall["to_merge"]]\
+            .groupby(columns_noproc)\
+            .sum()\
+            .drop("to_merge", axis=1)
+    df_mcminor["process"] = "Minor"
+    df_mcminor = df_mcminor\
+            .set_index("process", append=True)\
+            .reorder_levels(all_columns)
 
-    Returns
-    -------
-    "Success"
-    """
+    df_mcall = df_mcall[~df_mcall["to_merge"]]\
+            .drop("to_merge", axis=1)
+    if df_mcminor.sum()["yield"] > 0.:
+        df_mcall = pd.concat([df_mcall, df_mcminor])
 
     # Split axis into top and bottom with ratio 3:1
     # Share the x axis, not the y axis
@@ -71,122 +78,86 @@ def dist_ratio(hist_data, hists_mc, filepath, cfg):
         figsize = (4.8, 6.4),
     )
 
-    # Remove under/overflow bins (add overflow into final bin)
-    hists_mc = [taper_and_drop(h) for h in hists_mc]
-    if hist_data is not None:
-        hist_data = taper_and_drop(hist_data)
-        bins = hist_data["bins"]
-    else:
-        bins = hists_mc[0]["bins"]
+    # Get the global bins
+    bins_low = list(df_mcsum.index.get_level_values("bin0_low"))
+    bins_upp = list(df_mcsum.index.get_level_values("bin0_upp"))
+    bins = np.array(bins_low[:]+[bins_upp[-1]])
+    bin_centers = (bins[1:]+bins[:-1])/2
+    bin_widths = (bins[1:]-bins[:-1])
 
-    # MC sum histograms
-    hist_mc_sum = {
-        "name": hists_mc[0]["name"],
-        "sample": hists_mc[0]["sample"],
-        "bins": bins,
-        "counts": sum(h["counts"] for h in hists_mc),
-        "yields": sum(h["yields"] for h in hists_mc),
-        "variance": sum(h["variance"] for h in hists_mc),
-    }
-    if "function" in hists_mc[0]:
-        for key in hists_mc[0]:
-            if key not in hist_mc_sum:
-                hist_mc_sum[key] = hists_mc[0][key]
+    df_mcall_pivot_proc = df_mcall.pivot_table(values='yield',
+                                               index=columns_noproc,
+                                               columns='process',
+                                               aggfunc=np.sum)
 
-    # Total MC yield (integrated across the distribution)
-    # Also sort MC histograms
-    mc_sum = hist_mc_sum["yields"].sum()
-    hists_mc = sorted(hists_mc, key=lambda x: x["yields"].sum())
+    sorted_processes = list(df_mcall_pivot_proc.sum().sort_values().index)
+    if "Minor" in sorted_processes:
+        sorted_processes.remove("Minor")
+        sorted_processes = ["Minor"]+sorted_processes
+    df_mcall_pivot_proc = df_mcall_pivot_proc[sorted_processes]
 
-    # Merge the smaller histograms into "Minors", except for QCD
-    hists_mc_lower_oneperc = [h
-        for h in hists_mc
-        if h["yields"].sum()/hist_mc_sum["yields"].sum() < 0.01 and h["sample"] != "QCD"
-    ]
-    hist_mc_minor = {
-        "name": hists_mc[0]["name"],
-        "sample": "Minor",
-        "bins": bins,
-        "counts": sum(h["counts"] for h in hists_mc_lower_oneperc),
-        "yields": sum(h["yields"] for h in hists_mc_lower_oneperc),
-        "variance": sum(h["variance"] for h in hists_mc_lower_oneperc),
-    }
-    new_hists_mc = [h
-        for h in hists_mc
-        if h["yields"].sum()/hist_mc_sum["yields"].sum() >= 0.01 or h["sample"] == "QCD"
-    ]
-    if not isinstance(hist_mc_minor["counts"], int):
-        hists_mc = [hist_mc_minor]
-    hists_mc += new_hists_mc[:]
-
-    # Draw stacked MC
     axtop.hist(
-        [h["yields"] for h in hists_mc],
+        [df_mcall_pivot_proc[process].values for process in sorted_processes],
         bins = bins,
         log = cfg.log,
         stacked = True,
-        color = [cfg.sample_colours[h["sample"]]
-                 if h["sample"] in cfg.sample_colours
-                 else "blue"
-                 for h in hists_mc],
-        label = [h["sample"] for h in hists_mc],
+        color = [cfg.sample_colours.get(proc, "blue")
+                 for proc in sorted_processes],
+        label = sorted_processes,
     )
 
-    # Draw MC total line
     axtop.hist(
-        hist_mc_sum["yields"],
+        df_mcsum["yield"],
         bins = bins,
         log = cfg.log,
         histtype = 'step',
         color = "black",
+        label = "",
     )
 
-    if hist_data is not None:
-        # Draw data error bars
+    if "formula" in df_mcsum.columns:
+        try:
+            xs = (bins[1:] + bins[:-1])/2
+            ys = df_mcsum["yield"].sum()*df_mcsum["formula"]/df_mcsum["formula"].sum()
+            nans = np.isnan(ys)
+            xnew = np.linspace(xs[~nans].min(), xs[~nans].max(), xs[~nans].shape[0]*4)
+            ynew = spline(xs[~nans], ys[~nans], xnew)
+            axtop.plot(xnew, ynew, color='r', ls='--', label="MC fit")
+        except ValueError:
+            pass
+
+    has_data = df_data["yield"].sum()>0.
+    if has_data:
         axtop.errorbar(
             (bins[1:] + bins[:-1])/2,
-            hist_data["yields"],
-            yerr = np.sqrt(hist_data["variance"]),
+            df_data["yield"],
+            yerr = np.sqrt(df_data["variance"]),
             fmt = 'o',
             markersize = 3,
             linewidth = 1,
             capsize = 1.8,
-            color = cfg.sample_colours[hist_data["sample"]] \
-                    if hist_data["sample"] in cfg.sample_colours \
-                    else "black",
-            label = hist_data["sample"],
+            color = "black",
+            label = set(df_data.index.get_level_values("process")).pop(),
         )
 
-        # Push x axis to bin limits (matplotlib normally adds padding)
-        axtop.set_xlim(bins[0], bins[-1])
+        if "formula" in df_data.columns:
+            try:
+                xs = (bins[1:] + bins[:-1])/2
+                ys = df_data["yield"].sum()*df_data["formula"]/df_data["formula"].sum()
+                nans = np.isnan(ys)
+                xnew = np.linspace(xs[~nans].min(), xs[~nans].max(), xs[~nans].shape[0]*4)
+                ynew = spline(xs[~nans], ys[~nans], xnew)
+                axtop.plot(xnew, ynew, color='k', ls='--', label="Data fit")
+            except ValueError:
+                pass
 
-    # Draw functions if they exist
-    title = []
-    if hist_data is not None and "function" in hist_data:
-        xs, ys = hist_data["function"]
-        try:
-            title.extend(hist_data["text"])
-        except TypeError:
-            pass
-        ys = hist_data["yields"].sum()*ys / sum(ys)
-        xnew = np.linspace(xs.min(), xs.max(), xs.shape[0]*4)
-        ynew = spline(xs, ys, xnew)
-        axtop.plot(xnew, ynew, color="k", ls='--', label="Data fit")
-
-    if "function" in hist_mc_sum:
-        xs, ys = hist_mc_sum["function"]
-        try:
-            title.extend(hist_mc_sum["text"])
-        except TypeError:
-            pass
-        ys = mc_sum*ys / sum(ys)
-        xnew = np.linspace(xs.min(), xs.max(), xs.shape[0]*4)
-        ynew = spline(xs, ys, xnew)
-        axtop.plot(xnew, ynew, color="r", ls='--', label="MC fit")
+    axtop.set_xlim(bins[0], bins[-1])
 
     # Set ymin limit to maximum matplotlib's chosen minimum and 0.5
     ymin = max(axtop.get_ylim()[0], 0.5)
     axtop.set_ylim(ymin, None)
+    axtop.set_xlabel("")
+    axtop.set_ylabel("")
 
     # Add CMS text to top + energy + lumi
     axtop.text(0, 1, r'$\mathbf{CMS}\ \mathit{Preliminary}$',
@@ -205,39 +176,51 @@ def dist_ratio(hist_data, hists_mc, filepath, cfg):
     handles = handles[::-1]
     labels = labels[::-1]
 
-    # Add fraction of MC total to each legend label
-    fractions = {
-        h["sample"]: h["yields"].sum()/mc_sum
-        for h in hists_mc
-    }
-    if hist_data is not None:
-        fractions[hist_data["sample"]] = hist_data["yields"].sum()/mc_sum
-    labels = ["{} {:.2f}".format(cfg.sample_names[label], fractions[label])
-              if label in cfg.sample_names else label for label in labels]
+    df_int_fraction = df_mcall\
+            .groupby(columns_nobins)\
+            .sum()\
+            .groupby(columns_nobins_noproc)\
+            .apply(lambda x: x/x.sum())\
+            .reset_index()[["process", "yield"]]
+    if has_data:
+        df_int_fraction = pd.concat([
+            df_int_fraction,
+            pd.DataFrame({
+                "process": [set(df_data.index.get_level_values("process")).pop()],
+                "yield": [df_data["yield"].sum()/df_mcsum["yield"].sum()],
+            }),
+        ])
+
+    fit_labels = [label for label in labels if "fit" in label]
+    labels = ["{} {:.2f}".format(
+        cfg.sample_names.get(label, label),
+        df_int_fraction[df_int_fraction["process"].isin([label])]["yield"].iloc[0],
+    ) for label in labels if "fit" not in label] + fit_labels
 
     # Additional text added to the legend title
+    title = []
     if hasattr(cfg, "text"):
-        title.append(cfg.text)
+        title.extend(cfg.text)
     axtop.legend(handles, labels, title="\n".join(title), labelspacing=0.1)
 
-    if hist_data is not None:
-        # Data / MC in the ratio
-        axbot.errorbar(
-            (bins[1:] + bins[:-1])/2,
-            hist_data["yields"] / hist_mc_sum["yields"],
-            yerr = np.sqrt(hist_data["variance"]) / hist_mc_sum["yields"],
-            fmt = 'o',
-            markersize = 3,
-            linewidth = 1,
-            capsize = 1.8,
-            color = 'black',
-        )
+    # Data/MC in the lower panel
+    axbot.errorbar(
+        (bins[1:] + bins[:-1])/2,
+        df_ratio,
+        yerr = np.sqrt(df_ratio_data_var),
+        fmt = 'o',
+        markersize = 3,
+        linewidth = 1,
+        capsize = 1.8,
+        color = 'black',
+        label = "",
+    )
 
-    # MC stat uncertainty in the ratio
+    # MC stat uncertainty in the lower panel
     axbot.fill_between(
         bins,
-        list(1. - (np.sqrt(hist_mc_sum["variance"]) / hist_mc_sum["yields"])) + [1.],
-        list(1. + (np.sqrt(hist_mc_sum["variance"]) / hist_mc_sum["yields"])) + [1.],
+        list(1.-np.sqrt(df_ratio_mc_var))+[1.],
+        list(1.+np.sqrt(df_ratio_mc_var))+[1.],
         step = 'post',
         color = "#aaaaaa",
         label = "MC stat. unc.",
@@ -252,9 +235,10 @@ def dist_ratio(hist_data, hists_mc, filepath, cfg):
     axbot.set_ylim(0.5, 1.5)
 
     # x and y title labels for the ratio (axtop shares x-axis)
-    name = hists_mc[0]["name"]
+    name = set(df.index.get_level_values("name")).pop()
     name = name[0] if isinstance(name, list) else name
-    axbot.set_xlabel(cfg.axis_label[name] if name in cfg.axis_label else name,
+    name = name.split("__")[0]
+    axbot.set_xlabel(cfg.axis_label.get(name, name),
                      fontsize='large')
     axbot.set_ylabel("Data / SM Total",
                      fontsize='large')
@@ -268,11 +252,11 @@ def dist_ratio(hist_data, hists_mc, filepath, cfg):
     )
 
     # Report
-    print("Creating {}".format(filepath))
+    print("Creating {}.pdf".format(filepath))
 
     # Actually save the figure
     plt.tight_layout()
     fig.savefig(filepath+".pdf", format="pdf", bbox_inches="tight")
     plt.close(fig)
 
-    return "Success"
+    return df

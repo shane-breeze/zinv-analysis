@@ -91,6 +91,12 @@ class JecVariations(object):
             setattr(event, "MET_pt{}"  .format(key), met_pt)
             setattr(event, "MET_phi{}" .format(key), met_phi)
 
+        event.delete_branches([
+            "Jet_ptResolution",
+            "Jet_genJetMatchIdx",
+            "Jet_jerCorrection",
+        ])
+
 ################################################################################
 def get_jet_ptresolution(jers, jets, rho):
     """Function to modify arguments that are sent to a numba-jitted function"""
