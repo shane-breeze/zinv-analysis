@@ -12,7 +12,10 @@ import os
 datapath = os.path.join(os.environ["TOPDIR"], "data")
 #print(datapath)
 
-all_variations = ["jesUp", "jesDown"]
+all_variations = ["jesUp", "jesDown",
+                  "jerUp", "jerDown",
+                  "unclustUp", "unclustDown"]
+
 
 certified_lumi_checker = Readers.CertifiedLumiChecker(
     name = "certified_lumi_checker",
@@ -56,7 +59,7 @@ jec_variations = Readers.JecVariations(
     #jer_sf_file = datapath + "/jecs/Summer16_25nsV1_MC_SF_AK4PFchs.txt",
     jer_file = datapath + "/jecs/Spring16_25nsV10_MC_PtResolution_AK4PFchs.txt",
     #jer_file = datapath + "/jecs/Summer16_25nsV1_MC_PtResolution_AK4PFchs.txt",
-    do_jer = False,
+    do_jer = True,
     do_jes = True,
     do_unclust = True,
 )
