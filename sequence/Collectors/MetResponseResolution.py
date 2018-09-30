@@ -8,9 +8,6 @@ import copy
 import re
 import numpy as np
 import pandas as pd
-pd.set_option('display.max_rows', 10000)
-pd.set_option('display.max_columns', 500)
-pd.set_option('display.width', 10000)
 
 from scipy.special import wofz
 from uncertainties import ufloat
@@ -34,6 +31,7 @@ class MetResponseResolutionCollector(HistCollector):
         self.cfg.log = False
 
     def draw(self, histograms):
+        outdir = os.path.join(self.outdir, self.name)
         datasets = ["MET", "SingleMuon", "SingleElectron"]
 
         df = histograms.histograms
@@ -91,7 +89,7 @@ class MetResponseResolutionCollector(HistCollector):
         args = []
         for cat, df_group in df.groupby(columns_noproc_nobin0):
             # Create output directory structure
-            path = os.path.join(self.outdir, "plots", *cat[:2])
+            path = os.path.join(outdir, "plots", *cat[:2])
             if not os.path.exists(path):
                 os.makedirs(path)
 
@@ -178,7 +176,7 @@ class MetResponseResolutionCollector(HistCollector):
                 for attr in ["mean", "width"]:
                     df_nominal["{}_unc_{}".format(attr, variation)] = df_var[attr]
 
-            path = os.path.join(self.outdir, "plots", *cat[:2])
+            path = os.path.join(outdir, "plots", *cat[:2])
             if not os.path.exists(path):
                 os.makedirs(path)
 
