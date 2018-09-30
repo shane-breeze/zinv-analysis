@@ -17,6 +17,8 @@ class LHEPartAssigner(object):
         event.LeptonIsMuon = (event.LeptonDecay == 13)
         event.LeptonIsTau = (event.LeptonDecay == 15)
 
+        event.delete_branches(["LHEPart_pdgId"])
+
 @njit
 def get_lepton_id(pdgs, starts, stops):
     lepton_id = np.zeros(stops.shape[0], dtype=int32)
