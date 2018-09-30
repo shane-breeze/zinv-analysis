@@ -143,6 +143,9 @@ class HistCollector(object):
         return args
 
     def reload(self, outdir):
+        self.outdir = os.path.join(outdir, self.name)
+        if not os.path.exists(self.outdir):
+            os.makedirs(self.outdir)
         histograms = Histograms()
         histograms.reload(os.path.join(outdir, self.name))
         return self.draw(histograms)

@@ -1,3 +1,4 @@
+import copy
 import os
 import numpy as np
 import operator
@@ -12,59 +13,22 @@ class QcdEwkCorrectionsReader(HistReader):
 
 class QcdEwkCorrectionsCollector(HistCollector):
     def draw(self, histograms):
-        datasets = list(set(
-            n[0] for n, _ in histograms.histograms
-        ))
+        df = histograms.histograms
 
-        # Set and sort to get all unique combinations of (dataset, cutflow, samples)
-        dataset_cutflow_histnames = set(
-            (n[0], n[1], n[3])
-            for n, _ in histograms.histograms
-            if "corrected" not in n[3]
-        )
-        dataset_cutflow_histnames = sorted(
-            dataset_cutflow_histnames, key=operator.itemgetter(2, 1, 0),
-        )
+        all_columns = [i for i in df.index.names]
+        columns_noprocess = [c for c in all_columns if "process" not in c]
+        columns_noprocess_nobin = [c for c in columns_noprocess if "bin0" not in c]
+        columns_noprocess_nobin_noname_noweight = [c for c in columns_noprocess_nobin if c != "name" and c != "weight"]
 
         args = []
-        for dataset, cutflow, histname in dataset_cutflow_histnames:
-            path = os.path.join(self.outdir, dataset, cutflow)
+        for category, df_group in df.groupby(columns_noprocess_nobin_noname_noweight):
+            path = os.path.join(self.outdir, "plots", *category[:2])
             if not os.path.exists(path):
                 os.makedirs(path)
-            filepath = os.path.abspath(os.path.join(path, histname))
+            name = [i for i in set(df_group.index.get_level_values("name")) if "corrected" not in i].pop()
+            filepath = os.path.abspath(os.path.join(path, name))
+            cfg = copy.deepcopy(self.cfg)
+            cfg.name = name
+            args.append((dist_comp, (df_group, filepath, cfg)))
 
-            hist_pairs = {}
-            for hname in (histname, histname+"_corrected"):
-                for n, h in histograms.histograms:
-                    if n[2] not in ["ZJetsToNuNu", "WJetsToLNu", "DYJetsToLL"]:
-                        continue
-
-                    if (n[0], n[1], n[3]) != (dataset, cutflow, hname):
-                        continue
-
-                    if n[2] in datasets and dataset != n[2]:
-                        continue
-
-                    if n[2] in ["MET", "SingleMuon", "SingleElectron"] and dataset != n[2]:
-                        continue
-
-                    if n[2] in hist_pairs:
-                        hist_pairs[n[2]].append({
-                            "name": n[3],
-                            "sample": n[2],
-                            "bins": h.histogram["bins"],
-                            "counts": h.histogram["counts"],
-                            "yields": h.histogram["yields"],
-                            "variance": h.histogram["variance"],
-                        })
-                    else:
-                        hist_pairs[n[2]] = [{
-                            "name": n[3],
-                            "sample": n[2],
-                            "bins": h.histogram["bins"],
-                            "counts": h.histogram["counts"],
-                            "yields": h.histogram["yields"],
-                            "variance": h.histogram["variance"],
-                        }]
-            args.append([hist_pairs.values(), filepath, self.cfg])
-        return [(dist_comp, arg) for arg in args]
+        return args
