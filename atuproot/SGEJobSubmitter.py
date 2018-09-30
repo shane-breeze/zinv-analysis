@@ -68,6 +68,8 @@ class SGEJobSubmitter(object):
         "SingleMuon_Run2016H_v2": 12,
         "SingleElectron_Run2016H_v2": 12,
         "TTJets_Inclusive": 16,
+        "QCD_Pt-800To1000_ext1": 12,
+        "QCD_Pt-1000To1400_ext1": 12,
         "QCD_Pt-1400To1800_ext1": 12,
         "QCD_Pt-1800To2400_ext1": 12,
         "WZTo2Q2Nu": 12,
