@@ -1,20 +1,23 @@
 import setuptools
 
-with open("README.md", "r") as fh:
+with open("README.md", 'r') as fh:
     long_description = fh.read()
 
+with open("requirements.txt", 'r') as fh:
+    requirements = fh.read().splitlines()
+
 setuptools.setup(
-    name="atuproot",
-    version="0.0.1",
-    #author="FAST",
-    #author_email="fast-cms@cern.ch",
+    name="zinv-analysis",
+    version="0.1.0",
+    author="Shane Breeze",
+    author_email="sdb15@ic.ac.uk",
     scripts=["run_atuproot.py"],
-    description="AlphaTwirl + uproot = FAST analysis code",
+    description="AlphaTwirl + uproot for the Z inv. width analysis",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/shane-breeze/atuproot",
+    url="https://github.com/shane-breeze/zinv-analysis",
     packages=setuptools.find_packages(),
-    install_requires=['six', "alphatwirl==0.20.1", "uproot==2.9.7", "pandas", "numba", "pyyaml"],
+    install_requires=requirements,
     setup_requires=["pytest-runner"],
     tests_require=["pytest"],
     classifiers=(

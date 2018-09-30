@@ -5,19 +5,19 @@ import warnings
 warnings.filterwarnings('ignore')
 
 from atuproot.AtUproot import AtUproot
-from atuproot.build_parallel import build_parallel
-from atuproot.utils import grouped_run
+from atsge.build_parallel import build_parallel
+#from atuproot.utils import grouped_run
 from datasets.datasets import get_datasets
 from sequence.config import build_sequence
 
 import logging
 logging.getLogger(__name__).setLevel(logging.INFO)
 logging.getLogger("alphatwirl").setLevel(logging.INFO)
-logging.getLogger("atuproot.SGEJobSubmitter").setLevel(logging.INFO)
+logging.getLogger("atsge.SGEJobSubmitter").setLevel(logging.INFO)
 
 logging.getLogger(__name__).propagate = False
 logging.getLogger("alphatwirl").propagate = False
-logging.getLogger("atuproot.SGEJobSubmitter").propagate = False
+logging.getLogger("atsge.SGEJobSubmitter").propagate = False
 logging.getLogger("atuproot.AtUproot").propagate = False
 
 import argparse
@@ -56,16 +56,75 @@ def generate_report(outdir):
     with open(filepath, 'w') as f:
         f.write("python "+" ".join(sys.argv)+"\n")
 
+vmem_dict = {
+    "MET_Run2016B_v2": 12,
+    "MET_Run2016C_v1": 12,
+    "SingleMuon_Run2016B_v2": 12,
+    "SingleMuon_Run2016C_v1": 12,
+    "SingleMuon_Run2016D_v1": 12,
+    "SingleMuon_Run2016E_v1": 12,
+    "SingleMuon_Run2016F_v1": 12,
+    "SingleMuon_Run2016G_v1": 12,
+    "SingleMuon_Run2016H_v2": 12,
+    "SingleElectron_Run2016H_v2": 12,
+    "TTJets_Inclusive": 16,
+    "QCD_Pt-800To1000_ext1": 12,
+    "QCD_Pt-1000To1400_ext1": 12,
+    "QCD_Pt-1400To1800_ext1": 12,
+    "QCD_Pt-1800To2400_ext1": 12,
+    "WZTo2Q2Nu": 12,
+    "ZGToNuNuG": 12,
+    "ZGToLLG": 12,
+    "WWTo2L2Nu": 12,
+    "WZTo1L3Nu": 12,
+    "ZJetsToNuNu_Pt-50To100": 12,
+    "ZJetsToNuNu_Pt-250To400": 12,
+    "ZJetsToNuNu_Pt-250To400_ext1": 12,
+    "ZJetsToNuNu_Pt-250To400_ext2": 12,
+    "ZJetsToNuNu_Pt-400To650": 12,
+    "ZJetsToNuNu_Pt-400To650_ext1": 12,
+    "ZJetsToNuNu_Pt-650ToInf": 12,
+    "ZJetsToNuNu_Pt-650ToInf_ext1": 12,
+    "DYJetsToLL_Pt-0To50": 12,
+    "DYJetsToLL_Pt-50To100": 20,
+    "DYJetsToLL_Pt-100To250": 12,
+    "WJetsToLNu_Pt-0To50": 12,
+    "WJetsToLNu_Pt-50To100": 12,
+    "WJetsToLNu_Pt-100To250_ext2": 16,
+    "WJetsToLNu_Pt-250To400": 12,
+    "WJetsToLNu_Pt-250To400_ext1": 12,
+    "WJetsToLNu_Pt-400To600": 12,
+    "WJetsToLNu_Pt-400To600_ext1": 12,
+    "WJetsToLNu_Pt-600ToInf": 12,
+    "WJetsToLNu_Pt-600ToInf_ext1": 12,
+    "G1Jet_Pt-100To250": 12,
+    "G1Jet_Pt-100To250_ext1": 12,
+    "G1Jet_Pt-250To400": 12,
+    "G1Jet_Pt-250To400_ext1": 12,
+    "G1Jet_Pt-400To650": 12,
+    "G1Jet_Pt-400To650_ext1": 12,
+    "G1Jet_Pt-650ToInf": 12,
+    "G1Jet_Pt-650ToInf_ext1": 12,
+    "SingleTop_s-channel_InclusiveDecays": 12,
+    "EWKZToNuNu2Jets_ext2": 12,
+}
 def run(sequence, datasets, options):
     process = AtUproot(options.outdir,
         quiet = options.quiet,
-        parallel_mode = options.mode,
-        process = options.ncores,
         max_blocks_per_dataset = options.nblocks_per_dataset,
         max_blocks_per_process = options.nblocks_per_sample,
-        blocksize = options.blocksize,
+                       nevents_per_block = options.blocksize,
         profile = options.profile,
         profile_out_path = "profile.txt",
+    )
+    process.parallel = build_parallel(
+        options.mode,
+        quiet = options.quiet,
+        processes = options.ncores,
+        dispatcher_options = {
+            "vmem_dict": vmem_dict,
+            "walltime_dict": {},
+        },
     )
     return process.run(datasets, sequence)
 
@@ -89,15 +148,15 @@ def parallel_draw(jobs, options):
         processes = options.ncores,
     )
     parallel.begin()
-    try:
-        parallel.communicationChannel.put_multiple([{
-            'task': grouped_run,
-            'args': args,
-            'kwargs': {},
-        } for args in jobs])
-        parallel.communicationChannel.receive()
-    except KeyboardInterrupt:
-        parallel.terminate()
+    #try:
+    #    parallel.communicationChannel.put_multiple([{
+    #        'task': grouped_run,
+    #        'args': args,
+    #        'kwargs': {},
+    #    } for args in jobs])
+    #    parallel.communicationChannel.receive()
+    #except KeyboardInterrupt:
+    #    parallel.terminate()
     parallel.end()
 
 if __name__ == "__main__":

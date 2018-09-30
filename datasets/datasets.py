@@ -1,9 +1,27 @@
 from __future__ import print_function
+from collections import namedtuple
 import yaml
 import os
 import six
 import logging
-from atuproot.Dataset import Dataset
+
+class Dataset(object):
+    args = ["name", "parent", "isdata", "xsection", "lumi", "energy",
+            "sumweights", "files", "associates", "tree"]
+    def __init__(self, **kwargs):
+        kwargs.setdefault("associates", [])
+        kwargs.setdefault("tree", "Events")
+        for arg in self.args:
+            setattr(self, arg, kwargs[arg])
+
+    def __repr__(self):
+        return "{}({}, {})".format(
+            self.__class__.__name__,
+            ", ".join(["{} = {!r}".format(k, getattr(self, k))
+                       for k in self.args[:-2]]),
+            "associates = {}".format(", ".join([associate.name
+                                                for associate in self.associates])),
+        )
 
 def get_datasets(path):
     with open(path, 'r') as f:

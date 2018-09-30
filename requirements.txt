@@ -5,4 +5,5 @@ alphatwirl==0.20.1
 pandas
 pyyaml
 uproot==2.9.7
-rootpy
+atuproot==0.1.0
+atsge==0.1.6
