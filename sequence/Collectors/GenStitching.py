@@ -1,8 +1,10 @@
+import copy
 import os
 import operator
+import re
 
 from drawing.dist_stitch import dist_stitch
-from utils.Histogramming import Histogram, Histograms
+from utils.Histogramming import Histograms
 
 from Histogrammer import Config, HistReader, HistCollector
 
@@ -12,44 +14,36 @@ class GenStitchingReader(HistReader):
         self.parents = [parent]
         self.histograms.begin(event, self.parents, {})
 
+processes = [
+    "DYJetsToLL",
+    "WJetsToLNu",
+    "ZJetsToNuNu",
+    "G1Jet",
+    "QCD",
+]
+
 class GenStitchingCollector(HistCollector):
     def draw(self, histograms):
-        datasets = list(set(
-            n[0] for n, _ in histograms.histograms
-        ))
+        df = histograms.histograms
 
-        # Set and sort to get all unique combinations of (dataset, cutflow, histname)
-        dataset_cutflow_histnames = set(
-            (n[0], n[1], n[3]) for n, _ in histograms.histograms
-        )
-        dataset_cutflow_histnames = sorted(
-            dataset_cutflow_histnames, key=operator.itemgetter(2, 1, 0),
-        )
+        all_columns = [i for i in df.index.names]
+        all_columns.insert(all_columns.index("process")+1, "parent")
+        columns_no_process = [c for c in all_columns if "process" not in c]
+        columns_no_process_no_bin = [c for c in columns_no_process if "bin0" not in c]
+
+        df = df.reset_index("process")
+        df["parent"] = df["process"].apply(lambda p: next((proc for proc in processes if proc in p), "unknown"))
+        df = df.set_index(["process", "parent"], append=True)\
+                .reorder_levels(all_columns)
 
         args = []
-        for dataset, cutflow, histname in dataset_cutflow_histnames:
-            path = os.path.join(self.outdir, dataset, cutflow)
+        for category, df_group in df.groupby(columns_no_process_no_bin):
+            path = os.path.join(self.outdir, "plots", *category[:2])
             if not os.path.exists(path):
                 os.makedirs(path)
-            filepath = os.path.abspath(os.path.join(path, histname))
+            filepath = os.path.abspath(os.path.join(path, "__".join([category[2],category[4]])))
+            cfg = copy.deepcopy(self.cfg)
+            cfg.name = category[4]
+            args.append((dist_stitch, (df_group, filepath, cfg)))
 
-            hists_mc = []
-            for n, h in histograms.histograms:
-                if (n[0], n[1], n[3]) != (dataset, cutflow, histname):
-                    continue
-
-                if dataset not in n[2]:
-                    continue
-
-                plot_item = {
-                    "name": n[3],
-                    "sample": n[2],
-                    "bins": h.histogram["bins"],
-                    "counts": h.histogram["counts"],
-                    "yields": h.histogram["yields"],
-                    "variance": h.histogram["variance"],
-                }
-                hists_mc.append(plot_item)
-
-            args.append([hists_mc, filepath, self.cfg])
-        return [(dist_stitch, arg) for arg in args]
+        return args

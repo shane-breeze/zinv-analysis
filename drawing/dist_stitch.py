@@ -1,131 +1,129 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def taper_and_drop(hist):
-    if isinstance(hist["bins"], list):
-        hist["bins"] = hist["bins"][0]
-    hist["bins"] = hist["bins"][1:-1]
-    hist["counts"] = hist["counts"][1:-1]
-    hist["yields"] = hist["yields"][1:-1]
-    hist["variance"] = hist["variance"][1:-1]
+def dist_stitch(df, filepath, cfg):
+    all_columns = list(df.index.names)
+    columns_noproc = [c for c in all_columns if c != "process"]
+    columns_nobins = [c for c in all_columns if "bin" not in c]
+    columns_nobins_noproc = [c for c in columns_nobins if c != "process"]
 
-    return hist
+    # Remove under and overflow bins (add overflow into final bin)
+    def truncate(indf):
+        #indf.iloc[-2] += indf.iloc[-1]
+        indf = indf.iloc[1:-1]
+        indf = indf.reset_index(columns_nobins, drop=True)
+        return indf
+    df = df.groupby(columns_nobins).apply(truncate)
 
-def dist_stitch(hists_mc, filepath, cfg):
-    if len(hists_mc) == 0:
-        return
+    df_pivot_proc = df.pivot_table(
+        values='yield',
+        index=columns_noproc,
+        columns='process',
+        aggfunc=np.sum,
+    )
 
-    #cms_tdr_style()
+    # Ratio
+    y = np.log10(df_pivot_proc.sum(axis=1))
+    df_ratio = 0.5*(np.roll(y, 1) + np.roll(y, -1))/y
+    df_ratio.iloc[0] = 1.
+    df_ratio.iloc[-1] = 1.
+
+    # Ratio uncertainty
+    df_pivot_proc_var = df.pivot_table(
+        values = 'variance',
+        index = columns_noproc,
+        columns = 'process',
+        aggfunc = np.sum,
+    )
+    df_ratio_err = np.sqrt(df_pivot_proc_var.sum(axis=1))/df_pivot_proc.sum(axis=1)
+
+    # Split axis into top and bottom with ratio 3:1
+    # Share the x axis, not the y axis
+    # Figure size is 4.8 by 6.4 inches
     fig, (axtop, axbot) = plt.subplots(
         nrows=2, ncols=1, sharex='col', sharey=False,
         gridspec_kw={'height_ratios': [3, 1]},
         figsize = (4.8, 6.4),
     )
 
-    hists_mc = [taper_and_drop(h) for h in hists_mc]
-    bins = hists_mc[0]["bins"]
+    # Get the global bins
+    bins_low = list(df_pivot_proc.index.get_level_values("bin0_low"))
+    bins_upp = list(df_pivot_proc.index.get_level_values("bin0_upp"))
+    bins = np.array(bins_low[:]+[bins_upp[-1]])
+    bin_centers = (bins[1:]+bins[:-1])/2
+    bin_widths = (bins[1:]-bins[:-1])
 
-    hist_mc_sum = {
-        "name": hists_mc[0]["name"],
-        "sample": hists_mc[0]["sample"],
-        "bins": hists_mc[0]["bins"],
-        "counts": sum(h["counts"] for h in hists_mc),
-        "yields": sum(h["yields"] for h in hists_mc),
-        "variance": sum(h["variance"] for h in hists_mc),
-    }
-    hists_mc = sorted(hists_mc, key=lambda x: x["yields"].sum())
-
+    # Stacked plot
+    sorted_processes = list(df_pivot_proc.sum().sort_values(ascending=False).index)
     axtop.hist(
-        [h["yields"] for h in hists_mc],
-        bins = hists_mc[0]["bins"],
-        log = True,
+        [df_pivot_proc[proc].values for proc in sorted_processes],
+        bins = bins,
+        log = cfg.log,
+        histtype='step',
         stacked = True,
-        histtype = 'step',
-        linewidth = 1.5,
-        color = [cfg.sample_colours[h["sample"]]
-                 if h["sample"] in cfg.sample_colours
-                 else "blue"
-                 for h in hists_mc],
-        label = [cfg.sample_names[h["sample"]]
-                 if h["sample"] in cfg.sample_names
-                 else h["sample"]
-                 for h in hists_mc],
+        color = [cfg.sample_colours.get(proc, "blue")
+                 for proc in sorted_processes],
+        label = sorted_processes,
     )
+    axtop.set_xlim(bins[0], bins[-1])
 
-    ymin = max(axtop.get_ylim()[0], 0.5)
-    axtop.set_ylim(ymin, None)
-
+    # Add CMS text to top + energy + lumi
     axtop.text(0, 1, r'$\mathbf{CMS}\ \mathit{Preliminary}$',
                horizontalalignment='left',
                verticalalignment='bottom',
                transform=axtop.transAxes,
                fontsize='large')
-
     axtop.text(1, 1, r'$35.9\ \mathrm{fb}^{-1}(13\ \mathrm{TeV})$',
                horizontalalignment='right',
                verticalalignment='bottom',
                transform=axtop.transAxes,
                fontsize='large')
 
+    # Legend - reverse the labels
     handles, labels = axtop.get_legend_handles_labels()
-    mc_sum = hist_mc_sum["yields"].sum()
-    labels = ["{} {:.2e}".format(
-                  cfg.sample_names[h["sample"]] \
-                   if h["sample"] in cfg.sample_names \
-                   else h["sample"],
-                  h["yields"].sum()/mc_sum,
-              )
-              for h in hists_mc]
-    axtop.legend(handles[::-1], labels[::-1],
-                 labelspacing = 0.1)
+    handles = handles[::-1]
+    labels = labels[::-1]
+    labels = [cfg.sample_names.get(l, l) for l in labels]
+    axtop.legend(handles, labels)
 
-    # Stitching ratios
-    y = np.log10(hist_mc_sum["yields"])
-    ratio = 0.5*(np.roll(y, 1)+np.roll(y, -1)) / y
-    ratio[0] = 1.
-    ratio[-1] = 1.
-
+    # Ratio plot
     axbot.hist(
-        ratio,
-        bins = hists_mc[0]["bins"],
+        df_ratio,
+        bins = bins,
         color = "black",
-        histtype = "step",
+        histtype = 'step',
     )
-
-    # MC stat. error
-    ratio_err = np.sqrt(hist_mc_sum["variance"]) / hist_mc_sum["yields"]
     axbot.fill_between(
         bins,
-        list(1. - ratio_err) + [1.],
-        list(1. + ratio_err) + [1.],
+        list(1. - df_ratio_err.values) + [1.],
+        list(1. + df_ratio_err.values) + [1.],
         step = 'post',
         color = "#aaaaaa",
         label = "MC stat. unc.",
     )
+    ylim_ratio = max(1.-df_ratio.min(), df_ratio.max()-1.)*1.1
+    ylim_ratio_err = df_ratio_err.max()*1.1
+    ylim = max(ylim_ratio, ylim_ratio_err)
+    if not (np.isinf(ylim) or np.isnan(ylim)):
+        axbot.set_ylim((1.-ylim, 1.+ylim))
+    axbot.axhline(1., ls=':', color='black')
 
-    handles, labels = axbot.get_legend_handles_labels()
-    axbot.legend(handles, labels)
-
-    axbot.set_xlim(bins[0], bins[-1])
-    axbot.set_ylim(0.95, 1.05)
-
-    axbot.set_xlabel(cfg.axis_label[hists_mc[0]["name"]]
-                     if hists_mc[0]["name"] in cfg.axis_label
-                     else hists_mc[0]["name"],
+    # Add labels
+    name = cfg.name
+    axbot.set_xlabel(cfg.axis_label.get(name, name),
                      fontsize='large')
     axbot.set_ylabel("Closure", fontsize='large')
 
-    axbot.plot(
-        [bins[0], bins[-1]],
-        [1., 1.],
-        color = 'black',
-        linestyle = ':',
-    )
+    # Legend
+    handles, labels = axbot.get_legend_handles_labels()
+    axbot.legend(handles, labels)
 
-    print("Creating {}".format(filepath))
+    # Report
+    print("Creating {}.pdf".format(filepath))
 
+    # Actually save the figure
     plt.tight_layout()
     fig.savefig(filepath+".pdf", format="pdf", bbox_inches="tight")
     plt.close(fig)
 
-    return "Success"
+    return df
