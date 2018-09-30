@@ -1,7 +1,7 @@
 import os
 import operator
 
-from utils.Histogramming import Histogram, Histograms
+from utils.Histogramming import Histograms
 from Histogrammer import Config, HistReader, HistCollector
 
 SystematicsReader = HistReader
