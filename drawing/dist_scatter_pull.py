@@ -83,12 +83,19 @@ def dist_scatter_pull(df, variations, filepath, cfg):
     df_pulls = df_pulls[["pull"]]
 
     # Create figure and axes
-    fig, ((axtop, axnull), (axbot, axrig)) = plt.subplots(
-        nrows=2, ncols=2, sharex='col', sharey='row',
-        gridspec_kw={'height_ratios': [3, 1], 'width_ratios': [6, 1]},
+    fig, axes = plt.subplots(
+        nrows=3, ncols=2, sharex='col', sharey='row',
+        gridspec_kw={'height_ratios': [3, 1, 1],
+                     'width_ratios': [6, 1],
+                     'wspace': 0.05,
+                     'hspace': 0.05},
         figsize = (5.6, 6.4),
     )
-    axnull.axis('off')
+    axtop, axtopnull = axes[0]
+    axmid, axmidnull = axes[1]
+    axbot, axbotrig = axes[2]
+    axtopnull.axis('off')
+    axmidnull.axis('off')
 
     # top axes
     axtop.text(0, 1, r'$\mathbf{CMS}\ \mathit{Preliminary}$',
@@ -139,6 +146,10 @@ def dist_scatter_pull(df, variations, filepath, cfg):
     if dylims < 0.1:
         add_dylims = 0.5*(0.1 - dylims)
         axtop.set_ylim((ylims[0]-add_dylims, ylims[1]+add_dylims))
+    # TODO
+    #axtop.set_xlim((50., 350.))
+    #axtop.set_ylim((0, 40))
+    #axtop.axhline(1., ls='--', color='grey', lw=1)
 
     handles, labels = axtop.get_legend_handles_labels()
     handles += [rect_eg]
@@ -146,9 +157,35 @@ def dist_scatter_pull(df, variations, filepath, cfg):
     axtop.legend(handles, labels)
     axtop.set_ylabel(cfg.ylabel, fontsize='large')
 
+    # TODO
+    #axtop.set_ylabel(r'$\mu(E_{T,\parallel}^{miss}-p_{T}(\mu\mu)) / \langle p_{T}(\mu\mu) \rangle + 1$')
+    #axtop.set_ylabel(r'$\mu(E_{T,\perp}^{miss}) / \langle p_{T}(\mu\mu) \rangle$')
+
+    # Middle axes
+    axmid.fill_between(
+        bin_edges,
+        list(1.-df_ratio["ratio_mc_unc"])+[1.],
+        list(1.+df_ratio["ratio_mc_unc"])+[1.],
+        step = 'post',
+        color = '#aaaaaa',
+        label = "MC unc.",
+    )
+
+    axmid.errorbar(
+        bin_cents, df_ratio["ratio"],
+        xerr=bin_widths/2, yerr=df_ratio["ratio_data_unc"],
+        fmt='o', markersize=3, linewidth=1,
+        capsize=1.8, color="black",
+    )
+
+    axmid.axhline(1, ls='--', color='grey', lw=1)
+    axmid.set_ylabel("Data / MC", fontsize='large')
+    # TODO
+    #axmid.set_ylim((0.75, 1.25))
+
     # bottom axes
     axbot.plot(bin_cents, df_pulls["pull"], 'o', ms=3, mfc='black', mec='black')
-    axbot.set_xlabel(cfg.xlabel)
+    axbot.set_xlabel(cfg.xlabel, fontsize='large')
     axbot.set_ylabel("Pull", fontsize='large')
 
     ylim = max(map(abs, axbot.get_ylim()))
@@ -165,17 +202,17 @@ def dist_scatter_pull(df, variations, filepath, cfg):
     pull_hist = pull_hist[1:-1]
     pull_bins = pull_bins[1:-1]
 
-    axrig.hist(
+    axbotrig.hist(
         pull_hist,
         bins = pull_bins,
         histtype = 'step',
         orientation = 'horizontal',
         color = "k",
     )
-    axrig.set_xlim(0., pull_hist.max()+1)
-    axrig.set_ylim(-ylim, ylim)
-    axrig.axhline(-1, ls='--', color='grey', lw=1)
-    axrig.axhline(1, ls='--', color='grey', lw=1)
+    axbotrig.set_xlim(0., pull_hist.max()+1)
+    axbotrig.set_ylim(-ylim, ylim)
+    axbotrig.axhline(-1, ls='--', color='grey', lw=1)
+    axbotrig.axhline(1, ls='--', color='grey', lw=1)
 
     # Add gaussian fit
     (mu, sigma) = norm.fit(df_pulls["pull"])
@@ -184,7 +221,8 @@ def dist_scatter_pull(df, variations, filepath, cfg):
     gaus = mlab.normpdf(xs, mu, sigma)
     xnew = np.linspace(xs.min(), xs.max(), xs.shape[0]*4)
     ynew = spline(xs, pull_hist.sum()*gaus/gaus.sum(), xnew)
-    axrig.plot(ynew, xnew, 'r--', lw=2)
+    axbotrig.plot(ynew, xnew, 'r--', lw=2)
+    axbotrig.set_xticklabels([])
 
     # Create the damn plots
     print("Creating {}.pdf".format(filepath))
