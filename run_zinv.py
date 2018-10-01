@@ -6,7 +6,7 @@ warnings.filterwarnings('ignore')
 
 from atuproot.AtUproot import AtUproot
 from atsge.build_parallel import build_parallel
-#from atuproot.utils import grouped_run
+from utils.grouped_run import grouped_run
 from datasets.datasets import get_datasets
 from sequence.config import build_sequence
 
@@ -89,7 +89,7 @@ vmem_dict = {
     "DYJetsToLL_Pt-50To100": 20,
     "DYJetsToLL_Pt-100To250": 12,
     "WJetsToLNu_Pt-0To50": 12,
-    "WJetsToLNu_Pt-50To100": 12,
+    "WJetsToLNu_Pt-50To100": 16,
     "WJetsToLNu_Pt-100To250_ext2": 16,
     "WJetsToLNu_Pt-250To400": 12,
     "WJetsToLNu_Pt-250To400_ext1": 12,
@@ -143,20 +143,21 @@ def parallel_draw(jobs, options):
             for i in xrange(0, len(jobs), len(jobs)/100+1)]
 
     parallel = build_parallel(
-        parallel_mode = options.mode,
+        options.mode,
         quiet = options.quiet,
         processes = options.ncores,
+        dispatcher_options = {},
     )
     parallel.begin()
-    #try:
-    #    parallel.communicationChannel.put_multiple([{
-    #        'task': grouped_run,
-    #        'args': args,
-    #        'kwargs': {},
-    #    } for args in jobs])
-    #    parallel.communicationChannel.receive()
-    #except KeyboardInterrupt:
-    #    parallel.terminate()
+    try:
+        parallel.communicationChannel.put_multiple([{
+            'task': grouped_run,
+            'args': args,
+            'kwargs': {},
+        } for args in jobs])
+        parallel.communicationChannel.receive()
+    except KeyboardInterrupt:
+        parallel.terminate()
     parallel.end()
 
 if __name__ == "__main__":

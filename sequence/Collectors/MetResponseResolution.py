@@ -31,7 +31,6 @@ class MetResponseResolutionCollector(HistCollector):
         self.cfg.log = False
 
     def draw(self, histograms):
-        outdir = os.path.join(self.outdir, self.name)
         datasets = ["MET", "SingleMuon", "SingleElectron"]
 
         df = histograms.histograms
