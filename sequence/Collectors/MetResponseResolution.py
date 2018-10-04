@@ -88,7 +88,7 @@ class MetResponseResolutionCollector(HistCollector):
         args = []
         for cat, df_group in df.groupby(columns_noproc_nobin0):
             # Create output directory structure
-            path = os.path.join(outdir, "plots", *cat[:2])
+            path = os.path.join(self.outdir, "plots", *cat[:2])
             if not os.path.exists(path):
                 os.makedirs(path)
 
@@ -110,8 +110,16 @@ class MetResponseResolutionCollector(HistCollector):
                     .groupby(columns_nobin0)\
                     .apply(lambda x: x.iloc[1])[["mean", "mean_unc", "width", "width_unc"]]
             params = params.reset_index("process")
-            params_data = params[params.process.isin(datasets)].iloc[0]
-            params_mc = params[params.process.isin(["MCSum"])].iloc[0]
+
+            try:
+                params_data = params[params.process.isin(datasets)].iloc[0]
+            except IndexError:
+                params_data = {"mean": 0., "mean_unc": 0., "width": 0., "width_unc": 0.}
+
+            try:
+                params_mc = params[params.process.isin(["MCSum"])].iloc[0]
+            except IndexError:
+                params_mc = {"mean": 0., "mean_unc": 0., "width": 0., "width_unc": 0.}
 
             def get_sfs(val):
                 n = 0
@@ -175,7 +183,7 @@ class MetResponseResolutionCollector(HistCollector):
                 for attr in ["mean", "width"]:
                     df_nominal["{}_unc_{}".format(attr, variation)] = df_var[attr]
 
-            path = os.path.join(outdir, "plots", *cat[:2])
+            path = os.path.join(self.outdir, "plots", *cat[:2])
             if not os.path.exists(path):
                 os.makedirs(path)
 
@@ -208,8 +216,12 @@ def fit(df):
             "mean_unc": [0.],
             "sigma": [0.],
             "sigma_unc": [0.],
+            "gamma": [0.],
+            "gamma_unc": [0.],
             "width": [0.],
             "width_unc": [0.],
+            "chi2": [0.],
+            "ndof": [0.],
         })
 
     hdata = ROOT.TH1D("data", "", len(bins)-1, bins)
