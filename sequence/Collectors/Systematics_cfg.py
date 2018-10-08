@@ -40,7 +40,17 @@ histogrammer_cfgs = [
             ("muonTrigUp",    "ev: ev.Weight_{dataset}*ev.Weight_muonTrigUp"),
             ("muonTrigDown",  "ev: ev.Weight_{dataset}*ev.Weight_muonTrigDown"),
         ],
-    },
+    }
+] + [
+    {
+        "name": "METnoX_pt{}".format(variation),
+        "categories": [(d, c+variation) for d, c in categories],
+        "variables": ["ev: ev.METnoX_pt{}".format(variation)],
+        "bins": [[-inf]+list(np.linspace(0., 1000., 41))+[inf]],
+        "weights": [("nominal", "ev: ev.Weight_{dataset}")],
+    } for variation in ["jesUp", "jesDown",
+                        "jerUp", "jerDown",
+                        "unclustUp", "unclustDown"]
 ]
 
 sample_colours = {
