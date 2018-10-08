@@ -42,8 +42,15 @@ class Histograms(object):
         return self
 
     def end(self):
+        self.clear_empties()
         self.string_to_func = {}
         return self
+
+    def clear_empties(self):
+        return
+        df = self.histograms
+        columns = [c for c in df.index.names if "bin" not in c]
+        self.histograms = df.loc[df.groupby(columns)["count"].transform(func=np.sum)>0,:]
 
     def event(self, event):
         dfs = []
@@ -138,8 +145,9 @@ class Histograms(object):
             return other
         elif other.histograms.shape[0] == 0:
             return self
+        columns = self.histograms.index.names
         self.histograms = pd.concat([self.histograms, other.histograms])\
-                .groupby(self.histograms.index.names)\
+                .groupby(columns)\
                 .sum()
         return self
 
