@@ -69,7 +69,7 @@ vmem_dict = {
     "SingleElectron_Run2016H_v2": 12,
     "TTJets_Inclusive": 16,
     "QCD_Pt-600To800_ext1": 12,
-    "QCD_Pt-800To1000_ext1": 16,
+    "QCD_Pt-800To1000_ext1": 20,
     "QCD_Pt-1000To1400": 16,
     "QCD_Pt-1000To1400_ext1": 12,
     "QCD_Pt-1400To1800_ext1": 12,
@@ -91,7 +91,7 @@ vmem_dict = {
     "DYJetsToLL_Pt-0To50": 12,
     "DYJetsToLL_Pt-50To100": 20,
     "DYJetsToLL_Pt-100To250": 12,
-    "DYJetsToLL_Pt-250To400_ext3": 16,
+    "DYJetsToLL_Pt-250To400_ext3": 20,
     "WJetsToLNu_Pt-0To50": 12,
     "WJetsToLNu_Pt-50To100": 16,
     "WJetsToLNu_Pt-100To250_ext2": 16,
@@ -110,6 +110,7 @@ vmem_dict = {
     "G1Jet_Pt-650ToInf": 12,
     "G1Jet_Pt-650ToInf_ext1": 12,
     "SingleTop_s-channel_InclusiveDecays": 12,
+    "SingleTop_t-channel_top_InclusiveDecays": 12,
     "SingleTop_t-channel_antitop_InclusiveDecays": 12,
     "EWKZToNuNu2Jets_ext2": 12,
 }
@@ -134,7 +135,7 @@ def run(sequence, datasets, options):
             "walltime_dict": {},
         },
         dropbox_options = {
-            "sleep": 10,
+            "sleep": 30,
         },
     )
 
