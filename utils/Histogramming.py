@@ -47,7 +47,6 @@ class Histograms(object):
         return self
 
     def clear_empties(self):
-        return
         df = self.histograms
         columns = [c for c in df.index.names if "bin" not in c]
         self.histograms = df.loc[df.groupby(columns)["count"].transform(func=np.sum)>0,:]
