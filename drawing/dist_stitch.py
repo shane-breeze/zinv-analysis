@@ -45,6 +45,7 @@ def dist_stitch(df, filepath, cfg):
         gridspec_kw={'height_ratios': [3, 1]},
         figsize = (4.8, 6.4),
     )
+    if cfg.log: axtop.set_yscale('log')
 
     # Get the global bins
     bins_low = list(df_pivot_proc.index.get_level_values("bin0_low"))
@@ -56,9 +57,9 @@ def dist_stitch(df, filepath, cfg):
     # Stacked plot
     sorted_processes = list(df_pivot_proc.sum().sort_values(ascending=False).index)
     axtop.hist(
-        [df_pivot_proc[proc].values for proc in sorted_processes],
+        [bin_centers]*len(sorted_processes),
         bins = bins,
-        log = cfg.log,
+        weights = [df_pivot_proc[proc].values for proc in sorted_processes],
         histtype='step',
         stacked = True,
         color = [cfg.sample_colours.get(proc, "blue")
@@ -88,8 +89,9 @@ def dist_stitch(df, filepath, cfg):
 
     # Ratio plot
     axbot.hist(
-        df_ratio,
+        bin_centers,
         bins = bins,
+        weights = df_ratio,
         color = "black",
         histtype = 'step',
     )

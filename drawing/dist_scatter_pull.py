@@ -203,8 +203,9 @@ def dist_scatter_pull(df, variations, filepath, cfg):
     pull_bins = pull_bins[1:-1]
 
     axbotrig.hist(
-        pull_hist,
+        (np.array(pull_bins[1:])+np.array(pull_bins[:-1]))/2,
         bins = pull_bins,
+        weights = pull_hist,
         histtype = 'step',
         orientation = 'horizontal',
         color = "k",

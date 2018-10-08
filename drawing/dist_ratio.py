@@ -77,6 +77,7 @@ def dist_ratio(df, filepath, cfg):
         gridspec_kw={'height_ratios': [3, 1]},
         figsize = (4.8, 6.4),
     )
+    if cfg.log: axtop.set_yscale('log')
 
     # Get the global bins
     bins_low = list(df_mcsum.index.get_level_values("bin0_low"))
@@ -96,10 +97,11 @@ def dist_ratio(df, filepath, cfg):
         sorted_processes = ["Minor"]+sorted_processes
     df_mcall_pivot_proc = df_mcall_pivot_proc[sorted_processes]
 
+    contents = [df_mcall_pivot_proc[process].values for process in sorted_processes]
     axtop.hist(
-        [df_mcall_pivot_proc[process].values for process in sorted_processes],
+        [bin_centers]*len(contents),
         bins = bins,
-        log = cfg.log,
+        weights = contents,
         stacked = True,
         color = [cfg.sample_colours.get(proc, "blue")
                  for proc in sorted_processes],
@@ -107,9 +109,9 @@ def dist_ratio(df, filepath, cfg):
     )
 
     axtop.hist(
-        df_mcsum["yield"],
+        bin_centers,
         bins = bins,
-        log = cfg.log,
+        weights = df_mcsum["yield"],
         histtype = 'step',
         color = "black",
         label = "",
