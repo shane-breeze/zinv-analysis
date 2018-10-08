@@ -8,6 +8,7 @@ import copy
 import re
 import numpy as np
 import pandas as pd
+import cPickle as pickle
 
 from scipy.special import wofz
 from uncertainties import ufloat
@@ -166,6 +167,8 @@ class MetResponseResolutionCollector(HistCollector):
             ))
 
             # Create args list for post-process drawing
+            #with open(filepath+".pkl", 'w') as f:
+            #    pickle.dump((df_group, filepath, cfg), f)
             args.append((dist_ratio, (df_group, filepath, cfg)))
 
         df_fit = df_fit[~(

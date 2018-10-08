@@ -1,6 +1,7 @@
 import os
 import operator
 import pandas as pd
+import cPickle as pickle
 
 from drawing.dist_ratio import dist_ratio
 from utils.Histogramming import Histograms
@@ -139,6 +140,8 @@ class HistCollector(object):
             filepath = os.path.abspath(os.path.join(path, categories[3]))
 
             # Create args list for post-processing drawing
+            #with open(filepath+".pkl", 'w') as f:
+            #    pickle.dump((df_group, filepath, self.cfg), f)
             args.append((dist_ratio, (df_group, filepath, self.cfg)))
         return args
 
