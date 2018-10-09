@@ -167,8 +167,8 @@ class MetResponseResolutionCollector(HistCollector):
             ))
 
             # Create args list for post-process drawing
-            #with open(filepath+".pkl", 'w') as f:
-            #    pickle.dump((df_group, filepath, cfg), f)
+            with open(filepath+".pkl", 'w') as f:
+                pickle.dump((df_group, filepath, cfg), f)
             args.append((dist_ratio, (df_group, filepath, cfg)))
 
         df_fit = df_fit[~(

@@ -140,8 +140,8 @@ class HistCollector(object):
             filepath = os.path.abspath(os.path.join(path, categories[3]))
 
             # Create args list for post-processing drawing
-            #with open(filepath+".pkl", 'w') as f:
-            #    pickle.dump((df_group, filepath, self.cfg), f)
+            with open(filepath+".pkl", 'w') as f:
+                pickle.dump((df_group, filepath, self.cfg), f)
             args.append((dist_ratio, (df_group, filepath, self.cfg)))
         return args
 

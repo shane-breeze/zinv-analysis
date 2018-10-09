@@ -2,6 +2,8 @@ import copy
 import os
 import operator
 import re
+try: import cPickle as pickle
+except ImportError: import pickle
 
 from drawing.dist_stitch import dist_stitch
 from utils.Histogramming import Histograms
@@ -44,6 +46,8 @@ class GenStitchingCollector(HistCollector):
             filepath = os.path.abspath(os.path.join(path, "__".join([category[2],category[4]])))
             cfg = copy.deepcopy(self.cfg)
             cfg.name = category[4]
+            with open(filepath+".pkl", 'w') as f:
+                pickle.dump((df_group, filepath, cfg), f)
             args.append((dist_stitch, (df_group, filepath, cfg)))
 
         return args

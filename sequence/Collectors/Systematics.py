@@ -1,6 +1,8 @@
 import os
 import operator
 import copy
+try: import cPickle as pickle
+except ImportError: import pickle
 
 from utils.Histogramming import Histograms
 from Histogrammer import Config, HistReader, HistCollector
@@ -45,6 +47,8 @@ class SystematicsCollector(HistCollector):
             # Create args list for post-processing drawing
             cfg = copy.deepcopy(self.cfg)
             cfg.name = cfg.axis_label.get(categories[3], categories[3])
+            with open(filepath+".pkl", 'w') as f:
+                pickle.dump((df_group, filepath, cfg), f)
             args.append((dist_multicomp, (df_group, filepath, cfg)))
 
         return args

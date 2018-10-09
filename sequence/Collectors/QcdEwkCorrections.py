@@ -2,6 +2,8 @@ import copy
 import os
 import numpy as np
 import operator
+try: import cPickle as pickle
+except ImportError: import pickle
 
 from drawing.dist_comp import dist_comp
 from Histogrammer import HistReader, HistCollector, Config
@@ -40,6 +42,8 @@ class QcdEwkCorrectionsCollector(HistCollector):
             filepath = os.path.abspath(os.path.join(path, name))
             cfg = copy.deepcopy(self.cfg)
             cfg.name = name
+            with open(filepath+".pkl", 'w') as f:
+                pickle.dump((df_group, filepath, cfg), f)
             args.append((dist_comp, (df_group, filepath, cfg)))
 
         return args
