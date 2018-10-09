@@ -1,18 +1,12 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from scipy.interpolate import spline
 
 def dist_comp(df, filepath, cfg):
-    allowed_processes = ["DYJetsToLL", "WJetsToLNu", "ZJetsToNuNu"]
-    df = df.reset_index("weight", drop=True)
-
     # Define columns
     all_columns = list(df.index.names)
     columns_noname = [c for c in all_columns if c != "name"]
-    columns_noproc = [c for c in all_columns if c != "process"]
     columns_nobins = [c for c in all_columns if "bin" not in c]
-    columns_nobins_noproc = [c for c in columns_nobins if c != "process"]
 
     # Remove under and overflow bins (add overflow into final bin)
     def truncate(indf):
@@ -36,8 +30,8 @@ def dist_comp(df, filepath, cfg):
     df_uncorr.columns = ['yield']
     df_corr.columns = ['yield']
 
-    df_pivot_uncorr = df_uncorr.unstack(level='process')
-    df_pivot_corr = df_corr.unstack(level='process')
+    df_pivot_uncorr = df_uncorr.unstack(level='key')
+    df_pivot_corr = df_corr.unstack(level='key')
     df_pivot_ratio = df_pivot_corr / df_pivot_uncorr
 
     # Get the global bins
@@ -58,24 +52,24 @@ def dist_comp(df, filepath, cfg):
     if cfg.log: axtop.set_yscale('log')
 
     # Draw hists
-    processes = [p for p in df_pivot_corr.columns if p in allowed_processes]
+    all_keys = list(df.index.get_level_values("key").unique())
     axtop.hist(
-        [bin_centers]*len(processes),
+        [bin_centers]*len(all_keys),
         bins = bins,
-        weights = [df_pivot_uncorr[p] for p in processes],
+        weights = [df_pivot_uncorr[k] for k in all_keys],
         histtype = 'step',
-        color = [cfg.sample_colours.get(p, "blue") for p in processes],
-        label = [cfg.sample_names.get(p, p) for p in processes],
+        color = [cfg.sample_colours.get(k, "blue") for k in all_keys],
+        label = [cfg.sample_names.get(k, k) for k in all_keys],
         ls = '--',
     )
     handles, labels = axtop.get_legend_handles_labels()
     axtop.hist(
-        [bin_centers]*len(processes),
+        [bin_centers]*len(all_keys),
         bins = bins,
-        weights = [df_pivot_corr[p] for p in processes],
+        weights = [df_pivot_corr[k] for k in all_keys],
         histtype = 'step',
-        color = [cfg.sample_colours.get(p, "blue") for p in processes],
-        label = [cfg.sample_names.get(p, p) for p in processes],
+        color = [cfg.sample_colours.get(k, "blue") for k in all_keys],
+        label = [cfg.sample_names.get(k, k) for k in all_keys],
     )
     handles_corr, labels_corr = axtop.get_legend_handles_labels()
     handles_corr = handles_corr[len(handles):]
@@ -105,17 +99,17 @@ def dist_comp(df, filepath, cfg):
 
     # Ratio in bottom panel
     axbot.hist(
-        [bin_centers]*len(processes),
+        [bin_centers]*len(all_keys),
         bins = bins,
-        weights = [df_pivot_ratio[p] for p in processes],
+        weights = [df_pivot_ratio[k] for k in all_keys],
         histtype = 'step',
-        color = [cfg.sample_colours.get(p, 'blue') for p in processes],
+        color = [cfg.sample_colours.get(k, 'blue') for k in all_keys],
     )
     axbot.axhline(1, ls='--', color='gray')
 
     name = cfg.name
-    ymin = min(df_pivot_ratio[processes].min())
-    ymax = max(df_pivot_ratio[processes].max())
+    ymin = min(df_pivot_ratio[all_keys].min())
+    ymax = max(df_pivot_ratio[all_keys].max())
     padding = (ymax - ymin)*0.05
     if not (np.isinf(ymin) or np.isnan(ymin) or np.isinf(ymax) or np.isnan(ymax)):
         axbot.set_ylim((ymin-padding, ymax+padding))
