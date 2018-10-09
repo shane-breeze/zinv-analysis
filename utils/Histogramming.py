@@ -111,7 +111,7 @@ class Histograms(object):
         df["dataset"] = config["dataset"]
         df["region"] = config["region"]
         df["process"] = config["process"]
-        df["weight"] = config["weight"]
+        df["weight"] = config["weightname"]
         df["name"] = config["name"] if not isinstance(config["name"], list) else "__".join(config["name"])
         for idx, variable in reversed(list(enumerate(config["variables"]))):
             df["variable{}".format(idx)] = variable
