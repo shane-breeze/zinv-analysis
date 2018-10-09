@@ -49,13 +49,13 @@ class HistReader(object):
                     selection.extend(cfg["additional_selection"])
                 for weightname, weight in cfg["weights"]:
                     weight = weight.format(dataset=dataset)
-                    identifier = (dataset, cutflow, None, cfg["name"], weightname)
 
                     configs.append({
                         "name": cfg["name"],
                         "dataset": dataset,
                         "region": cutflow,
                         "weight": weight,
+                        "weightname": weightname,
                         "selection": selection,
                         "variables": cfg["variables"],
                         "bins": cfg["bins"],
