@@ -14,14 +14,25 @@ class QcdEwkCorrectionsReader(HistReader):
 class QcdEwkCorrectionsCollector(HistCollector):
     def draw(self, histograms):
         df = histograms.histograms
+        all_columns = list(df.index.names)
+        all_columns.insert(all_columns.index("process"), "key")
+        all_columns.remove("process")
 
-        all_columns = [i for i in df.index.names]
-        columns_noprocess = [c for c in all_columns if "process" not in c]
-        columns_noprocess_nobin = [c for c in columns_noprocess if "bin0" not in c]
-        columns_noprocess_nobin_noname_noweight = [c for c in columns_noprocess_nobin if c != "name" and c != "weight"]
+        # Allowed processes are as shown below
+        df = df.reset_index("process")
+        df = df[df["process"].isin(["DYJetsToLL", "WJetsToLNu", "ZJetsToNuNu"])]
+        df["key"] = df["process"]
+        df = df.drop("process", axis=1)\
+                .set_index("key", append=True)\
+                .reorder_levels(all_columns)\
+                .reset_index("weight", drop=True)
+
+        columns_nokey = [c for c in all_columns if "key" not in c]
+        columns_nokey_nobin = [c for c in columns_nokey if "bin0" not in c]
+        columns_nokey_nobin_noname_noweight = [c for c in columns_nokey_nobin if c != "name" and c != "weight"]
 
         args = []
-        for category, df_group in df.groupby(columns_noprocess_nobin_noname_noweight):
+        for category, df_group in df.groupby(columns_nokey_nobin_noname_noweight):
             path = os.path.join(self.outdir, "plots", *category[:2])
             if not os.path.exists(path):
                 os.makedirs(path)
