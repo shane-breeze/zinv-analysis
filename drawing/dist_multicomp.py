@@ -108,11 +108,17 @@ def dist_multicomp(df, filepath, cfg):
             color = cfg.sample_colours.get(key, 'blue'),
             label = cfg.sample_names.get(key, key),
         )
-    ax.axhline(1, ls='--', color='black')
+        ax.axhline(1, ls='--', lw=1., color='black')
+
+    top = np.sqrt(((df_key_perc_up[sorted_keys]-1)**2).sum(axis=1))+1
+    bot = 1-np.sqrt(((df_key_perc_down[sorted_keys]-1)**2).sum(axis=1))
+
+    ax.step(bins, top, where='post', color='black', label='Total', lw=1.)
+    ax.step(bins, bot, where='post', color='black', lw=1.)
 
     # Legend
     handles, labels = ax.get_legend_handles_labels()
-    ax.legend(handles[::-1], labels[::-1])
+    ax.legend(handles, labels)
 
     name = cfg.name
     ax.set_xlabel(cfg.axis_label.get(name, name), fontsize='large')
