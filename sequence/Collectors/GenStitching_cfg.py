@@ -105,6 +105,6 @@ sample_names = {
 
 axis_label = {
     "LHE_Vpt": r'LHE $p_{T}(V)$ (GeV)',
-    "Generator_scalePDF": r'LHE $Q^2$ ($\mathrm{GeV}^2$})',
+    "Generator_scalePDF": r'LHE $Q^2$ ($\mathrm{GeV}^2$)',
     "GenPartBoson_pt": r'Gen $p_{T}(V)$ (GeV)',
 }
