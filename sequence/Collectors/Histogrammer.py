@@ -109,14 +109,16 @@ class HistCollector(object):
                 histograms = readers[0].histograms
             else:
                 histograms.merge(readers[0].histograms)
-
-        histograms.save(self.outdir)
+        self.save(histograms)
         if self.plot:
             try:
                 return self.draw(histograms)
             except Exception as e:
                 print(e)
         return []
+
+    def save(self, histograms):
+        histograms.save(self.outdir)
 
     def draw(self, histograms):
         datasets = ["MET", "SingleMuon", "SingleElectron"]
