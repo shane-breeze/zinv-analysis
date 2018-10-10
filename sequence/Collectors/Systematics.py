@@ -11,10 +11,44 @@ from drawing.dist_multicomp import dist_multicomp
 SystematicsReader = HistReader
 
 class SystematicsCollector(HistCollector):
+    def save(self, histograms):
+        df = histograms.histograms
+
+        # Remove variations from name and region
+        levels = df.index.names
+        df = df.reset_index(["name", "region", "weight"])
+        df["name"] = df.apply(lambda row: row["name"].replace(row["weight"], ""), axis=1)
+        df["region"] = df.apply(lambda row: row["region"].replace(row["weight"], ""), axis=1)
+        df = df.set_index(["name", "region", "weight"], append=True).reorder_levels(levels)
+
+        histograms.histograms = df
+        histograms.save(self.outdir)
+
     def draw(self, histograms):
         datasets = ["MET", "SingleMuon", "SingleElectron"]
-
         df = histograms.histograms
+
+        def rename_level_values(df, level, name_map):
+            levels = df.index.names
+            df = df.reset_index(level)
+            df[level] = df[level].map(name_map, na_action='ignore')
+            df = df[~df[level].isna()]
+            df = df.set_index(level, append=True).reorder_levels(levels)
+            return df
+
+        df = rename_level_values(df, "process", {
+            "ZJetsToNuNu":    "znunu",          "DYJetsToMuMu":   "zmumu",
+            "WJetsToENu":     "wlnu",           "WJetsToMuNu":    "wlnu",
+            "WJetsToTauNu":   "wlnu",           "QCD":            "qcd",
+            "TTJets":         "bkg",            "Diboson":        "bkg",
+            "DYJetsToEE":     "bkg",            "DYJetsToTauTau": "bkg",
+            "EWKV2Jets":      "bkg",            "SingleTop":      "bkg",
+            "G1Jet":          "bkg",            "VGamma":         "bkg",
+            "MET":            "MET",            "SingleMuon":     "SingleMuon",
+            "SingleElectron": "SingleElectron",
+        })
+        df = df.groupby(df.index.names).sum()
+
         all_columns = list(df.index.names)
         all_columns.insert(all_columns.index("weight"), "key")
         all_columns.remove("weight")
@@ -22,16 +56,11 @@ class SystematicsCollector(HistCollector):
         columns_nobins = [c for c in all_columns if "bin" not in c]
         columns_nobins_nokey = [c for c in columns_nobins if c != "key"]
 
-        # Remove variations from name and region
         df = df.reset_index("variable0", drop=True)
-        df = df.reset_index(["name", "region", "weight", "process"])
-        df["name"] = df.apply(lambda row: row["name"].replace(row["weight"], ""), axis=1)
-        df["region"] = df.apply(lambda row: row["region"].replace(row["weight"], ""), axis=1)
+        df = df.reset_index(["weight", "process"])
         df["key"] = df["weight"]
         df = df[~df["process"].isin(datasets)]
         df = df.drop("weight", axis=1)\
-                .set_index("name", append=True)\
-                .set_index("region", append=True)\
                 .set_index("key", append=True)\
                 .set_index("process", append=True)\
                 .reorder_levels(all_columns)
