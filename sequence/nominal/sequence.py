@@ -16,7 +16,6 @@ all_variations = ["jesUp", "jesDown",
                   "jerUp", "jerDown",
                   "unclustUp", "unclustDown"]
 
-
 certified_lumi_checker = Readers.CertifiedLumiChecker(
     name = "certified_lumi_checker",
     lumi_json_path = datapath + "/json/Cert_271036-284044_13TeV_23Sep2016ReReco_Collisions16_JSON.txt",
@@ -44,6 +43,7 @@ jet_cross_cleaning = Readers.ObjectCrossCleaning(
     name = "jet_cross_cleaning",
     collections = ("Jet",),
     ref_collections = ("MuonVeto", "ElectronVeto", "PhotonVeto"),
+    variations = all_variations,
 )
 
 tau_cross_cleaning = Readers.ObjectCrossCleaning(

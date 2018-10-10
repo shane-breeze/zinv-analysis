@@ -10,6 +10,11 @@ class ObjectCrossCleaning(object):
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
+        if not hasattr(self, "variations"):
+            self.variations = [""]
+        else:
+            self.variations.insert(0, "")
+
     def event(self, event):
         for collection_name in self.collections:
             collection = getattr(event, collection_name)
@@ -19,11 +24,12 @@ class ObjectCrossCleaning(object):
                 ref_collection = getattr(event, ref_collection_name)
                 selections = selections & comp(collection, ref_collection)
 
-            for cat in ["Veto", "Selection"]:
-                new_collection_name = collection_name + cat
-                old_selection = getattr(event, new_collection_name).selection
-                new_selection = old_selection & selections
-                getattr(event, new_collection_name).selection = new_selection
+            for variation in self.variations:
+                for cat in ["Veto", "Selection"]:
+                    new_collection_name = collection_name + cat + variation
+                    old_selection = getattr(event, new_collection_name).selection
+                    new_selection = old_selection & selections
+                    getattr(event, new_collection_name).selection = new_selection
 
 def comp(coll1, coll2):
     return comp_jit(coll1.eta.content, coll1.phi.content,
@@ -44,6 +50,7 @@ def comp_jit(etas1_cont, phis1_cont, starts_1, stops_1,
                 deta = etas1_cont[idx1] - etas2_cont[idx2]
                 dphi = phis1_cont[idx1] - phis2_cont[idx2]
 
+                # dR**2 < 0.4**2
                 if DeltaR2(deta, dphi) < 0.16:
                     content[idx1] = False
                     break

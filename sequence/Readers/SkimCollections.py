@@ -25,8 +25,6 @@ class SkimCollections(object):
 
     def event(self, event):
         for (input_collection, output_collection), selection in self.selection_functions.items():
-
-
             setattr(event, output_collection,
                     Collection(output_collection, event, input_collection,
                                getattr(event, input_collection)(selection)))

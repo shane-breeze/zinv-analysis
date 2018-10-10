@@ -13,7 +13,6 @@ class EventSumsProducer(object):
         event.METnoX = Collection("METnoX", event)
         event.DiMuon = Collection("DiMuon", event)
         event.MHT40 = Collection("MHT40", event)
-        event.LeadJetSelection = Collection("LeadJetSelection", event)
 
         # DiMuon
         dimu_pt, dimu_phi = create_dimuon(event.MuonSelection)

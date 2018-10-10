@@ -43,6 +43,7 @@ jet_cross_cleaning = Readers.ObjectCrossCleaning(
     name = "jet_cross_cleaning",
     collections = ("Jet",),
     ref_collections = ("MuonVeto", "ElectronVeto", "PhotonVeto"),
+    variations = all_variations,
 )
 
 tau_cross_cleaning = Readers.ObjectCrossCleaning(
