@@ -1,13 +1,19 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import logging
 
-pd.set_option('display.max_rows', None)
-pd.set_option('display.max_columns', None)
-pd.set_option('display.max_colwidth', -1)
-pd.set_option('display.width', None)
+logging.basicConfig()
+
+#pd.set_option('display.max_rows', None)
+#pd.set_option('display.max_columns', None)
+#pd.set_option('display.max_colwidth', -1)
+#pd.set_option('display.width', None)
 
 def dist_multicomp(df, filepath, cfg):
+    if "nominal" not in df.index.get_level_values("key").unique():
+        return df
+
     # Define columns
     all_keys = list(df.index.get_level_values("key").unique())
     all_keys_noupdown = list(set([k.replace("Up","").replace("Down","") for k in all_keys if k != "nominal"]))
@@ -24,13 +30,18 @@ def dist_multicomp(df, filepath, cfg):
         return indf
     df = df.groupby(columns_nobins).apply(truncate)
 
-    df = df.reset_index("bin0_low")
-    new_bins = [-np.inf]+list(np.linspace(50., 1000., 20))+[np.inf]
-    #new_bins = [-np.inf, 0., 200., 250., 300., 350., 400., 500., 600., 800., np.inf]
+    df = df.reset_index(["bin0_low", "bin0_upp"])
+    new_bins = list(np.linspace(0., 1000., 21))
+    test_bins = np.array(list(df["bin0_low"].unique())+list(df["bin0_upp"].unique()))
+    if not np.isin(new_bins, test_bins).all():
+        logger = logging.getLogger(__name__)
+        logger.warning("New bins don't fully intersect with the old bins")
+        return df
+
     df["merge_idx"] = df["bin0_low"].apply(
-        lambda b: next(idx for idx, nb in enumerate(new_bins[1:]) if b<nb),
+        lambda b: next(idx-1 for idx, nb in enumerate(new_bins+[np.inf]) if b<nb),
     )
-    df = df.set_index("bin0_low", append=True)\
+    df = df.set_index(["bin0_low", "bin0_upp"], append=True)\
             .reorder_levels(all_columns)\
             .groupby(columns_nobins+["merge_idx"]).sum()
 
@@ -74,7 +85,7 @@ def dist_multicomp(df, filepath, cfg):
     df_key_perc_down = (df_key_perc_down[sorted_keys]+1)
 
     # Get the global bins
-    bins = np.array(new_bins[1:-1])
+    bins = np.array(new_bins)
     bin_centers = (bins[1:]+bins[:-1])/2
     bin_widths = (bins[1:]-bins[:-1])
 
@@ -102,6 +113,16 @@ def dist_multicomp(df, filepath, cfg):
         ymax = max(top.max(), ymax)
         ymin = min(bot.min(), ymin)
 
+        top = top[(top.index.get_level_values("merge_idx")>=0) & \
+                  (top.index.get_level_values("merge_idx")<len(bins))]
+        bot = bot[(bot.index.get_level_values("merge_idx")>=0) & \
+                  (bot.index.get_level_values("merge_idx")<len(bins))]
+
+        if top.shape[0] < len(bins):
+            top = list(top)+[1]
+        if bot.shape[0] < len(bins):
+            bot = list(bot)+[1]
+
         ax.fill_between(
             bins, top, bot,
             step = 'post',
@@ -112,6 +133,16 @@ def dist_multicomp(df, filepath, cfg):
 
     top = np.sqrt(((df_key_perc_up[sorted_keys]-1)**2).sum(axis=1))+1
     bot = 1-np.sqrt(((df_key_perc_down[sorted_keys]-1)**2).sum(axis=1))
+
+    top = top[(top.index.get_level_values("merge_idx")>=0) & \
+              (top.index.get_level_values("merge_idx")<len(bins))]
+    bot = bot[(bot.index.get_level_values("merge_idx")>=0) & \
+              (bot.index.get_level_values("merge_idx")<len(bins))]
+
+    if top.shape[0] < len(bins):
+        top = list(top)+[1]
+    if bot.shape[0] < len(bins):
+        bot = list(bot)+[1]
 
     ax.step(bins, top, where='post', color='black', label='Total', lw=1.)
     ax.step(bins, bot, where='post', color='black', lw=1.)
@@ -125,7 +156,8 @@ def dist_multicomp(df, filepath, cfg):
     ax.set_ylabel(r'Relative impact', fontsize='large')
 
     yrange = max(ymax-1, 1-ymin)*1.05
-    ax.set_ylim((1-yrange, 1+yrange))
+    if not np.isinf(yrange):
+        ax.set_ylim((1-yrange, 1+yrange))
 
     # Report
     print("Creating {}.pdf".format(filepath))
