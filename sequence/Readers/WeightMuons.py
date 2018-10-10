@@ -104,14 +104,14 @@ class WeightMuons(object):
         corrs_trig_down = np.sqrt(corrs_trig_down**2 + (0.005)**2)
 
         corrs = corrs_id * corrs_iso * corrs_track
-        event.Weight_muonIdUp = corrs_id_up
-        event.Weight_muonIdDown = corrs_id_down
-        event.Weight_muonIsoUp = corrs_iso_up
-        event.Weight_muonIsoDown = corrs_iso_down
-        event.Weight_muonTrackUp = corrs_track_up
-        event.Weight_muonTrackDown = corrs_track_down
-        event.Weight_muonTrigUp = corrs_trig_up
-        event.Weight_muonTrigDown = corrs_trig_down
+        event.Weight_muonIdUp = 1 + corrs_id_up
+        event.Weight_muonIdDown = 1 - corrs_id_down
+        event.Weight_muonIsoUp = 1 + corrs_iso_up
+        event.Weight_muonIsoDown = 1 - corrs_iso_down
+        event.Weight_muonTrackUp = 1 + corrs_track_up
+        event.Weight_muonTrackDown = 1 - corrs_track_down
+        event.Weight_muonTrigUp = 1 + corrs_trig_up
+        event.Weight_muonTrigDown = 1 - corrs_trig_down
         event.Weight_MET *= corrs
         event.Weight_SingleMuon *= corrs * corrs_trig
         event.Weight_SingleElectron *= corrs
@@ -144,8 +144,8 @@ def get_correction_eta_jit(mueta, starts, stops, weights, inetabins,
                 sum_weight += weights[iw]
                 etabins = inetabins[iw]
                 corr = incorrs[iw]
-                corr_up = incorrs[iw]
-                corr_down = incorrs[iw]
+                corr_up = incorrs_up[iw]
+                corr_down = incorrs_down[iw]
 
                 # loop over correction bins
                 for ibin in range(etabins.shape[0]):
@@ -210,8 +210,8 @@ def get_correction_pt_abseta_jit(mupt, mueta, starts, stops, weights,
                 ptbins = inptbins[iw]
                 etabins = inetabins[iw]
                 corr = incorrs[iw]
-                corr_up = incorrs[iw]
-                corr_down = incorrs[iw]
+                corr_up = incorrs_up[iw]
+                corr_down = incorrs_down[iw]
 
                 # loop over correction bins
                 for ibin in range(ptbins.shape[0]):
