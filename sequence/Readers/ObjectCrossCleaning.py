@@ -15,6 +15,11 @@ class ObjectCrossCleaning(object):
         else:
             self.variations.insert(0, "")
 
+    def begin(self, event):
+        self.isdata = event.config.dataset.isdata
+        if self.isdata:
+            self.variations = [""]
+
     def event(self, event):
         for collection_name in self.collections:
             collection = getattr(event, collection_name)
