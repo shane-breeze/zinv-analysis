@@ -80,8 +80,6 @@ def dist_comp(df, filepath, cfg):
 
     axtop.set_xlim(bins[0], bins[-1])
 
-
-
     # Add CMS text to top + energy + lumi
     axtop.text(0, 1, r'$\mathbf{CMS}\ \mathit{Preliminary}$',
                horizontalalignment='left',

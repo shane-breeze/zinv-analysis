@@ -62,7 +62,7 @@ def read_file(path, overflow=True):
     bins = np.array([map(float, l[1:3]) for l in lines])
     corr = np.array([float(l[3]) for l in lines])
     corr_up = np.array([1.+float(l[5]) for l in lines])
-    corr_down = np.array([1.+float(l[4]) for l in lines])
+    corr_down = np.array([1.-float(l[4]) for l in lines])
 
     if overflow:
         bins[-1,-1] = np.infty
