@@ -18,7 +18,10 @@ if __name__ == "__main__":
     with gzip.open(path, 'rb') as f:
         package = pickle.load(f)
 
-    print("TaskPackage(")
-    print("\tname = {}".format(package.task.progressbar_label))
-    print("\tinputPaths = {}".format(package.task.build_events.config.inputPaths))
-    print(")")
+    if hasattr(package.task, 'progressbar_label'):
+        print("TaskPackage(")
+        print("\tname = {}".format(package.task.progressbar_label))
+        print("\tinputPaths = {}".format(package.task.build_events.config.inputPaths))
+        print(")")
+    else:
+        print(dir(package))
