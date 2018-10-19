@@ -24,6 +24,17 @@ def make_error_boxes(ax, xlow, xhigh, ylow, yhigh, facecolor='r',
     return errorboxes[0]
 
 def dist_scatter_pull(df, variations, filepath, cfg):
+    # # change stuff
+    # bin1_low = df.index.get_level_values("bin1_low").values
+    # bin1_upp = df.index.get_level_values("bin1_upp").values
+
+    # infidx = np.where(np.isinf(bin1_upp))[0]
+    # bin1_upp[infidx] = 2*bin1_upp[infidx-1] - bin1_upp[infidx-2]
+    # df = df.divide((bin1_upp+bin1_low)/2, axis=0)
+    # df["mean"] = df["mean"] + 1
+    # cfg.ylabel = r'$\mu(E_{T,\parallel}^{miss}-p_{T}(\mu\mu)) / \langle p_{T}(\mu\mu) \rangle - 1$'
+    # cfg.ylabel = r'$\mu(E_{T,\perp}^{miss}) / \langle p_{T}(\mu\mu) \rangle + 1$'
+
     datasets = ["MET", "SingleMuon", "SingleElectron"]
     attr = df.columns[0]
 
