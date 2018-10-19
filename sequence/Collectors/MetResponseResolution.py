@@ -29,6 +29,7 @@ class MetResponseResolutionReader(HistReader):
 class MetResponseResolutionCollector(HistCollector):
     def __init__(self, **kwargs):
         super(MetResponseResolutionCollector, self).__init__(**kwargs)
+        self.variations = [v for v in self.variations if v != ""]
         self.cfg.log = False
 
     def draw(self, histograms):
@@ -46,6 +47,7 @@ class MetResponseResolutionCollector(HistCollector):
         columns_noproc.insert(columns_noproc.index("region")+1, "variation")
         columns_nobin0.insert(columns_nobin0.index("region")+1, "variation")
         columns_noproc_nobin0.insert(columns_noproc_nobin0.index("region")+1, "variation")
+
         df["region"] = df.index.get_level_values("region")
         df["variation"] = df["region"].apply(lambda x: next((v for v in self.variations if v in x), "nominal"))
         df = df.set_index("variation", append=True)
@@ -175,6 +177,7 @@ class MetResponseResolutionCollector(HistCollector):
             df_fit.index.get_level_values("process").isin(datasets)\
             & (df_fit.index.get_level_values("process")\
                != df_fit.index.get_level_values("dataset")))]
+
         for cat, df_group in df_fit.groupby(columns_noproc_nobin0_novar_nobin1):
             df_grp = df_group[["mean", "mean_unc", "width", "width_unc"]]
             df_nominal = df_grp[df_grp.index.get_level_values("variation").isin(["nominal"])]\
@@ -204,6 +207,8 @@ class MetResponseResolutionCollector(HistCollector):
                 cfg.ylabel = ylabel
 
                 #dist_scatter_pull(df_toplot, self.variations, filepath, cfg)
+                with open(filepath+".pkl", 'w') as f:
+                    pickle.dump((df_toplot, self.variations, filepath, cfg), f)
                 args.append((dist_scatter_pull, (df_toplot, self.variations, filepath, cfg)))
 
         return args
