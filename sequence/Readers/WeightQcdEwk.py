@@ -1,5 +1,6 @@
 import numpy as np
-from numba import njit, float32
+import pandas as pd
+from numba import njit, int32
 from utils.Lambda import Lambda
 
 class WeightQcdEwk(object):
@@ -11,40 +12,91 @@ class WeightQcdEwk(object):
         if self.parent not in self.input_paths:
             return
 
-        self.lambda_formula = Lambda(self.formula)
+        input_dict = {}
+        global_bin_min = None
+        global_bin_max = None
+        for param in self.params:
+            path, key = self.input_paths[self.parent]
+            bin_min, bin_max, correction, _, _ = read_input(path, key.format(param))
 
-        # {correction_name : (bin_min, bin_max, correction, errdown, errup)}
-        self.input_dicts = {
-            name: read_input(path, key)
-            for name, (path, key) in self.input_paths[self.parent].items()
-        }
+            if global_bin_min is None:
+                global_bin_min = bin_min
+            if global_bin_max is None:
+                global_bin_max = bin_max
 
-    def end(self):
-        self.lambda_formula = None
+            assert np.all(global_bin_min == bin_min)
+            assert np.all(global_bin_max == bin_max)
+
+            input_dict[param] = correction
+
+        input_df = pd.DataFrame(input_dict)
+        input_df["bin_min"] = global_bin_min
+        input_df["bin_max"] = global_bin_max
+        input_df = input_df.set_index(["bin_min", "bin_max"])
+
+        input_df["isz"] = self.parent in ["ZJetsToNuNu", "DYJetsToLL"]
+        input_df["isw"] = self.parent in ["WJetsToLNu"]
+
+        # nominal
+        columns = [""]
+        for nuisance in self.nuisances:
+            input_df[nuisance] = 0
+        input_df[""] = input_df.eval(self.formula)
+
+        # Up/down variations
+        for nuisance in self.nuisances:
+            input_df[nuisance] = 1
+            input_df[nuisance+"Up"] = input_df.eval(self.formula)
+            input_df[nuisance] = -1
+            input_df[nuisance+"Down"] = input_df.eval(self.formula)
+            input_df[nuisance] = 0
+            columns.append(nuisance+"Up")
+            columns.append(nuisance+"Down")
+        self.variations = columns
+        input_df = input_df[columns]
+
+        if self.overflow:
+            ser = input_df.iloc[-1,:]
+            ser.name = (ser.name[-1], np.inf)
+            input_df = input_df.append(ser)
+        if self.underflow:
+            ser = input_df.iloc[0,:]
+            ser.name = (-np.inf, ser.name[0])
+            input_df = input_df.append(ser)
+            input_df.iloc[-1,:] = 1
+        self.input_df = input_df.sort_index()
+        #self.input_df = input_df.reset_index()
 
     def event(self, event):
         if self.parent not in self.input_paths:
             weights = np.ones(event.size)
+            event.WeightQcdEwk = weights
+            for variation in self.variations[1:]:
+                setattr(event, "WeightQcdEwk_{}".format(variation), weights)
         else:
-            corrections = {
-                name: get_corrections(event.GenPartBoson_pt, binmin, binmax, corr)
-                for name, (binmin, binmax, corr, errdown, errup) in self.input_dicts.items()
-            }
-            weights = self.lambda_formula(**corrections)
-        event.WeightQCDEWK = weights
-        event.Weight_MET *= event.WeightQCDEWK
-        event.Weight_SingleMuon *= event.WeightQCDEWK
-        event.Weight_SingleElectron *= event.WeightQCDEWK
+            corrections = self.input_df.iloc[get_bin_indices(
+                event.GenPartBoson_pt,
+                self.input_df.index.get_level_values("bin_min").values,
+                self.input_df.index.get_level_values("bin_max").values,
+            )]
+            event.WeightQcdEwk = corrections[""].values
+            for variation in self.variations[1:]:
+                setattr(event, "WeightQcdEwk_{}".format(variation),
+                        (corrections[variation]/corrections[""]).values)
+
+        event.Weight_MET *= event.WeightQcdEwk
+        event.Weight_SingleMuon *= event.WeightQcdEwk
+        event.Weight_SingleElectron *= event.WeightQcdEwk
 
 @njit
-def get_corrections(boson_pts, bin_mins, bin_maxs, corrections):
-    weights = np.zeros(boson_pts.shape[0], dtype=float32)
-    for iev, boson_pt in enumerate(boson_pts):
-        for ib, (bin_min, bin_max) in enumerate(zip(bin_mins, bin_maxs)):
-            if bin_min <= boson_pt < bin_max:
-                weights[iev] = corrections[ib]
+def get_bin_indices(vals, mins, maxs):
+    idxs = -1*np.ones_like(vals, dtype=int32)
+    for iev, val in enumerate(vals):
+        for ib, (bin_min, bin_max) in enumerate(zip(mins, maxs)):
+            if bin_min <= val < bin_max:
+                idxs[iev] = ib
                 break
-    return weights
+    return idxs
 
 def read_input(path, histname):
     with open(path, 'r') as f:
