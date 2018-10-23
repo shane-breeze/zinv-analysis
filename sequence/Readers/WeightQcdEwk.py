@@ -8,6 +8,10 @@ class WeightQcdEwk(object):
         self.__dict__.update(kwargs)
 
     def begin(self, event):
+        self.variations = [""]\
+                + [n+"Up" for n in self.nuisances]\
+                + [n+"Down" for n in self.nuisances]
+
         self.parent = event.config.dataset.parent
         if self.parent not in self.input_paths:
             return
@@ -52,7 +56,6 @@ class WeightQcdEwk(object):
             input_df[nuisance] = 0
             columns.append(nuisance+"Up")
             columns.append(nuisance+"Down")
-        self.variations = columns
         input_df = input_df[columns]
 
         if self.overflow:
