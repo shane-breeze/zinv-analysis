@@ -55,7 +55,7 @@ class JecVariations(object):
         )
         delta_jerup = cjerup - cjer
         delta_jerdown = cjer - cjerdown
-        if not self.do_jer:
+        if not self.apply_jer_corrections:
             cjer = np.ones(cjer.shape)
         event.Jet_jerCorrection = uproot.interp.jagged.JaggedArray(
             cjer, event.Jet.starts, event.Jet.stops,
