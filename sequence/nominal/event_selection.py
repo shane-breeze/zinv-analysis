@@ -8,11 +8,15 @@ filter_selection = "ev: (ev.Flag_goodVertices>0.5) & "\
                        "(ev.Flag_HBHENoiseFilter>0.5) & "\
                        "(ev.Flag_HBHENoiseIsoFilter>0.5) & "\
                        "(ev.Flag_EcalDeadCellTriggerPrimitiveFilter>0.5) & "\
-                       "(ev.Flag_eeBadScFilter>0.5)"
+                       "(ev.Flag_eeBadScFilter>0.5) & "\
+                       "(ev.Flag_BadChargedCandidateFilter>0.5) & "\
+                       "(ev.Flag_BadGlobalMuon>0.5) & "\
+                       "(ev.Flag_BadPFMuonFilter>0.5) & "\
+                       "(ev.Flag_CloneGlobalMuon>0.5)"
 met_selection = "ev: ev.METnoX.pt > 200."
 dphi_jet_met_selection = "ev: ev.MinDPhiJ1234METnoX > 0.5"
 dphi_jet_met_inv_selection = "ev: ev.MinDPhiJ1234METnoX <= 0.5"
-dcalo_pfmet_selection = "ev: ev.MET.dCaloMET < 0.5"
+#dcalo_pfmet_selection = "ev: ev.MET.dCaloMET < 0.5"
 jet_selection = "ev: (ev.JetSelection.size > 0) & "\
                     "(ev.JetSelection.size == ev.JetVeto.size) & "\
                     "(ev.LeadJetSelection.pt > 200.) & "\
@@ -26,7 +30,7 @@ tau_veto = "ev: (ev.TauSelection.size == ev.TauVeto.size) & (ev.TauVeto.size == 
 mtw_selection = "ev: (ev.MTW >= 30.) & (ev.MTW < 125.)"
 mll_selection = "ev: (ev.MLL >= 71.) & (ev.MLL < 111.)"
 
-large_weight_removal = "ev: (ev.Weight_MET<100.) & (ev.Weight_SingleMuon<100.)"
+#large_weight_removal = "ev: (ev.Weight_MET<100.) & (ev.Weight_SingleMuon<100.)"
 ngen_boson_selection = "ev: True if ev.config.parent not in 'EWKV2Jets' else (ev.nGenBosons==1)"
 
 blind_mask = "ev: ev.BlindMask"
@@ -39,17 +43,19 @@ event_selection.data_selection = [
     ("trigger_selection", trigger_selection),
 ]
 
-event_selection.mc_selection = []
+event_selection.mc_selection = [
+    ("ngen_boson_selection", ngen_boson_selection),
+]
 
 event_selection.baseline_selection = [
     ("filter_selection", filter_selection),
     ("met_selection", met_selection),
-    ("dcalo_pfmet_selection", dcalo_pfmet_selection),
+    #("dcalo_pfmet_selection", dcalo_pfmet_selection),
     ("jet_selection", jet_selection),
     ("pho_veto", pho_veto),
     ("nbjet_veto", nbjet_veto),
     ("tau_veto", tau_veto),
-    ("large_weight_removal", large_weight_removal),
+    #("large_weight_removal", large_weight_removal),
 ]
 
 event_selection.monojet_selection = [

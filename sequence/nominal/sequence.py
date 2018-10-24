@@ -157,7 +157,7 @@ weight_qcd_ewk = Readers.WeightQcdEwk(
     underflow = True,
     overflow = True,
     formula = "1 + kappa_EW + d1k_ew*d1kappa_EW + isz*(d2k_ew_z*d2kappa_EW + d3k_ew_z*d3kappa_EW)"\
-                                               "+ isw*(d2k_ew_w*d2kappa_EW + d3k_ew_w*d3kappa_EW)"\
+                                               "+ isw*(d2k_ew_w*d2kappa_EW + d3k_ew_w*d3kappa_EW)",
     params = ["kappa_EW", "d1kappa_EW", "d2kappa_EW", "d3kappa_EW"],
     nuisances = ["d1k_ew", "d2k_ew_z", "d2k_ew_w", "d3k_ew_z", "d3k_ew_w"],
 )
