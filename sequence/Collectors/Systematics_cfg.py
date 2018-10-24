@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from utils.Colours import colours_dict
 
 inf = np.infty
@@ -25,6 +26,16 @@ monojet_variations = [
     ("pileupDown",    "ev: ev.Weight_{dataset}*ev.Weight_pileupDown"),
     ("metTrigSFUp",   "ev: ev.Weight_{dataset}*ev.Weight_metTrigSFUp"),
     ("metTrigSFDown", "ev: ev.Weight_{dataset}*ev.Weight_metTrigSFDown"),
+    ("d1k_ewUp",      "ev: ev.Weight_{dataset}*ev.WeightQcdEwk_d1k_ewUp"),
+    ("d1k_ewDown",    "ev: ev.Weight_{dataset}*ev.WeightQcdEwk_d1k_ewDown"),
+    ("d2k_ew_zUp",    "ev: ev.Weight_{dataset}*ev.WeightQcdEwk_d2k_ew_zUp"),
+    ("d2k_ew_zDown",  "ev: ev.Weight_{dataset}*ev.WeightQcdEwk_d2k_ew_zDown"),
+    ("d2k_ew_wUp",    "ev: ev.Weight_{dataset}*ev.WeightQcdEwk_d2k_ew_wUp"),
+    ("d2k_ew_wDown",  "ev: ev.Weight_{dataset}*ev.WeightQcdEwk_d2k_ew_wDown"),
+    ("d3k_ew_zUp",    "ev: ev.Weight_{dataset}*ev.WeightQcdEwk_d3k_ew_zUp"),
+    ("d3k_ew_zDown",  "ev: ev.Weight_{dataset}*ev.WeightQcdEwk_d3k_ew_zDown"),
+    ("d3k_ew_wUp",    "ev: ev.Weight_{dataset}*ev.WeightQcdEwk_d3k_ew_wUp"),
+    ("d3k_ew_wDown",  "ev: ev.Weight_{dataset}*ev.WeightQcdEwk_d3k_ew_wDown"),
 ]
 
 muon_met_variations = monojet_variations + [
@@ -83,18 +94,25 @@ histogrammer_cfgs = [
                         "unclustUp", "unclustDown"]
 ]
 
+cmap = plt.cm.viridis
+colors = [cmap(i) for i in np.linspace(0, 1, 15)]
 sample_colours = {
     "nominal":   "black",
-    "mcstat":    colours_dict["gray"],
-    "pileup":    colours_dict["mint"],
-    "metTrigSF": colours_dict["blue"],
-    "muonId":    colours_dict["green"],
-    "muonIso":   colours_dict["orange"],
-    "muonTrack": colours_dict["gold"],
-    "muonTrig":  colours_dict["purple"],
-    "jes":       colours_dict["red"],
-    "jer":       colours_dict["pink"],
-    "unclust":   colours_dict["violet"],
+    "mcstat":    colors[0],
+    "pileup":    colors[1],
+    "metTrigSF": colors[2],
+    "muonId":    colors[3],
+    "muonIso":   colors[4],
+    "muonTrack": colors[5],
+    "muonTrig":  colors[6],
+    "jes":       colors[7],
+    "jer":       colors[8],
+    "unclust":   colors[9],
+    "d1k_ew":    colors[10],
+    "d2k_ew_z":  colors[11],
+    "d2k_ew_w":  colors[12],
+    "d3k_ew_z":  colors[13],
+    "d3k_ew_w":  colors[14],
 }
 
 sample_names = {
@@ -109,6 +127,11 @@ sample_names = {
     "jes":       "JES",
     "jer":       "JER",
     "unclust":   "Unclust. En.",
+    "d1k_ew":    r'$\delta^{1}\kappa_{EW}$',
+    "d2k_ew_z":  r'$\delta^{2}\kappa_{EW}^{Z}$',
+    "d2k_ew_w":  r'$\delta^{2}\kappa_{EW}^{W}$',
+    "d3k_ew_z":  r'$\delta^{3}\kappa_{EW}^{Z}$',
+    "d3k_ew_w":  r'$\delta^{3}\kappa_{EW}^{W}$',
 }
 
 axis_label = {
