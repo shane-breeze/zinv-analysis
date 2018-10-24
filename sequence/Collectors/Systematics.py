@@ -1,3 +1,4 @@
+import numpy as np
 import os
 import operator
 import copy
@@ -7,6 +8,7 @@ except ImportError: import pickle
 from utils.Histogramming import Histograms
 from Histogrammer import Config, HistReader, HistCollector
 from drawing.dist_multicomp import dist_multicomp
+from drawing.dist_facet import dist_facet
 
 SystematicsReader = HistReader
 
@@ -55,6 +57,7 @@ class SystematicsCollector(HistCollector):
         all_columns.remove("variable0")
         columns_nobins = [c for c in all_columns if "bin" not in c]
         columns_nobins_nokey = [c for c in columns_nobins if c != "key"]
+        columns_nobins_nokey_noproc = [c for c in columns_nobins_nokey if c != "process"]
 
         df = df.reset_index("variable0", drop=True)
         df = df.reset_index(["weight", "process"])
@@ -92,5 +95,36 @@ class SystematicsCollector(HistCollector):
             with open(filepath+".pkl", 'w') as f:
                 pickle.dump((df_group, filepath, cfg), f)
             args.append((dist_multicomp, (df_group, filepath, cfg)))
+
+        for categories, df_group in df.groupby(columns_nobins_nokey_noproc):
+            # Create output directory structure
+            path = os.path.join(self.outdir, "plots", *categories[:2])
+            if not os.path.exists(path):
+                os.makedirs(path)
+            filepath = os.path.abspath(os.path.join(path, "__".join(categories[2:])))
+
+            # mc stat
+            df_unstack = df_group["yield"].unstack(level="key")
+            df_mcstat = np.sqrt(df_group["variance"].unstack(level="key")["nominal"])
+            df_unstack["mcstatUp"] = df_unstack["nominal"]+df_mcstat
+            df_unstack["mcstatDown"] = df_unstack["nominal"]-df_mcstat
+
+            # process order from total yield
+            process_order = df_unstack["nominal"].groupby("process").sum()\
+                    .sort_values(ascending=False).index.values
+
+            # take ratio and remove nominal column
+            df_unstack = df_unstack.divide(df_unstack["nominal"], axis="index")
+            df_unstack = df_unstack[[c for c in df_unstack.columns if c != "nominal"]]
+
+            # Create args list for post-processing drawing
+            cfg = copy.deepcopy(self.cfg)
+            cfg.process_order = process_order
+            cfg.xlabel = cfg.axis_label.get(categories[2], categories[2])
+            cfg.ylabel = "Relative uncertainty"
+            cfg.name = categories[1]
+            with open(filepath+".pkl", 'w') as f:
+                pickle.dump((df_unstack, filepath, cfg), f)
+            args.append((dist_facet, (df_unstack, filepath, cfg)))
 
         return args
