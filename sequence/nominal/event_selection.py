@@ -31,7 +31,7 @@ mtw_selection = "ev: (ev.MTW >= 30.) & (ev.MTW < 125.)"
 mll_selection = "ev: (ev.MLL >= 71.) & (ev.MLL < 111.)"
 
 #large_weight_removal = "ev: (ev.Weight_MET<100.) & (ev.Weight_SingleMuon<100.)"
-ngen_boson_selection = "ev: True if ev.config.parent not in 'EWKV2Jets' else (ev.nGenBosons==1)"
+ngen_boson_selection = "ev: True if ev.config.dataset.parent not in 'EWKV2Jets' else (ev.nGenBosons==1)"
 
 blind_mask = "ev: ev.BlindMask"
 metsb_selection = "ev: ev.METnoX.pt <= 250."

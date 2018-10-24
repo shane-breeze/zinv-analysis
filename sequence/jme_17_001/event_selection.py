@@ -20,7 +20,7 @@ ele_selection = "ev: (ev.ElectronSelection.size == ev.ElectronVeto.size) & (ev.E
 mtw_selection = "ev: (ev.MTW >= 30.) & (ev.MTW < 125.)"
 mll_selection = "ev: (ev.MLL >= 80.) & (ev.MLL < 100.)"
 
-ngen_boson_selection = "ev: True if ev.config.parent not in 'EWKV2Jets' else (ev.nGenBosons==1)"
+ngen_boson_selection = "ev: True if ev.config.dataset.parent not in 'EWKV2Jets' else (ev.nGenBosons==1)"
 
 # Selections
 event_selection.data_selection = [

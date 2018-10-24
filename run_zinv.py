@@ -92,6 +92,7 @@ vmem_dict = {
     "WZTo2Q2Nu": 12,
     "WZTo3L1Nu": 16,
     "ZZTo2Q2Nu": 12,
+    "ZZTo4Q": 12,
     "WWTo2L2Nu": 12,
     "WWTo4Q": 16,
     "ZGToNuNuG": 12,
@@ -131,8 +132,8 @@ vmem_dict = {
     "SingleTop_s-channel_InclusiveDecays": 12,
     "SingleTop_t-channel_top_InclusiveDecays": 16,
     "SingleTop_t-channel_antitop_InclusiveDecays": 16,
-    "SingleTop_tW_top_InclusiveDecays": 12,
-    "SingleTop_tW_antitop_InclusiveDecays": 12,
+    "SingleTop_tW_top_InclusiveDecays": 16,
+    "SingleTop_tW_antitop_InclusiveDecays": 16,
     "EWKZToNuNu2Jets_ext2": 12,
 }
 def run(sequence, datasets, options):
