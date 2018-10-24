@@ -4,7 +4,7 @@ import sys
 import warnings
 warnings.filterwarnings('ignore')
 
-from atuproot.AtUproot import AtUproot
+from atuproot.atuproot_main import AtUproot
 from atsge.build_parallel import build_parallel
 from utils.grouped_run import grouped_run
 from datasets.datasets import get_datasets
@@ -18,7 +18,7 @@ logging.getLogger("atsge.SGEJobSubmitter").setLevel(logging.INFO)
 logging.getLogger(__name__).propagate = False
 logging.getLogger("alphatwirl").propagate = False
 logging.getLogger("atsge.SGEJobSubmitter").propagate = False
-logging.getLogger("atuproot.AtUproot").propagate = False
+logging.getLogger("atuproot.atuproot_main").propagate = False
 
 import argparse
 def parse_args():
