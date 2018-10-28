@@ -1,251 +1,127 @@
+from utils.Lambda import Lambda
+from utils.NumbaFuncs import get_bin_indices
 import numpy as np
-from numba import njit, float32
+import pandas as pd
 
 class WeightMuons(object):
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
+        # Add dataframes to correctors
+        for corrector in self.correctors:
+            dfs = []
+            for w, path in corrector["weighted_paths"]:
+                ndims = len(corrector["binning_variables"])
+                file_form = [("bin{}_low".format(idx), "bin{}_upp".format(idx))
+                             for idx in range(ndims)]
+                file_form = [bin_label
+                             for bin_pair in file_form
+                             for bin_label in bin_pair] + ["corr", "unc_up", "unc_down"]
+                df = pd.DataFrame(read_file(path, file_form))
+
+                for idx in range(ndims):
+                    bin_low = "bin{}_low".format(idx)
+                    bin_upp = "bin{}_upp".format(idx)
+                    df.loc[df[bin_low]==df[bin_low].min(), bin_low] = -np.inf
+                    df.loc[df[bin_upp]==df[bin_upp].max(), bin_upp] =  np.inf
+
+                df["weight"] = w
+                dfs.append(df)
+            corrector["df"] = pd.concat(dfs)
+
     def begin(self, event):
-        # ID
-        self.weights_id, self.corrections_id = zip(*[
-            (w, read_file(path, form=["ptlow", "pthigh", "absetalow", "absetahigh", "corr", "unc"]))
-            for w, path in self.correction_id_paths
-        ])
-        self.weights_id = np.array(self.weights_id)
-        self.corrections_id = [
-            [np.array(zip(*[sf.pop("ptlow"), sf.pop("pthigh")])),
-             np.array(zip(*[sf.pop("absetalow"), sf.pop("absetahigh")])),
-             np.array(sf["corr"]), np.array(sf["unc"]), np.array(sf.pop("unc"))]
-            for sf in self.corrections_id
-        ]
-        for sf in self.corrections_id:
-            sf[0][sf[0]==np.min(sf[0])] = 0.
-            sf[0][sf[0]==np.max(sf[0])] = np.infty
-            sf[1][sf[1]==np.min(sf[1])] = 0.
-            sf[1][sf[1]==np.max(sf[1])] = np.infty
+        funcs = [corrector["binning_variables"] for corrector in self.correctors]
+        self.string_to_func = {func: Lambda(func) for func in [f for fs in funcs for f in fs]}
 
-        # ISO
-        self.weights_iso, self.corrections_iso = zip(*[
-            (w, read_file(path, form=["ptlow", "pthigh", "absetalow", "absetahigh", "corr", "unc"]))
-            for w, path in self.correction_iso_paths
-        ])
-        self.weights_iso = np.array(self.weights_iso)
-        self.corrections_iso = [
-            [np.array(zip(*[sf.pop("ptlow"), sf.pop("pthigh")])),
-             np.array(zip(*[sf.pop("absetalow"), sf.pop("absetahigh")])),
-             np.array(sf["corr"]), np.array(sf["unc"]), np.array(sf.pop("unc"))]
-            for sf in self.corrections_iso
-        ]
-        for sf in self.corrections_iso:
-            sf[0][sf[0]==np.min(sf[0])] = 0.
-            sf[0][sf[0]==np.max(sf[0])] = np.infty
-            sf[1][sf[1]==np.min(sf[1])] = 0.
-            sf[1][sf[1]==np.max(sf[1])] = np.infty
-
-        # Tracking
-        self.weights_track, self.corrections_track = zip(*[
-            (w, read_file(path, form=["etalow", "etahigh", "corr", "unc_down", "unc_up"]))
-            for w, path in self.correction_track_paths
-        ])
-        self.weights_track = np.array(self.weights_track)
-        self.corrections_track = [
-            [np.array(zip(*[sf.pop("etalow"), sf.pop("etahigh")])),
-             np.array(sf["corr"]), np.array(sf.pop("unc_up")), np.array(sf.pop("unc_down"))]
-            for sf in self.corrections_track
-        ]
-        for sf in self.corrections_track:
-            sf[0][sf[0]==np.min(sf[0])] = -np.infty
-            sf[0][sf[0]==np.max(sf[0])] = np.infty
-
-        # Trigger
-        self.weights_trig, self.corrections_trig = zip(*[
-            (w, read_file(path, form=["ptlow", "pthigh", "absetalow", "absetahigh", "corr", "unc"]))
-            for w, path in self.correction_trig_paths
-        ])
-        self.weights_trig = np.array(self.weights_trig)
-        self.corrections_trig = [
-            [np.array(zip(*[sf.pop("ptlow"), sf.pop("pthigh")])),
-             np.array(zip(*[sf.pop("absetalow"), sf.pop("absetahigh")])),
-             np.array(sf["corr"]), np.array(sf["unc"]), np.array(sf.pop("unc"))]
-            for sf in self.corrections_trig
-        ]
-        for sf in self.corrections_trig:
-            sf[0][sf[0]==np.min(sf[0])] = 0.
-            sf[0][sf[0]==np.max(sf[0])] = np.infty
-            sf[1][sf[1]==np.min(sf[1])] = 0.
-            sf[1][sf[1]==np.max(sf[1])] = np.infty
+    def end(self):
+        self.string_to_func = {}
 
     def event(self, event):
-        # ID
-        corrs_id, corrs_id_up, corrs_id_down = get_correction_pt_abseta(
-            event.MuonSelection, self.weights_id, self.corrections_id,
-        )
-        corrs_id_up = np.sqrt(corrs_id_up**2 + (0.01)**2)
-        corrs_id_down = np.sqrt(corrs_id_down**2 + (0.01)**2)
+        event_sfs = {}
+        for corrector in self.correctors:
+            # Get required objects
+            df = corrector["df"]
+            nweight = df["weight"].unique().shape[0]
 
-        # ISO
-        corrs_iso, corrs_iso_up, corrs_iso_down = get_correction_pt_abseta(
-            event.MuonSelection, self.weights_iso, self.corrections_iso,
-        )
-        corrs_iso_up = np.sqrt(corrs_iso_up**2 + (0.005)**2)
-        corrs_iso_down = np.sqrt(corrs_iso_down**2 + (0.005)**2)
+            name = corrector["name"]
+            collection = getattr(event, corrector["collection"])
+            vars = corrector["binning_variables"]
+            any_pass = corrector["any_pass"] if "any_pass" in corrector else False
+            add_syst = corrector["add_syst"] if "add_syst" in corrector else 0.
+            event_vars = [self.string_to_func[v](collection) for v in vars]
 
-        # Track
-        corrs_track, corrs_track_up, corrs_track_down = get_correction_eta(
-            event.MuonSelection, self.weights_track, self.corrections_track,
-        )
+            # Select bin from reference table
+            indices = None
+            scale = 1
+            for idx in range(len(vars)):
+                bin_low = np.unique(df["bin{}_low".format(idx)].values)
+                bin_upp = np.unique(df["bin{}_upp".format(idx)].values)
 
-        # Trig
-        corrs_trig, corrs_trig_up, corrs_trig_down = get_correction_pt_abseta(
-            event.MuonSelection, self.weights_trig, self.corrections_trig,
-            any_pass = True,
-        )
-        corrs_trig_up = np.sqrt(corrs_trig_up**2 + (0.005)**2)
-        corrs_trig_down = np.sqrt(corrs_trig_down**2 + (0.005)**2)
+                ind = get_bin_indices(event_vars[idx], bin_low, bin_upp)
+                if indices is None:
+                    indices = ind
+                else:
+                    indices += scale*ind
+                scale *= bin_low.shape[0]
+            dfw = df.loc[indices]
 
-        corrs = corrs_id * corrs_iso * corrs_track
-        event.Weight_muonIdUp = 1 + corrs_id_up
-        event.Weight_muonIdDown = 1 - corrs_id_down
-        event.Weight_muonIsoUp = 1 + corrs_iso_up
-        event.Weight_muonIsoDown = 1 - corrs_iso_down
-        event.Weight_muonTrackUp = 1 + corrs_track_up
-        event.Weight_muonTrackDown = 1 - corrs_track_down
-        event.Weight_muonTrigUp = 1 + corrs_trig_up
-        event.Weight_muonTrigDown = 1 - corrs_trig_down
-        event.Weight_MET *= corrs
-        event.Weight_SingleMuon *= corrs * corrs_trig
-        event.Weight_SingleElectron *= corrs
+            # Add event and object index to event correction table
+            evidx = np.zeros_like(collection.pt.content, dtype=int)
+            objidx = np.zeros_like(collection.pt.content,dtype=int)
+            for idx, (start, stop) in enumerate(zip(collection.starts, collection.stops)):
+                evidx[start:stop] = idx
+                for subidx in range(start, stop):
+                    objidx[subidx] = subidx-start
+            evidx = np.vstack([evidx]*nweight).T.ravel()
+            objidx = np.vstack([objidx]*nweight).T.ravel()
+            dfw["evidx"] = evidx
+            dfw["objidx"] = objidx
 
-def get_correction_eta(muons, weights, corrections, any_pass=False):
-    etabins, corrs, corrs_up, corrs_down = [x for x in zip(*corrections)]
-    return get_correction_eta_jit(
-        muons.eta.content, muons.eta.starts, muons.eta.stops,
-        weights, etabins, corrs, corrs_up, corrs_down, any_pass=any_pass,
-    )
+            # Evaluate relevant weighted mean variables
+            dfw = dfw.set_index(["evidx", "objidx"])
+            dfw["w_corr"] = dfw.eval("weight*corr")
+            dfw["w_up"] = dfw.eval("(weight*unc_up)**2")
+            dfw["w_down"] = dfw.eval("(weight*unc_down)**2")
+            dfw = dfw.loc[:,["weight", "w_corr", "w_up", "w_down"]]
+            dfw = dfw.groupby(["evidx", "objidx"]).sum()
+            dfw["w_up"] = np.sqrt(dfw["w_up"])
+            dfw["w_down"] = np.sqrt(dfw["w_down"])
+            dfw = dfw.divide(dfw["weight"], axis=0)
 
-@njit
-def get_correction_eta_jit(mueta, starts, stops, weights, inetabins,
-                           incorrs, incorrs_up, incorrs_down, any_pass=False):
-    nev = stops.shape[0]
-    outcorrs = np.ones(nev, dtype=float32)
-    outcorrs_up = np.ones(nev, dtype=float32)
-    outcorrs_down = np.ones(nev, dtype=float32)
+            # Calculate event uncertainties
+            dfw["add_syst"] = add_syst
+            dfsf = pd.concat([
+                np.sqrt(dfw.eval("w_up**2 + (w_corr*add_syst)**2").groupby("evidx").sum()),
+                np.sqrt(dfw.eval("w_down**2 + (w_corr*add_syst)**2").groupby("evidx").sum()),
+            ], axis=1)
+            dfsf.columns = ["sf_up", "sf_down"]
 
-    # loop over events
-    for iev, (start, stop) in enumerate(zip(starts, stops)):
-        sf, sf_up2, sf_down2 = 1., 0., 0.
-
-        # loop over muons
-        for imu in range(start, stop):
-            sum_weight, sum_weightcorr, sum_weightcorrup2, sum_weightcorrdown2 = 0., 0., 0., 0.
-
-            # loop over weights
-            for iw in range(weights.shape[0]):
-                sum_weight += weights[iw]
-                etabins = inetabins[iw]
-                corr = incorrs[iw]
-                corr_up = incorrs_up[iw]
-                corr_down = incorrs_down[iw]
-
-                # loop over correction bins
-                for ibin in range(etabins.shape[0]):
-
-                    # find the bin
-                    if etabins[ibin,0] <= mueta[imu] < etabins[ibin,1]:
-                        sum_weightcorr += weights[iw]*corr[ibin]
-                        sum_weightcorrup2 += (weights[iw] * corr_up[ibin])**2
-                        sum_weightcorrdown2 += (weights[iw] * corr_down[ibin])**2
-
-                        # bin found
-                        break
-
-            # weights summed
+            # Calculate event correction - include any_pass option for trigger
+            # type SF
             if any_pass:
-                sf *= 1. - sum_weightcorr / sum_weight
-            else:
-                sf *= sum_weightcorr / sum_weight
-
-            if sum_weightcorr > 0.:
-                sf_up2 += sum_weightcorrup2 / sum_weightcorr**2
-                sf_down2 += sum_weightcorrdown2 / sum_weightcorr**2
-
-        if any_pass and start-stop>0:
-            sf = 1. - sf
-
-        # pass to output arrays
-        outcorrs[iev] = sf
-        outcorrs_up[iev] = np.sqrt(sf_up2)
-        outcorrs_down[iev] = np.sqrt(sf_down2)
-
-    return outcorrs, outcorrs_up, outcorrs_down
-
-def get_correction_pt_abseta(muons, weights, corrections, any_pass=False):
-    ptbins, etabins, corrs, corrs_up, corrs_down = [x for x in zip(*corrections)]
-    return get_correction_pt_abseta_jit(
-        muons.pt.content, muons.eta.content, muons.pt.starts, muons.pt.stops,
-        weights, ptbins, etabins, corrs, corrs_up, corrs_down, any_pass=any_pass,
-    )
-
-@njit
-def get_correction_pt_abseta_jit(mupt, mueta, starts, stops, weights,
-                                 inptbins, inetabins,
-                                 incorrs, incorrs_up, incorrs_down,
-                                 any_pass=False):
-    nev = stops.shape[0]
-    outcorrs = np.ones(nev, dtype=float32)
-    outcorrs_up = np.ones(nev, dtype=float32)
-    outcorrs_down = np.ones(nev, dtype=float32)
-
-    # loop over events
-    for iev, (start, stop) in enumerate(zip(starts, stops)):
-        sf, sf_up2, sf_down2 = 1., 0., 0.
-
-        # loop over muons
-        for imu in range(start, stop):
-            sum_weight, sum_weightcorr, sum_weightcorrup2, sum_weightcorrdown2 = 0., 0., 0., 0.
-
-            # loop over weights
-            for iw in range(weights.shape[0]):
-                sum_weight += weights[iw]
-                ptbins = inptbins[iw]
-                etabins = inetabins[iw]
-                corr = incorrs[iw]
-                corr_up = incorrs_up[iw]
-                corr_down = incorrs_down[iw]
-
-                # loop over correction bins
-                for ibin in range(ptbins.shape[0]):
-
-                    # find the bin
-                    within_pt = ptbins[ibin,0] <= mupt[imu] < ptbins[ibin,1]
-                    within_eta = etabins[ibin,0] <= abs(mueta[imu]) < etabins[ibin,1]
-                    if within_pt and within_eta:
-                        sum_weightcorr += weights[iw]*corr[ibin]
-                        sum_weightcorrup2 += (weights[iw] * corr_up[ibin])**2
-                        sum_weightcorrdown2 += (weights[iw] * corr_down[ibin])**2
-
-                        # bin found
-                        break
-
-            # weights summed
+                dfw["w_corr"] = 1-dfw["w_corr"]
+            dfsf["sf"] = dfw["w_corr"].groupby("evidx").prod()
             if any_pass:
-                sf *= 1. - sum_weightcorr / sum_weight
-            else:
-                sf *= sum_weightcorr / sum_weight
+                dfsf["sf"] = 1-dfsf["sf"]
 
-            if sum_weightcorr > 0.:
-                sf_up2 += sum_weightcorrup2 / sum_weightcorr**2
-                sf_down2 += sum_weightcorrdown2 / sum_weightcorr**2
+            # variations
+            sf_up = np.zeros(event.size)
+            sf_down = np.zeros(event.size)
+            sf_up[dfsf.index.get_level_values("evidx")] = dfsf["sf_up"]/dfsf["sf"]
+            sf_down[dfsf.index.get_level_values("evidx")] = dfsf["sf_down"]/dfsf["sf"]
 
-        if any_pass and stop-start>0:
-            sf = 1. - sf
+            setattr(event, "Weight_{}Up".format(name), 1+sf_up)
+            setattr(event, "Weight_{}Down".format(name), 1-sf_down)
 
-        # pass to output arrays
-        outcorrs[iev] = sf
-        outcorrs_up[iev] = np.sqrt(sf_up2)
-        outcorrs_down[iev] = np.sqrt(sf_down2)
+            # Central SF
+            sf = np.ones(event.size)
+            sf[dfsf.index.get_level_values("evidx")] = dfsf["sf"]
+            event_sfs[name] = sf
 
-    return outcorrs, outcorrs_up, outcorrs_down
+        event_sfs = pd.DataFrame(event_sfs)
+        for dataset, eval_key in self.dataset_applicators.items():
+            setattr(event, "Weight_{}".format(dataset),
+                    getattr(event, "Weight_{}".format(dataset))*event_sfs.eval(eval_key).values)
 
 def read_file(path, form):
     with open(path, 'r') as f:

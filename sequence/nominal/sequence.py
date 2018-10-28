@@ -110,23 +110,44 @@ weight_met_trigger = Readers.WeightMetTrigger(
 )
 weight_muons = Readers.WeightMuons(
     name = "weight_muons",
-    correction_id_paths = [
-        (19.7, datapath + "/muons/muon_id_runBCDEF.txt"),
-        (16.2, datapath + "/muons/muon_id_runGH.txt"),
-    ],
-    correction_iso_paths = [
-        (19.7, datapath + "/muons/muon_isolation_runBCDEF.txt"),
-        (16.2, datapath + "/muons/muon_isolation_runGH.txt"),
-    ],
-    correction_track_paths = [
-        (1., datapath + "/muons/muon_tracking.txt"),
-    ],
-    correction_trig_paths = [
-        (19.7, datapath + "/muons/muon_trigger_runBCDEF.txt"),
-        (16.2, datapath + "/muons/muon_trigger_runGH.txt"),
+    dataset_applicators = {
+        "MET": "muonId*muonIso*muonTrack",
+        "SingleMuon": "muonId*muonIso*muonTrack*muonTrig",
+        "SingleElectron": "muonId*muonIso*muonTrack",
+    },
+    correctors = [
+        {
+            "name": "muonId",
+            "collection": "MuonSelection",
+            "binning_variables": ("mu: mu.pt.content", "mu: np.abs(mu.eta.content)"),
+            "weighted_paths": [(19.7, datapath+"/muons/muon_id_runBCDEF.txt"),
+                               (16.2, datapath+"/muons/muon_id_runGH.txt")],
+            "add_syst": 0.01,
+        }, {
+            "name": "muonIso",
+            "collection": "MuonSelection",
+            "binning_variables": ("mu: mu.pt.content", "mu: np.abs(mu.eta.content)"),
+            "weighted_paths": [(19.7, datapath+"/muons/muon_isolation_runBCDEF.txt"),
+                               (16.2, datapath+"/muons/muon_isolation_runGH.txt")],
+            "add_syst": 0.005,
+        }, {
+            "name": "muonTrack",
+            "collection": "MuonSelection",
+            "binning_variables": ("mu: mu.eta.content", ),
+            "weighted_paths": [(1., datapath+"/muons/muon_tracking.txt")],
+        }, {
+            "name": "muonTrig",
+            "collection": "MuonSelection",
+            "binning_variables": ("mu: mu.pt.content", "mu: np.abs(mu.eta.content)"),
+            "weighted_paths": [(19.7, datapath + "/muons/muon_trigger_runBCDEF.txt"),
+                               (16.2, datapath + "/muons/muon_trigger_runGH.txt")],
+            "any_pass": True,
+            "add_syst": 0.005,
+        },
     ],
     data = False,
 )
+
 #weight_qcd_ewk = Readers.WeightQcdEwk(
 #    name = "weight_qcd_ewk",
 #    input_paths = {
