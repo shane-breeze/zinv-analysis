@@ -47,7 +47,8 @@ trigger_selection = {
                'HLT_PFMET170_HBHE_BeamHaloCleaned'],
     },
     "SingleMuon": ["HLT_IsoMu24", "HLT_IsoTkMu24"],
-    "SingleElectron": ["HLT_Ele27_WPTight_Gsf"],
+    "SingleElectron": ["HLT_Ele27_WPTight_Gsf",
+                       "HLT_Ele105_CaloIdVT_GsfTrkIdT"],
 }
 
 class TriggerChecker(object):
