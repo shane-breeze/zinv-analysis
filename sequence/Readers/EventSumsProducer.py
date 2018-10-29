@@ -12,12 +12,17 @@ class EventSumsProducer(object):
         # Create new collections
         event.METnoX = Collection("METnoX", event)
         event.DiMuon = Collection("DiMuon", event)
+        event.DiElectron = Collection("DiElectron", event)
         event.MHT40 = Collection("MHT40", event)
 
         # DiMuon
-        dimu_pt, dimu_phi = create_dimuon(event.MuonSelection)
+        dimu_pt, dimu_phi = create_dilepton(event.MuonSelection)
         event.DiMuon_pt = dimu_pt
         event.DiMuon_phi = dimu_phi
+
+        diele_pt, diele_phi = create_dilepton(event.ElectronSelection)
+        event.DiElectron_pt = diele_pt
+        event.DiElectron_phi = diele_phi
 
         self.isdata = event.config.dataset.isdata
         variations = [""]+self.variations if not self.isdata else [""]
@@ -25,6 +30,8 @@ class EventSumsProducer(object):
             # Create lead jet selection collection
             setattr(event, "LeadJetSelection{}".format(variation),
                     Collection("LeadJetSelection{}".format(variation), event))
+            setattr(event, "SecondJetSelection{}".format(variation),
+                    Collection("SecondJetSelection{}".format(variation), event))
 
             # MET
             met, mephi = create_metnox(
@@ -49,6 +56,16 @@ class EventSumsProducer(object):
             setattr(event, "METnoX_diMuonPerpProjPt_Plus_DiMuon_pt{}".format(variation), metnox_perp+dimu_pt)
             setattr(event, "METnoX_diMuonParaProjPt_Div_DiMuon_pt{}".format(variation), metnox_para/dimu_pt)
             setattr(event, "METnoX_diMuonPerpProjPt_Plus_DiMuon_pt_Div_DiMuon_pt{}".format(variation), (metnox_perp+dimu_pt)/dimu_pt)
+
+            metnox_para, metnox_perp = create_metres(
+                event.METnoX, event.DiElectron, variation,
+            )
+            setattr(event, "METnoX_diElectronParaProjPt{}".format(variation), metnox_para)
+            setattr(event, "METnoX_diElectronPerpProjPt{}".format(variation), metnox_perp)
+            setattr(event, "METnoX_diElectronParaProjPt_Minus_DiElectron_pt{}".format(variation), metnox_para-diele_pt)
+            setattr(event, "METnoX_diElectronPerpProjPt_Plus_DiElectron_pt{}".format(variation), metnox_perp+diele_pt)
+            setattr(event, "METnoX_diElectronParaProjPt_Div_DiElectron_pt{}".format(variation), metnox_para/diele_pt)
+            setattr(event, "METnoX_diElectronPerpProjPt_Plus_DiElectron_pt_Div_DiElectron_pt{}".format(variation), (metnox_perp+diele_pt)/diele_pt)
 
             # MHT
             ht, mht, mhphi = create_mht(event.JetSelection, variation)
@@ -78,23 +95,28 @@ class EventSumsProducer(object):
             )
 
             # Create Lead and Second Jet collections
-            collection = "LeadJetSelection{}".format(variation)
-            for attr in ["pt", "eta", "phi", "chEmEF", "chHEF", "neEmEF", "neHEF"]:
-                attr_name = attr+variation
-                if attr!="pt" and variation!="":
-                    attr_name = attr
-                ref_collection = collection.replace("Lead", "").replace("Second", "")
-                pos = 0 if "Lead" in collection else 1
-                setattr(
-                    event,
-                    collection+"_"+attr_name,
-                    create_lead_object(
-                        getattr(getattr(event, ref_collection), attr_name).content,
-                        getattr(event, ref_collection).starts,
-                        getattr(event, ref_collection).stops,
-                        pos = pos,
-                    ),
-                )
+            for collection in ["LeadJetSelection{}".format(variation),
+                               "SecondJetSelection{}".format(variation)]:
+                for attr in ["pt", "eta", "phi", "chEmEF", "chHEF", "neEmEF", "neHEF"]:
+                    attr_name = attr+variation
+                    if attr!="pt" and variation!="":
+                        attr_name = attr
+                    ref_collection = collection.replace("Lead", "").replace("Second", "")
+                    pos = 0 if "Lead" in collection else 1
+                    setattr(
+                        event,
+                        collection+"_"+attr_name,
+                        create_lead_object(
+                            getattr(getattr(event, ref_collection), attr_name).content,
+                            getattr(event, ref_collection).starts,
+                            getattr(event, ref_collection).stops,
+                            pos = pos,
+                        ),
+                    )
+
+            # DPhi(J1,J2)
+            setattr(event, "DPhiJ1J2{}".format(variation),
+                    BoundPhi(event.LeadJetSelection.phi-event.SecondJetSelection.phi))
 
         # Create Lead and Second Lepton collections
         for collection in ["LeadMuonSelection", "SecondMuonSelection",
@@ -195,13 +217,13 @@ def create_mht_jit(jetpt, jetphi, starts, stops):
 
     return hts, mhts, mhphis
 
-def create_dimuon(muons):
-    return jit_create_dimuon(
+def create_dilepton(muons):
+    return jit_create_dilepton(
         muons.pt.content, muons.phi.content,
         muons.pt.starts, muons.pt.stops,
     )
 @njit
-def jit_create_dimuon(muons_pt, muons_phi, muons_starts, muons_stops):
+def jit_create_dilepton(muons_pt, muons_phi, muons_starts, muons_stops):
     nev = muons_starts.shape[0]
     dimupts = np.zeros(nev, dtype=float32)
     dimuphis = np.zeros(nev, dtype=float32)

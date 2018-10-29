@@ -69,6 +69,11 @@ class SelectionProducer(object):
             "SingleElectronSB": baseline + es.baseline_selection + es.singleelectronsb_selection,
             "SingleElectronSR": baseline + es.baseline_selection + es.singleelectronsr_selection,
             "DoubleElectron": baseline + es.baseline_selection + es.doubleelectron_selection,
+            "DoubleElectron_unblind": [(n, s)
+                                       for (n, s) in baseline \
+                                       + es.baseline_selection \
+                                       + es.doubleelectron_selection
+                                       if n not in ["met_selection", "blind_mask"]],
             "DoubleElectronSB": baseline + es.baseline_selection + es.doubleelectronsb_selection,
             "DoubleElectronSR": baseline + es.baseline_selection + es.doubleelectronsr_selection,
         }

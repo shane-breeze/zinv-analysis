@@ -57,7 +57,7 @@ def create_mtw_jit(met,  mephi,
     mtws = np.zeros(met.shape[0], dtype=float32)
     for iev, (msta, msto, esta, esto) in enumerate(zip(musta, musto, elsta, elsto)):
         nmu = msto-msta
-        nel = esta-esto
+        nel = esto-esta
 
         mtw = np.nan
         if nmu == 1:

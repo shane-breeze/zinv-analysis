@@ -3,7 +3,9 @@ from utils.Colours import colours_dict
 
 inf = np.infty
 
-dimuon_categories = [("MET", "DoubleMuon_unblind"), ("SingleMuon", "DoubleMuon_unblind")]
+dimuon_categories = [("MET", "DoubleMuon_unblind"),
+                     ("SingleMuon", "DoubleMuon_unblind")]
+diele_categories = [("SingleElectron", "DoubleElectron_unblind")]
 
 bins = [200., 207., 214., 220., 226., 232., 238., 244., 250., 258., 268., 279.,
         292., 307., 326., 349., 380., 431., 563., 695.]
@@ -101,6 +103,94 @@ histogrammer_cfgs = [
                  [-inf]+bins+[inf]],
         "weights": [("nominal", "ev: ev.Weight_{dataset}")],
     } for variation in all_variations
+] + [
+    {
+        "name": ["METnoX_diElectronParaProjPt_Minus_DiElectron_pt{}".format(variation),
+                 "DiElectron_pt"],
+        "categories": [(d, c+variation) for d, c in diele_categories],
+        "variables": ["ev: ev.METnoX_diElectronParaProjPt_Minus_DiElectron_pt{}".format(variation),
+                      "ev: ev.DiElectron_pt"],
+        "bins": [[-inf]+list(np.linspace(-250, 250., 51))+[inf],
+                 [-inf]+bins+[inf]],
+        "weights": [("nominal", "ev: ev.Weight_{dataset}")],
+    } for variation in all_variations
+] + [
+    {
+        "name": ["METnoX_diElectronPerpProjPt{}".format(variation),
+                 "DiElectron_pt"],
+        "categories": [(d, c+variation) for d, c in diele_categories],
+        "variables": ["ev: ev.METnoX_diElectronPerpProjPt{}".format(variation),
+                      "ev: ev.DiElectron_pt"],
+        "bins": [[-inf]+list(np.linspace(-250, 250., 51))+[inf],
+                 [-inf]+bins+[inf]],
+        "weights": [("nominal", "ev: ev.Weight_{dataset}")],
+    } for variation in all_variations
+] + [
+    {
+        "name": ["METnoX_diElectronParaProjPt_Div_DiElectron_pt{}".format(variation),
+                 "DiElectron_pt"],
+        "categories": [(d, c+variation) for d, c in diele_categories],
+        "variables": ["ev: ev.METnoX_diElectronParaProjPt_Div_DiElectron_pt{}".format(variation),
+                      "ev: ev.DiElectron_pt"],
+        "bins": [[-inf]+list(np.linspace(0., 2., 51))+[inf],
+                 [-inf]+bins+[inf]],
+        "weights": [("nominal", "ev: ev.Weight_{dataset}")],
+    } for variation in all_variations
+] + [
+    {
+        "name": ["METnoX_diElectronPerpProjPt_Plus_DiElectron_pt_Div_DiElectron_pt{}".format(variation),
+                 "DiElectron_pt"],
+        "categories": [(d, c+variation) for d, c in diele_categories],
+        "variables": ["ev: ev.METnoX_diElectronPerpProjPt_Plus_DiElectron_pt_Div_DiElectron_pt{}".format(variation),
+                      "ev: ev.DiElectron_pt"],
+        "bins": [[-inf]+list(np.linspace(0., 2., 51))+[inf],
+                 [-inf]+bins+[inf]],
+        "weights": [("nominal", "ev: ev.Weight_{dataset}")],
+    } for variation in all_variations
+] + [
+    {
+        "name": ["METnoX_diElectronParaProjPt_Minus_DiElectron_pt{}".format(variation),
+                 "METnoX_pt"],
+        "categories": [(d, c+variation) for d, c in diele_categories],
+        "variables": ["ev: ev.METnoX_diElectronParaProjPt_Minus_DiElectron_pt{}".format(variation),
+                      "ev: ev.METnoX_pt"],
+        "bins": [[-inf]+list(np.linspace(-250, 250., 51))+[inf],
+                 [-inf]+bins+[inf]],
+        "weights": [("nominal", "ev: ev.Weight_{dataset}")],
+    } for variation in all_variations
+] + [
+    {
+        "name": ["METnoX_diElectronPerpProjPt{}".format(variation),
+                 "METnoX_pt{}".format(variation)],
+        "categories": [(d, c+variation) for d, c in diele_categories],
+        "variables": ["ev: ev.METnoX_diElectronPerpProjPt{}".format(variation),
+                      "ev: ev.METnoX_pt{}".format(variation)],
+        "bins": [[-inf]+list(np.linspace(-250, 250., 51))+[inf],
+                 [-inf]+bins+[inf]],
+        "weights": [("nominal", "ev: ev.Weight_{dataset}")],
+    } for variation in all_variations
+] + [
+    {
+        "name": ["METnoX_diElectronParaProjPt_Div_DiElectron_pt{}".format(variation),
+                 "METnoX_pt{}".format(variation)],
+        "categories": [(d, c+variation) for d, c in diele_categories],
+        "variables": ["ev: ev.METnoX_diElectronParaProjPt_Div_DiElectron_pt{}".format(variation),
+                      "ev: ev.METnoX_pt{}".format(variation)],
+        "bins": [[-inf]+list(np.linspace(0., 2., 51))+[inf],
+                 [-inf]+bins+[inf]],
+        "weights": [("nominal", "ev: ev.Weight_{dataset}")],
+    } for variation in all_variations
+] + [
+    {
+        "name": ["METnoX_diElectronPerpProjPt_Plus_DiElectron_pt_Div_DiElectron_pt{}".format(variation),
+                 "METnoX_pt{}".format(variation)],
+        "categories": [(d, c+variation) for d, c in diele_categories],
+        "variables": ["ev: ev.METnoX_diElectronPerpProjPt_Plus_DiElectron_pt_Div_DiElectron_pt{}".format(variation),
+                      "ev: ev.METnoX_pt{}".format(variation)],
+        "bins": [[-inf]+list(np.linspace(0., 2., 51))+[inf],
+                 [-inf]+bins+[inf]],
+        "weights": [("nominal", "ev: ev.Weight_{dataset}")],
+    } for variation in all_variations
 ]
 
 sample_colours = {
@@ -156,4 +246,10 @@ axis_label = {
     "METnoX_diMuonPerpProjPt": r'$E_{T,\perp}^{miss}$ (GeV)',
     "METnoX_diMuonParaProjPt_Div_DiMuon_pt": r'$E_{T,\parallel}^{miss} / p_{T}(\mu\mu)$',
     "METnoX_diMuonPerpProjPt_Plus_DiMuon_pt_Div_DiMuon_pt": r'$(E_{T,\perp}^{miss}+p_{T}(\mu\mu)) / p_{T}(\mu\mu)$',
+    "DiElectron_pt": r'$p_{T}(ee)$ (GeV)',
+    "METnoX_pt": r'$E_{T}^{miss}$ (GeV)',
+    "METnoX_diElectronParaProjPt_Minus_DiElectron_pt": r'$E_{T,\parallel}^{miss} - p_{T}(ee)$ (GeV)',
+    "METnoX_diElectronPerpProjPt": r'$E_{T,\perp}^{miss}$ (GeV)',
+    "METnoX_diElectronParaProjPt_Div_DiElectron_pt": r'$E_{T,\parallel}^{miss} / p_{T}(ee)$',
+    "METnoX_diElectronPerpProjPt_Plus_DiElectron_pt_Div_DiElectron_pt": r'$(E_{T,\perp}^{miss}+p_{T}(ee)) / p_{T}(ee)$',
 }

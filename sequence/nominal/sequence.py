@@ -108,7 +108,7 @@ weight_met_trigger = Readers.WeightMetTrigger(
     },
     data = False,
 )
-weight_muons = Readers.WeightMuons(
+weight_muons = Readers.WeightObjects(
     name = "weight_muons",
     dataset_applicators = {
         "MET": "muonId*muonIso*muonTrack",
@@ -143,6 +143,34 @@ weight_muons = Readers.WeightMuons(
                                (16.2, datapath + "/muons/muon_trigger_runGH.txt")],
             "any_pass": True,
             "add_syst": 0.005,
+        },
+    ],
+    data = False,
+)
+weight_electrons = Readers.WeightObjects(
+    name = "weight_electrons",
+    dataset_applicators = {
+        "MET": "eleIdIso*eleReco",
+        "SingleMuon": "eleIdIso*eleReco",
+        "SingleElectron": "eleIdIso*eleReco*eleTrig",
+    },
+    correctors = [
+        {
+            "name": "eleIdIso",
+            "collection": "ElectronSelection",
+            "binning_variables": ("e: e.eta.content", "e: e.pt.content"),
+            "weighted_paths": [(1, datapath+"/electrons/electron_idiso.txt")],
+        }, {
+            "name": "eleReco",
+            "collection": "ElectronSelection",
+            "binning_variables": ("e: e.eta.content", "e: e.pt.content"),
+            "weighted_paths": [(1, datapath+"/electrons/electron_reconstruction.txt")],
+        }, {
+            "name": "eleTrig",
+            "collection": "ElectronSelection",
+            "binning_variables": ("e: e.pt.content", "e: e.eta.content"),
+            "weighted_paths": [(1, datapath+"/electrons/electron_trigger.txt")],
+            "any_pass": True,
         },
     ],
     data = False,
@@ -273,6 +301,7 @@ sequence = [
     (weight_pu, NullCollector()),
     (weight_met_trigger, NullCollector()),
     (weight_muons, NullCollector()),
+    (weight_electrons, NullCollector()),
     (weight_qcd_ewk, NullCollector()),
     (selection_producer, NullCollector()),
     # Add collectors (with accompanying readers) at the end so that all

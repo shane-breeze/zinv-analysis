@@ -4,15 +4,6 @@ from utils.Colours import colours_dict
 inf = np.infty
 pi = np.pi+0.00001
 
-# Sepearate cutflows and datasets
-all_cutflows = ["Monojet", "MonojetSB", "MonojetSR",
-                "MonojetQCD", "MonojetQCDSB", "MonojetQCDSR",
-                "SingleMuon", "SingleMuonSB", "SingleMuonSR",
-                "DoubleMuon", "DoubleMuonSB", "DoubleMuonSR",
-                "SingleElectron", "SingleElectronSB", "SingleElectronSR",
-                "DoubleElectron", "DoubleElectronSB", "DoubleElectronSR"]
-all_datasets = ["MET", "SingleMuon"]
-
 # dataset-cutflows split into regions
 monojet_categories = [("MET", "Monojet"), ("MET", "MonojetSB"), ("MET", "MonojetSR"),
                       ("MET", "MonojetQCD"), ("MET", "MonojetQCDSB"), ("MET", "MonojetQCDSR")]
@@ -22,10 +13,15 @@ muon_categories = [("MET", "SingleMuon"), ("MET", "SingleMuonSB"), ("MET", "Sing
 dimuon_categories = [("MET", "DoubleMuon"), ("MET", "DoubleMuonSB"), ("MET", "DoubleMuonSR"),
                      ("SingleMuon", "DoubleMuon"),("SingleMuon", "DoubleMuonSB"), ("SingleMuon", "DoubleMuonSR")]
 
-ele_categories = [] #[("MET", "SingleElectron"), ("MET", "SingleElectronSB"), ("MET", "SingleElectronSR")]
-diele_categories = [] #[("MET", "DoubleElectron"), ("MET", "DoubleElectronSB"), ("MET", "DoubleElectronSR")]
+ele_categories = [("SingleElectron", "SingleElectron"),
+                  ("SingleElectron", "SingleElectronSB"),
+                  ("SingleElectron", "SingleElectronSR")]
+diele_categories = [("SingleElectron", "DoubleElectron"),
+                    ("SingleElectron", "DoubleElectronSB"),
+                    ("SingleElectron", "DoubleElectronSR")]
 
-categories = monojet_categories + muon_categories + dimuon_categories
+categories = monojet_categories + muon_categories + dimuon_categories \
+        + ele_categories + diele_categories
 
 histogrammer_cfgs = [
     {
@@ -62,6 +58,30 @@ histogrammer_cfgs = [
         "name": "DiMuon_phi",
         "categories": dimuon_categories,
         "variables": ["ev: ev.DiMuon_phi"],
+        "bins": [[-inf]+list(np.linspace(-pi, pi, 51))+[inf]],
+        "weights": [("nominal", "ev: ev.Weight_{dataset}")],
+    }, {
+        "name": "METnoX_diElectronParaProjPt_Minus_DiElectron_pt",
+        "categories": diele_categories,
+        "variables": ["ev: ev.METnoX_diElectronParaProjPt_Minus_DiElectron_pt"],
+        "bins": [[-inf]+list(np.linspace(-250, 250., 51))+[inf]],
+        "weights": [("nominal", "ev: ev.Weight_{dataset}")],
+    }, {
+        "name": "METnoX_diElectronPerpProjPt",
+        "categories": diele_categories,
+        "variables": ["ev: ev.METnoX_diElectronPerpProjPt"],
+        "bins": [[-inf]+list(np.linspace(-250., 250., 51))+[inf]],
+        "weights": [("nominal", "ev: ev.Weight_{dataset}")],
+    }, {
+        "name": "DiElectron_pt",
+        "categories": diele_categories,
+        "variables": ["ev: ev.DiElectron_pt"],
+        "bins": [[-inf]+list(np.linspace(0., 1000., 41))+[inf]],
+        "weights": [("nominal", "ev: ev.Weight_{dataset}")],
+    }, {
+        "name": "DiElectron_phi",
+        "categories": diele_categories,
+        "variables": ["ev: ev.DiElectron_phi"],
         "bins": [[-inf]+list(np.linspace(-pi, pi, 51))+[inf]],
         "weights": [("nominal", "ev: ev.Weight_{dataset}")],
     }, {
@@ -115,8 +135,7 @@ histogrammer_cfgs = [
     }, {
         "name": "MinDPhiJ1234METnoX",
         "categories": categories + [(d, "{}_remove_dphi_jet_met_selection".format(c))
-                                    for c in all_cutflows if "QCD" not in c
-                                    for d in all_datasets],
+                                    for d, c in categories if "QCD" not in c],
         "variables": ["ev: ev.MinDPhiJ1234METnoX"],
         "bins": [[-inf]+list(np.linspace(0., pi, 51))+[inf]],
         "weights": [("nominal", "ev: ev.Weight_{dataset}")],
@@ -128,23 +147,23 @@ histogrammer_cfgs = [
         "weights": [("nominal", "ev: ev.Weight_{dataset}")],
     }, {
         "name": "MTW",
-        "categories": muon_categories + [(d, "{}_remove_mtw_selection".format(c))
-                                         for c in all_cutflows if "SingleMuon" in c
-                                         for d in all_datasets],
+        "categories": muon_categories + ele_categories\
+                      + [(d, "{}_remove_mtw_selection".format(c))
+                         for d, c in muon_categories+ele_categories if "SingleMuon" in c or "SingleElectron" in c],
         "variables": ["ev: ev.MTW"],
         "bins": [[-inf]+list(np.linspace(0., 200., 51))+[inf]],
         "weights": [("nominal", "ev: ev.Weight_{dataset}")],
     }, {
         "name": "MLL",
-        "categories": dimuon_categories,
+        "categories": dimuon_categories + diele_categories,
         "variables": ["ev: ev.MLL"],
         "bins": [[-inf]+list(np.linspace(65., 115., 51))+[inf]],
         "weights": [("nominal", "ev: ev.Weight_{dataset}")],
     }, {
         "name": "MLL_wide",
-        "categories": dimuon_categories + [(d, "{}_remove_mll_selection".format(c))
-                                           for c in all_cutflows if "DoubleMuon" in c
-                                           for d in all_datasets],
+        "categories": dimuon_categories + diele_categories\
+                      + [(d, "{}_remove_mll_selection".format(c))
+                         for d, c in dimuon_categories+diele_categories if "DoubleMuon" in c or "DoubleElectron" in c],
         "variables": ["ev: ev.MLL"],
         "bins": [[-inf]+list(np.linspace(0., 200., 51))+[inf]],
         "weights": [("nominal", "ev: ev.Weight_{dataset}")],
@@ -203,6 +222,12 @@ histogrammer_cfgs = [
         "bins": [[-inf]+list(np.linspace(0., 1., 41))+[inf]],
         "weights": [("nominal", "ev: ev.Weight_{dataset}")],
     }, {
+        "name": "DPhiJ1J2",
+        "categories": categories,
+        "variables": ["ev: ev.DPhiJ1J2"],
+        "bins": [[-inf]+list(np.linspace(-pi, pi, 51))+[inf]],
+        "weights": [("nominal", "ev: ev.Weight_{dataset}")],
+    }, {
         "name": "nMuonVeto",
         "categories": categories,
         "variables": ["ev: ev.MuonVeto.size"],
@@ -229,8 +254,7 @@ histogrammer_cfgs = [
     }, {
         "name": "nPhotonVeto",
         "categories": categories + [(d, "{}_remove_pho_veto".format(c))
-                                    for c in all_cutflows
-                                    for d in all_datasets],
+                                    for d, c in categories],
         "variables": ["ev: ev.PhotonVeto.size"],
         "bins": [[-inf]+list(np.linspace(0., 5., 6))+[inf]],
         "weights": [("nominal", "ev: ev.Weight_{dataset}")],
@@ -243,8 +267,7 @@ histogrammer_cfgs = [
     }, {
         "name": "nTauVeto",
         "categories": categories + [(d, "{}_remove_tau_veto".format(c))
-                                    for c in all_cutflows
-                                    for d in all_datasets],
+                                    for d, c in categories],
         "variables": ["ev: ev.TauVeto.size"],
         "bins": [[-inf]+list(np.linspace(0., 5., 6))+[inf]],
         "weights": [("nominal", "ev: ev.Weight_{dataset}")],
@@ -257,8 +280,7 @@ histogrammer_cfgs = [
     }, {
         "name": "nBJetSelectionMedium",
         "categories": categories + [(d, "{}_remove_nbjet_veto".format(c))
-                                    for c in all_cutflows
-                                    for d in all_datasets],
+                                    for d, c in categories],
         "variables": ["ev: ev.nBJetSelectionMedium"],
         "bins": [[-inf]+list(np.linspace(0., 5., 6))+[inf]],
         "weights": [("nominal", "ev: ev.Weight_{dataset}")],
@@ -441,6 +463,10 @@ axis_label = {
     "METnoX_diMuonPerpProjPt": r'$E_{T,\perp}^{miss}$ (GeV)',
     "DiMuon_pt": r'$p_{T}(\mu\mu)$ (GeV)',
     "DiMuon_phi": r'$p_{T}(\mu\mu)\ \phi$',
+    "METnoX_diElectronParaProjPt_Minus_DiElectron_pt": r'$E_{T,\parallel}^{miss} - p_{T}(e e)$ (GeV)',
+    "METnoX_diElectronPerpProjPt": r'$E_{T,\perp}^{miss}$ (GeV)',
+    "DiElectron_pt": r'$p_{T}(e e)$ (GeV)',
+    "DiElectron_phi": r'$p_{T}(e e)\ \phi$',
     "MET_pt": r'$E_{T,PF}^{miss}$ (GeV)',
     "MET_phi": r'$E_{T,PF}^{miss}\ \phi$',
     "CaloMET_pt": r'$E_{T,Calo.}^{miss}$ (GeV)',
@@ -463,6 +489,7 @@ axis_label = {
     "LeadJetSelection_chHEF": r'$f_{\mathrm{Ch. Had. En.}}(j_{0})$',
     "LeadJetSelection_neEmEF": r'$f_{\mathrm{Neut. EM En.}}(j_{0})$',
     "LeadJetSelection_neHEF": r'$f_{\mathrm{Neut. Had. En.}}(j_{0})$',
+    "DPhiJ1J2": r'$\Delta\phi (j_{0}, j_{1})$',
     "nMuonVeto": r'No. veto muon',
     "nMuonSelection": r'No. selected muon',
     "nElectronVeto": r'No. veto electron',

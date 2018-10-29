@@ -3,7 +3,7 @@ from utils.NumbaFuncs import get_bin_indices
 import numpy as np
 import pandas as pd
 
-class WeightMuons(object):
+class WeightObjects(object):
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
@@ -125,7 +125,10 @@ class WeightMuons(object):
 
 def read_file(path, form):
     with open(path, 'r') as f:
-        lines = [map(float, l.strip().split())
-                 for l in f.read().splitlines()
-                 if l.strip()[0]!="#"]
+        try:
+            lines = [map(float, l.strip().split())
+                     for l in f.read().splitlines()
+                     if l.strip()[0]!="#"]
+        except ValueError as e:
+            raise ValueError("{} for {}".format(e, path))
     return {k: v for k, v in zip(form, zip(*lines))}

@@ -13,8 +13,8 @@ muon_met_categories = [("MET", "SingleMuon"), ("MET", "SingleMuonSB"), ("MET", "
 muon_mu_categories = [("SingleMuon", "SingleMuon"), ("SingleMuon", "SingleMuonSB"), ("SingleMuon", "SingleMuonSR")]
 dimuon_met_categories = [("MET", "DoubleMuon"), ("MET", "DoubleMuonSB"), ("MET", "DoubleMuonSR")]
 dimuon_mu_categories = [("SingleMuon", "DoubleMuon"),("SingleMuon", "DoubleMuonSB"), ("SingleMuon", "DoubleMuonSR")]
-ele_categories = [("MET", "SingleElectron"), ("MET", "SingleElectronSB"), ("MET", "SingleElectronSR")]
-diele_categories = [("MET", "DoubleElectron"), ("MET", "DoubleElectronSB"), ("MET", "DoubleElectronSR")]
+ele_categories = [("SingleElectron", "SingleElectron"), ("SingleElectron", "SingleElectronSB"), ("SingleElectron", "SingleElectronSR")]
+diele_categories = [("SingleElectron", "DoubleElectron"), ("SingleElectron", "DoubleElectronSB"), ("SingleElectron", "DoubleElectronSR")]
 
 categories = monojet_categories + muon_met_categories + muon_mu_categories + \
         dimuon_met_categories + dimuon_mu_categories + \
@@ -54,7 +54,14 @@ muon_mu_variations = muon_met_variations + [
     ("muonTrigDown",  "ev: ev.Weight_{dataset}*ev.Weight_muonTrigDown"),
 ]
 
-ele_variations = monojet_variations
+ele_variations = monojet_variations + [
+    ("eleIdIsoUp", "ev: ev.Weight_{dataset}*ev.Weight_eleIdIsoUp"),
+    ("eleIdIsoDown", "ev: ev.Weight_{dataset}*ev.Weight_eleIdIsoDown"),
+    ("eleRecoUp", "ev: ev.Weight_{dataset}*ev.Weight_eleRecoUp"),
+    ("eleRecoDown", "ev: ev.Weight_{dataset}*ev.Weight_eleRecoDown"),
+    ("eleTrigUp", "ev: ev.Weight_{dataset}*ev.Weight_eleTrigUp"),
+    ("eleTrigDown", "ev: ev.Weight_{dataset}*ev.Weight_eleTrigDown"),
+]
 
 histogrammer_cfgs = [
     {
@@ -95,7 +102,7 @@ histogrammer_cfgs = [
 ]
 
 cmap = plt.cm.viridis
-colors = [cmap(i) for i in np.linspace(0, 1, 15)]
+colors = [cmap(i) for i in np.linspace(0, 1, 18)]
 sample_colours = {
     "nominal":   "black",
     "mcstat":    colors[0],
@@ -113,6 +120,9 @@ sample_colours = {
     "d2k_ew_w":  colors[12],
     "d3k_ew_z":  colors[13],
     "d3k_ew_w":  colors[14],
+    "eleIdIso":  colors[15],
+    "eleReco":   colors[16],
+    "eleTrig":   colors[17],
 }
 
 sample_names = {
@@ -121,9 +131,9 @@ sample_names = {
     "pileup":    "Pileup",
     "metTrigSF": r'$E_{T}^{miss}$ Trig',
     "muonId":    "Muon ID",
-    "muonIso":   "Muon Iso",
+    "muonIso":   "Muon Iso.",
     "muonTrack": "Muon Track",
-    "muonTrig":  "Muon Trig",
+    "muonTrig":  "Muon Trig.",
     "jes":       "JES",
     "jer":       "JER",
     "unclust":   "Unclust. En.",
@@ -132,6 +142,9 @@ sample_names = {
     "d2k_ew_w":  r'$\delta^{2}\kappa_{EW}^{W}$',
     "d3k_ew_z":  r'$\delta^{3}\kappa_{EW}^{Z}$',
     "d3k_ew_w":  r'$\delta^{3}\kappa_{EW}^{W}$',
+    "eleIdIso":  "Ele. ID/Iso.",
+    "eleReco":   "Ele. Reco.",
+    "eleTrig":   "Ele. Trig.",
 }
 
 axis_label = {

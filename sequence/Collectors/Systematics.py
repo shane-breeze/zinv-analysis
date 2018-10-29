@@ -40,10 +40,10 @@ class SystematicsCollector(HistCollector):
 
         df = rename_level_values(df, "process", {
             "ZJetsToNuNu":    "znunu",          "DYJetsToMuMu":   "zmumu",
-            "WJetsToENu":     "wlnu",           "WJetsToMuNu":    "wlnu",
-            "WJetsToTauNu":   "wlnu",           "QCD":            "qcd",
-            "TTJets":         "bkg",            "Diboson":        "bkg",
-            "DYJetsToEE":     "bkg",            "DYJetsToTauTau": "bkg",
+            "DYJetsToEE":     "zee",            "WJetsToENu":     "wlnu",
+            "WJetsToMuNu":    "wlnu",           "WJetsToTauNu":   "wlnu",
+            "QCD":            "qcd",            "TTJets":         "bkg",
+            "Diboson":        "bkg",            "DYJetsToTauTau": "bkg",
             "EWKV2Jets":      "bkg",            "SingleTop":      "bkg",
             "G1Jet":          "bkg",            "VGamma":         "bkg",
             "MET":            "MET",            "SingleMuon":     "SingleMuon",
