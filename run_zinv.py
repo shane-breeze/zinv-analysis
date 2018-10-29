@@ -45,7 +45,7 @@ def parse_args():
     parser.add_argument("--profile", default=False, action='store_true',
                         help="Profile the code")
     parser.add_argument("--sample", default=None, type=str,
-                        help="Select some sample")
+                        help="Select some sample (comma delimited)")
     parser.add_argument("--redraw", default=False, action='store_true',
                         help="Overrides most options. Runs over collectors "
                              "only to rerun the draw function on outdir")
@@ -59,11 +59,11 @@ def generate_report(outdir):
 vmem_dict = {
     # 500,000 events per block:
     "DYJetsToLL_Pt-0To50": 12,
-    "DYJetsToLL_Pt-50To100":12,
+    "DYJetsToLL_Pt-50To100":16,
     "DYJetsToLL_Pt-100To250": 12,
     "EWKZToNuNu2Jets_ext2": 12,
-    "SingleTop_tW_antitop_InclusiveDecays": 12,
-    "SingleTop_tW_top_InclusiveDecays": 12,
+    "SingleTop_tW_antitop_InclusiveDecays": 16,
+    "SingleTop_tW_top_InclusiveDecays": 16,
     "QCD_Pt-30To50": 12,
     "QCD_Pt-50To80": 12,
     "QCD_Pt-80To120": 12,
@@ -152,9 +152,9 @@ if __name__ == "__main__":
     sequence = build_sequence(options.sequence_cfg, options.outdir)
     datasets = get_datasets(options.dataset_cfg)
     if options.sample is not None:
+        samples = options.sample.split(",")
         datasets = [d for d in datasets
-                    if d.name==options.sample or \
-                       d.parent==options.sample]
+                    if d.name in samples or d.parent in samples]
 
     if options.redraw:
         jobs = redraw(sequence, datasets, options)
