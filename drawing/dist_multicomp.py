@@ -67,6 +67,9 @@ def dist_multicomp(df, filepath, cfg):
     # sum in quadrature
     df_key_perc = np.sign(df_pivot_ratio-1)*np.abs(df_pivot_ratio-1)
     for key in all_keys_noupdown:
+        if key+"Up" not in df_key_perc.columns or key+"Down" not in df_key_perc.columns:
+            all_keys_noupdown.pop(all_keys_noupdown.index(key))
+            continue
         df_temp = df_key_perc[[key+"Up", key+"Down"]]
         df_temp["dummy"] = 0.
         df_temp["new"+key+"Up"] = df_temp.apply(np.max, axis=1)
