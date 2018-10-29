@@ -19,7 +19,7 @@ class WeightMetTrigger(object):
             self.corr_down.append(corr_down)
 
     def event(self, event):
-        nmuons = event.MuonSelection.pt.stops - event.MuonSelection.pt.starts
+        nmuons = event.MuonSelection.stops - event.MuonSelection.starts
         met = event.METnoX.pt
         corrs, corrs_up, corrs_down = get_correction(
             self.cats, self.bins, self.corr, self.corr_up, self.corr_down,
@@ -27,10 +27,10 @@ class WeightMetTrigger(object):
         )
         event.Weight_MET *= corrs
         event.Weight_metTrigSFUp = np.divide(corrs_up, corrs,
-                                             out=np.zeros_like(corrs_up),
+                                             out=np.ones_like(corrs_up),
                                              where=corrs!=0)
         event.Weight_metTrigSFDown = np.divide(corrs_down, corrs,
-                                               out=np.zeros_like(corrs_down),
+                                               out=np.ones_like(corrs_down),
                                                where=corrs!=0)
 
 @njit
@@ -61,8 +61,8 @@ def read_file(path, overflow=True):
 
     bins = np.array([map(float, l[1:3]) for l in lines])
     corr = np.array([float(l[3]) for l in lines])
-    corr_up = np.array([1.+float(l[5]) for l in lines])
-    corr_down = np.array([1.-float(l[4]) for l in lines])
+    corr_up = corr + np.array([float(l[5]) for l in lines])
+    corr_down = corr - np.array([float(l[4]) for l in lines])
 
     if overflow:
         bins[-1,-1] = np.infty
