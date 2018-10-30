@@ -15,7 +15,7 @@ muo_veto = "u: (u.pt>10.) & "\
               "(np.abs(u.dxy)<0.5) & "\
               "(np.abs(u.dz)<1.0)"
 muo_sele = "u: (u.pt>30.) &"\
-              "(np.abs(u.eta)<2.1) & "\
+              "(np.abs(u.eta)<2.4) & "\
               "(np.abs(u.pfRelIso04_all)<0.15) &"\
               "(u.tightId>=1)"
 
@@ -26,7 +26,7 @@ ele_veto = "e: (e.pt>10.) & "\
               "(np.abs(e.dz)<0.822) & "\
               "(e.convVeto)"
 ele_sele = "e: (e.pt>30.) & "\
-              "(np.abs(e.eta)<2.1) & "\
+              "(np.abs(e.eta)<2.4) & "\
               "(e.cutBased>=4) & "\
               "(((np.abs(e.eta)<=1.479) & "\
                 "(np.abs(e.dxy)<0.05) & "\
