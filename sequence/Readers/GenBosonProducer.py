@@ -3,6 +3,7 @@ from numba import njit, boolean, int32, float32
 import uproot
 from . import Collection
 from utils.Geometry import DeltaR2, LorTHPMToXYZE, LorXYZEToTHPM
+from utils.NumbaFuncs import get_nth_sorted_object_indices
 
 class GenBosonProducer(object):
     def __init__(self, **kwargs):
@@ -26,6 +27,7 @@ class GenBosonProducer(object):
         event.GenPartBosonDaughters.eta
         event.GenPartBosonDaughters.phi
         event.GenPartBosonDaughters.mass
+        gpbd = event.GenPartBosonDaughters
 
         # Finished with GenPart branches
         event.delete_branches(["GenPart_pdgId",
@@ -38,18 +40,32 @@ class GenBosonProducer(object):
                                "GenPart_genPartIdxMother"])
 
         genpart_dressedlepidx = genpart_matched_dressedlepton(
-            event.GenPartBosonDaughters, event.GenDressedLepton,
+            gpbd, event.GenDressedLepton,
         )
         event.GenPartBosonDaughters_genDressedLeptonIdx = uproot.interp.jagged.JaggedArray(
-            genpart_dressedlepidx, event.GenPartBosonDaughters.starts, event.GenPartBosonDaughters.stops,
+            genpart_dressedlepidx, gpbd.starts, gpbd.stops,
         )
 
-        pt, eta, phi, mass = create_genpart_boson(event.GenPartBosonDaughters,
-                                                  event.GenDressedLepton)
+        pt, eta, phi, mass = create_genpart_boson(gpbd, event.GenDressedLepton)
         event.GenPartBoson_pt = pt
         event.GenPartBoson_eta = eta
         event.GenPartBoson_phi = phi
         event.GenPartBoson_mass = mass
+
+
+        # LeadGenPartBosonDaughter
+        event.LeadGenPartBosonDaughters = Collection("LeadGenPartBosonDaughters", event)
+        idxs = get_nth_sorted_object_indices(0, gpbd.pt.content, gpbd.starts, gpbd.stops)
+        setattr(event, "LeadGenPartBosonDaughters_pt", gpbd.pt.content[idxs])
+        setattr(event, "LeadGenPartBosonDaughters_eta", gpbd.eta.content[idxs])
+        setattr(event, "LeadGenPartBosonDaughters_phi", gpbd.phi.content[idxs])
+
+        # SecondGenPartBosonDaughter
+        event.SecondGenPartBosonDaughters = Collection("SecondGenPartBosonDaughters", event)
+        idxs = get_nth_sorted_object_indices(1, gpbd.pt.content, gpbd.starts, gpbd.stops)
+        setattr(event, "SecondGenPartBosonDaughters_pt", gpbd.pt.content[idxs])
+        setattr(event, "SecondGenPartBosonDaughters_eta", gpbd.eta.content[idxs])
+        setattr(event, "SecondGenPartBosonDaughters_phi", gpbd.phi.content[idxs])
 
         event.delete_branches(["GenPartBosonDaughters_pdgId",
                                "GenPartBosonDaughters_pt",
@@ -63,6 +79,7 @@ class GenBosonProducer(object):
                                "GenDressedLepton_eta",
                                "GenDressedLepton_phi",
                                "GenDressedLepton_mass"])
+
 
 def create_genpart_boson(genpart, gendressedlep):
     return create_genpart_boson_jit(genpart.pt.content,

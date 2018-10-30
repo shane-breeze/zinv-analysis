@@ -10,3 +10,11 @@ def get_bin_indices(vals, mins, maxs):
                 idxs[iev] = ib
                 break
     return idxs
+
+@njit
+def get_nth_sorted_object_indices(n, pts, starts, stops):
+    idxs = -1*np.ones_like(starts, dtype=int32)
+    for iev, (start, stop) in enumerate(zip(starts, stops)):
+        if n < stop-start:
+            idxs[iev] = start + np.argsort(pts[start:stop])[::-1][n]
+    return idxs
