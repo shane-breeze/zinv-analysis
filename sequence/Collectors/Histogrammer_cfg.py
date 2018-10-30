@@ -6,7 +6,9 @@ pi = np.pi+0.00001
 
 # dataset-cutflows split into regions
 monojet_categories = [("MET", "Monojet"), ("MET", "MonojetSB"), ("MET", "MonojetSR"),
-                      ("MET", "MonojetQCD"), ("MET", "MonojetQCDSB"), ("MET", "MonojetQCDSR")]
+                      ("MET", "MonojetQCD"), ("MET", "MonojetQCDSB"), ("MET", "MonojetQCDSR"),
+                      ("MET", "Monojet_remove_muon_selection_fmt_0"),
+                      ("SingleMuon", "Monojet_remove_muon_selection_fmt_0")]
 
 muon_categories = [("MET", "SingleMuon"), ("MET", "SingleMuonSB"), ("MET", "SingleMuonSR"),
                    ("SingleMuon", "SingleMuon"), ("SingleMuon", "SingleMuonSB"), ("SingleMuon", "SingleMuonSR")]
@@ -20,7 +22,9 @@ diele_categories = [("SingleElectron", "DoubleElectron"),
                     ("SingleElectron", "DoubleElectronSB"),
                     ("SingleElectron", "DoubleElectronSR")]
 
-categories = monojet_categories + muon_categories + dimuon_categories \
+categories = [("MET", "None")]\
+        + monojet_categories\
+        + muon_categories + dimuon_categories \
         + ele_categories + diele_categories
 
 histogrammer_cfgs = [
