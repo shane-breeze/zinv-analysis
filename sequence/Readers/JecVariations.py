@@ -1,7 +1,7 @@
 import uproot
 import numpy as np
 from numba import njit, int32, float32
-from utils.Geometry import DeltaR2, RadToCart, CartToRad
+from utils.Geometry import DeltaR2, RadToCart2D, CartToRad2D
 
 np.random.seed(123456)
 
@@ -256,7 +256,7 @@ def calculate_new_jets_met(jer_var, jes_var, unclust_threshold, unclustx_var, un
     results = jit_calculate_new_jets_met(
         jer_var, jes_var, unclust_threshold, unclustx_var, unclusty_var,
         jets.jerCorrection.content, jets.pt.content, jets.phi.content, jets.mass.content,
-        jets.starts, jets.stops,
+        jets.rawFactor.content, jets.starts, jets.stops,
         met.pt, met.phi,
     )
     return (
@@ -265,7 +265,7 @@ def calculate_new_jets_met(jer_var, jes_var, unclust_threshold, unclustx_var, un
     )
 @njit
 def jit_calculate_new_jets_met(jer_var, jes_var, unclust_threshold, unclustx_var, unclusty_var,
-                               jets_jersf, jets_pt, jets_phi, jets_mass, jets_starts, jets_stops,
+                               jets_jersf, jets_pt, jets_phi, jets_mass, jets_kraw, jets_starts, jets_stops,
                                met_pt, met_phi):
     # common jet correction factor
     jets_corr = (1 + jer_var + jes_var)*jets_jersf
@@ -275,22 +275,27 @@ def jit_calculate_new_jets_met(jer_var, jes_var, unclust_threshold, unclustx_var
     new_jets_mass = jets_corr*jets_mass
 
     # Radian to cartesian for mex and mey corrections
-    jets_px, jets_py = RadToCart(jets_pt, jets_phi)
-    mex, mey = RadToCart(met_pt, met_phi)
+    jets_px, jets_py = RadToCart2D(jets_pt, jets_phi)
+    mex, mey = RadToCart2D(met_pt, met_phi)
 
     # Sum the jet modification contributions
     mex_jet_mod = np.zeros(met_pt.shape[0], dtype=float32)
     mey_jet_mod = np.zeros(met_pt.shape[0], dtype=float32)
     for iev, (jb, je) in enumerate(zip(jets_starts, jets_stops)):
         for ij in range(jb, je):
+            # uncorrect JES
             if jets_pt[ij] > unclust_threshold:
-                mex_jet_mod[iev] -= (jets_corr[ij]-1)*jets_px[ij]
-                mey_jet_mod[iev] -= (jets_corr[ij]-1)*jets_py[ij]
+                mex_jet_mod[iev] += jets_kraw[ij]*jets_px[ij]
+                mey_jet_mod[iev] += jets_kraw[ij]*jets_py[ij]
+            # correct JES and JER
+            if new_jets_pt[ij] > unclust_threshold:
+                mex_jet_mod[iev] -= (jets_corr[ij]+jets_kraw[ij]-1)*jets_px[ij]
+                mey_jet_mod[iev] -= (jets_corr[ij]+jets_kraw[ij]-1)*jets_py[ij]
 
     new_mex = mex + mex_jet_mod + unclustx_var
     new_mey = mey + mey_jet_mod + unclusty_var
 
-    new_met_pt, new_met_phi = CartToRad(new_mex, new_mey)
+    new_met_pt, new_met_phi = CartToRad2D(new_mex, new_mey)
     return ((new_jets_pt, new_jets_mass), (new_met_pt, new_met_phi))
 
 ################################################################################
