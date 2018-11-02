@@ -1,7 +1,7 @@
 import uproot
 import numpy as np
 from numba import njit, float32, int32
-from utils.Geometry import RadToCart, CartToRad, BoundPhi
+from utils.Geometry import RadToCart2D, CartToRad2D, BoundPhi, PartCoorToCart3D, CartToPartCoor3D
 from .CollectionCreator import Collection
 
 class EventSumsProducer(object):
@@ -14,6 +14,7 @@ class EventSumsProducer(object):
         event.DiMuon = Collection("DiMuon", event)
         event.DiElectron = Collection("DiElectron", event)
         event.MHT40 = Collection("MHT40", event)
+        event.HMiss = Collection("HMiss", event)
 
         # DiMuon
         dimu_pt, dimu_phi = create_dilepton(event.MuonSelection)
@@ -72,6 +73,11 @@ class EventSumsProducer(object):
             setattr(event, "HT40{}".format(variation), ht)
             setattr(event, "MHT40_pt{}".format(variation), mht)
             setattr(event, "MHT40_phi{}".format(variation), mhphi)
+
+            hmiss_pt, hmiss_eta, hmiss_phi = create_hmiss(event.JetSelection, variation)
+            setattr(event, "HMiss_pt{}".format(variation), hmiss_pt)
+            setattr(event, "HMiss_eta{}".format(variation), hmiss_eta)
+            setattr(event, "HMiss_phi{}".format(variation), hmiss_phi)
 
             # dPhi(J, METnoX)
             setattr(
@@ -209,13 +215,43 @@ def create_mht_jit(jetpt, jetphi, starts, stops):
         for jet_index in range(start, stop):
             if jetpt[jet_index] > 40.:
                 ht += jetpt[jet_index]
-                px, py = RadToCart(jetpt[jet_index], jetphi[jet_index])
+                px, py = RadToCart2D(jetpt[jet_index], jetphi[jet_index])
                 mhx -= px
                 mhy -= py
         hts[iev] = ht
-        mhts[iev], mhphis[iev] = CartToRad(mhx, mhy)
+        mhts[iev], mhphis[iev] = CartToRad2D(mhx, mhy)
 
     return hts, mhts, mhphis
+
+def create_hmiss(jets, variation):
+    return create_hmiss_jit(
+        getattr(jets, "pt{}".format(variation)).content,
+        jets.eta.content, jets.phi.content,
+        jets.starts, jets.stops,
+    )
+
+@njit
+def create_hmiss_jit(jetpt, jeteta, jetphi, starts, stops):
+    nev = stops.shape[0]
+    hmiss_pts = np.zeros(nev, dtype=float32)
+    hmiss_etas = np.zeros(nev, dtype=float32)
+    hmiss_phis = np.zeros(nev, dtype=float32)
+
+    for iev, (start, stop) in enumerate(zip(starts, stops)):
+        hxmiss, hymiss, hzmiss = 0., 0., 0.
+        for ij in range(start, stop):
+            px, py, pz = PartCoorToCart3D(jetpt[ij], jeteta[ij], jetphi[ij])
+            hxmiss -= px
+            hymiss -= py
+            hzmiss -= pz
+        if hxmiss == hymiss == hzmiss == 0.:
+            hmiss_pt, hmiss_eta, hmiss_phi = 0., 0., 0.,
+        else:
+            hmiss_pt, hmiss_eta, hmiss_phi = CartToPartCoor3D(hxmiss, hymiss, hzmiss)
+        hmiss_pts[iev] = hmiss_pt
+        hmiss_etas[iev] = hmiss_eta
+        hmiss_phis[iev] = hmiss_phi
+    return hmiss_pts, hmiss_etas, hmiss_phis
 
 def create_dilepton(muons):
     return jit_create_dilepton(
@@ -234,9 +270,9 @@ def jit_create_dilepton(muons_pt, muons_phi, muons_starts, muons_stops):
             dimupt = np.nan
             dimuphi = np.nan
         else:
-            mux1, muy1 = RadToCart(muons_pt[start], muons_phi[start])
-            mux2, muy2 = RadToCart(muons_pt[start+1], muons_phi[start+1])
-            dimupt, dimuphi = CartToRad(mux1+mux2, muy1+muy2)
+            mux1, muy1 = RadToCart2D(muons_pt[start], muons_phi[start])
+            mux2, muy2 = RadToCart2D(muons_pt[start+1], muons_phi[start+1])
+            dimupt, dimuphi = CartToRad2D(mux1+mux2, muy1+muy2)
         dimupts[iev] = dimupt
         dimuphis[iev] = dimuphi
 
@@ -276,13 +312,13 @@ def create_metnox_jit(met, mephi,
 
     for iev, (musta, musto, elsta, elsto) in enumerate(zip(mustarts, mustops,
                                                            elstarts, elstops)):
-        mex, mey = RadToCart(met[iev], mephi[iev])
+        mex, mey = RadToCart2D(met[iev], mephi[iev])
         for muidx in range(musta, musto):
-            mux, muy = RadToCart(mupt[muidx], muphi[muidx])
+            mux, muy = RadToCart2D(mupt[muidx], muphi[muidx])
             mex, mey = mex+mux, mey+muy
         for elidx in range(elsta, elsto):
-            elx, ely = RadToCart(elpt[elidx], elphi[elidx])
+            elx, ely = RadToCart2D(elpt[elidx], elphi[elidx])
             mex, mey = mex+elx, mey+ely
-        mets_out[iev], mephis_out[iev] = CartToRad(mex, mey)
+        mets_out[iev], mephis_out[iev] = CartToRad2D(mex, mey)
 
     return mets_out, mephis_out
