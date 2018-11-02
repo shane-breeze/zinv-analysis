@@ -46,6 +46,7 @@ class GenBosonProducer(object):
             genpart_dressedlepidx, gpbd.starts, gpbd.stops,
         )
 
+        event.GenPartBoson = Collection("GenPartBoson", event)
         pt, eta, phi, mass = create_genpart_boson(gpbd, event.GenDressedLepton)
         event.GenPartBoson_pt = pt
         event.GenPartBoson_eta = eta
@@ -55,17 +56,45 @@ class GenBosonProducer(object):
 
         # LeadGenPartBosonDaughter
         event.LeadGenPartBosonDaughters = Collection("LeadGenPartBosonDaughters", event)
-        idxs = get_nth_sorted_object_indices(0, gpbd.pt.content, gpbd.starts, gpbd.stops)
-        setattr(event, "LeadGenPartBosonDaughters_pt", gpbd.pt.content[idxs])
-        setattr(event, "LeadGenPartBosonDaughters_eta", gpbd.eta.content[idxs])
-        setattr(event, "LeadGenPartBosonDaughters_phi", gpbd.phi.content[idxs])
+        if gpbd.stops[-1] == 0:
+            pt = np.empty(event.size)
+            eta = np.empty(event.size)
+            phi = np.empty(event.size)
+            pt[:] = np.nan
+            eta[:] = np.nan
+            phi[:] = np.nan
+        else:
+            idxs = get_nth_sorted_object_indices(0, gpbd.pt.content, gpbd.starts, gpbd.stops)
+            pt = gpbd.pt.content[idxs]
+            eta = gpbd.eta.content[idxs]
+            phi = gpbd.phi.content[idxs]
+            pt[idxs==-1] = np.nan
+            eta[idxs==-1] = np.nan
+            phi[idxs==-1] = np.nan
+        setattr(event, "LeadGenPartBosonDaughters_pt", pt)
+        setattr(event, "LeadGenPartBosonDaughters_eta", eta)
+        setattr(event, "LeadGenPartBosonDaughters_phi", phi)
 
         # SecondGenPartBosonDaughter
         event.SecondGenPartBosonDaughters = Collection("SecondGenPartBosonDaughters", event)
-        idxs = get_nth_sorted_object_indices(1, gpbd.pt.content, gpbd.starts, gpbd.stops)
-        setattr(event, "SecondGenPartBosonDaughters_pt", gpbd.pt.content[idxs])
-        setattr(event, "SecondGenPartBosonDaughters_eta", gpbd.eta.content[idxs])
-        setattr(event, "SecondGenPartBosonDaughters_phi", gpbd.phi.content[idxs])
+        if gpbd.stops[-1] == 0:
+            pt = np.empty(event.size)
+            eta = np.empty(event.size)
+            phi = np.empty(event.size)
+            pt[:] = np.nan
+            eta[:] = np.nan
+            phi[:] = np.nan
+        else:
+            idxs = get_nth_sorted_object_indices(1, gpbd.pt.content, gpbd.starts, gpbd.stops)
+            pt = gpbd.pt.content[idxs]
+            eta = gpbd.eta.content[idxs]
+            phi = gpbd.phi.content[idxs]
+            pt[idxs==-1] = np.nan
+            eta[idxs==-1] = np.nan
+            phi[idxs==-1] = np.nan
+        setattr(event, "SecondGenPartBosonDaughters_pt", pt)
+        setattr(event, "SecondGenPartBosonDaughters_eta", eta)
+        setattr(event, "SecondGenPartBosonDaughters_phi", phi)
 
         event.delete_branches(["GenPartBosonDaughters_pdgId",
                                "GenPartBosonDaughters_pt",
