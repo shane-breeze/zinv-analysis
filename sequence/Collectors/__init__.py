@@ -1,5 +1,7 @@
 from .Histogrammer import HistReader, HistCollector
 import Histogrammer_cfg
+from .Histogrammer2D import Hist2DReader, Hist2DCollector
+import Histogrammer2D_cfg
 from .GenStitching import GenStitchingReader, GenStitchingCollector
 import GenStitching_cfg
 from .MetResponseResolution import MetResponseResolutionReader, MetResponseResolutionCollector
