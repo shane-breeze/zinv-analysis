@@ -32,6 +32,9 @@ class SelectionProducer(object):
         ("ev.LeadJetSelection.pt",   "ev.LeadJetSelection.pt{}"),
         ("ev.LeadJetSelection.mass", "ev.LeadJetSelection.mass{}"),
         ("ev.LeadJetSelection",      "ev.LeadJetSelection{}"),
+        ("ev.HMiss.pt",              "ev.HMiss.pt{}"),
+        ("ev.HMiss.eta",             "ev.HMiss.eta{}"),
+        ("ev.HMiss.phi",             "ev.HMiss.phi{}"),
     ])
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
@@ -54,6 +57,11 @@ class SelectionProducer(object):
             "MonojetQCD": baseline + es.baseline_selection + es.monojetqcd_selection,
             "MonojetQCDSB": baseline + es.baseline_selection + es.monojetqcdsb_selection,
             "MonojetQCDSR": baseline + es.baseline_selection + es.monojetqcdsr_selection,
+            "Monojet_remove_muon_selection_fmt_0": [(n, s)
+                                                    for (n, s) in baseline \
+                                                    + es.baseline_selection \
+                                                    + es.monojet_selection
+                                                    if n not in ["muon_selection_fmt_0"]],
             "SingleMuon": baseline + es.baseline_selection + es.singlemuon_selection,
             "SingleMuonSB": baseline + es.baseline_selection + es.singlemuonsb_selection,
             "SingleMuonSR": baseline + es.baseline_selection + es.singlemuonsr_selection,
