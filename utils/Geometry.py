@@ -15,12 +15,24 @@ def DeltaR2(deta, dphi):
     return deta**2 + BoundPhi(dphi)**2
 
 @njit
-def RadToCart(r, phi):
+def RadToCart2D(r, phi):
     return r*np.cos(phi), r*np.sin(phi)
 
 @njit
-def CartToRad(x, y):
+def CartToRad2D(x, y):
     return np.sqrt(x**2+y**2), BoundPhi(np.arctan2(y, x))
+
+@njit
+def PartCoorToCart3D(pt, eta, phi):
+    x, y = RadToCart2D(pt, phi)
+    z = pt*np.sinh(eta)
+    return x, y, z
+
+@njit
+def CartToPartCoor3D(x, y, z):
+    pt, phi = CartToRad2D(x, y)
+    eta = np.arctanh(z/np.sqrt(z**2+pt**2))
+    return pt, eta, phi
 
 @njit
 def LorTHPMToXYZE(t, h, p, m):
