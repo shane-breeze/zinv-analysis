@@ -141,6 +141,9 @@ class HistCollector(object):
                 os.makedirs(path)
             filepath = os.path.abspath(os.path.join(path, categories[3]))
 
+            if categories[2] != "":
+                filepath += "_" + categories[2]
+
             # Create args list for post-processing drawing
             with open(filepath+".pkl", 'w') as f:
                 pickle.dump((df_group, filepath, self.cfg), f)
