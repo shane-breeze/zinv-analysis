@@ -7,7 +7,9 @@ pi = np.pi+0.00001
 
 # dataset-cutflows split into regions
 monojet_categories = [("MET", "Monojet"), ("MET", "MonojetSB"), ("MET", "MonojetSR"),
-                      ("MET", "MonojetQCD"), ("MET", "MonojetQCDSB"), ("MET", "MonojetQCDSR")]
+                      ("MET", "MonojetQCD"), ("MET", "MonojetQCDSB"), ("MET", "MonojetQCDSR"),
+                      ("MET", "Monojet_remove_muon_selection_fmt_0"),
+                      ("SingleMuon", "Monojet_remove_muon_selection_fmt_0")]
 
 muon_met_categories = [("MET", "SingleMuon"), ("MET", "SingleMuonSB"), ("MET", "SingleMuonSR")]
 muon_mu_categories = [("SingleMuon", "SingleMuon"), ("SingleMuon", "SingleMuonSB"), ("SingleMuon", "SingleMuonSR")]
@@ -16,9 +18,11 @@ dimuon_mu_categories = [("SingleMuon", "DoubleMuon"),("SingleMuon", "DoubleMuonS
 ele_categories = [("SingleElectron", "SingleElectron"), ("SingleElectron", "SingleElectronSB"), ("SingleElectron", "SingleElectronSR")]
 diele_categories = [("SingleElectron", "DoubleElectron"), ("SingleElectron", "DoubleElectronSB"), ("SingleElectron", "DoubleElectronSR")]
 
-categories = monojet_categories + muon_met_categories + muon_mu_categories + \
-        dimuon_met_categories + dimuon_mu_categories + \
-        ele_categories + diele_categories
+categories = [("MET", "None")]\
+        + monojet_categories\
+        + muon_met_categories + muon_mu_categories\
+        + dimuon_met_categories + dimuon_mu_categories\
+        + ele_categories + diele_categories
 
 monojet_variations = [
     ("nominal",       "ev: ev.Weight_{dataset}"),
