@@ -2,15 +2,16 @@ import argparse
 import copy
 import numpy as np
 from tabulate import tabulate as tab
+import yaml
 
 try: import cPickle as pickle
 except ImportError: import pickle
 
 import pandas as pd
-pd.set_option('display.max_rows', None)
-pd.set_option('display.max_columns', None)
-pd.set_option('display.max_colwidth', -1)
-pd.set_option('display.width', None)
+#pd.set_option('display.max_rows', None)
+#pd.set_option('display.max_columns', None)
+#pd.set_option('display.max_colwidth', -1)
+#pd.set_option('display.width', None)
 
 import logging
 logging.basicConfig()
@@ -23,16 +24,27 @@ def parse_args():
     parser.add_argument("input", type=str, help="Input pickle file")
     parser.add_argument("--binning", type=str, default="[200.]",
                         help="Binning to use")
+    parser.add_argument("--shape", type=bool, default=False,
+                        help="Create shape datacards")
 
     return parser.parse_args()
 
-def open_df(path):
+def parse_args_yaml():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument("configs", type=str,
+                        help="Comma delimited list of yaml configs")
+
+    return parser.parse_args()
+
+def open_df(cfg):
+    path = cfg["input"]
     with open(path, 'r') as f:
-        df = pickle.load(f)
+        df = pickle.load(f)[1]
     df = df.reset_index("variable0", drop=True)
     return df
 
-def reformat(df, binning):
+def reformat(df, cfg):
     # Rebin
     def rebin(df, bins):
         df = df.reset_index(["bin0_low", "bin0_upp"])
@@ -49,7 +61,7 @@ def reformat(df, binning):
                 .set_index("bin0_low", append=True)\
                 .set_index("bin0_upp", append=True)
         return df
-    #bins = [-np.infty]+list(np.linspace(200., 1000., 17))+[np.infty]
+    binning = cfg["binning"]
     bins = [-np.infty]+list(binning)+[np.infty]
     df = rebin(df, bins)
 
@@ -62,49 +74,37 @@ def reformat(df, binning):
         df = df.set_index(level, append=True)\
                 .reorder_levels(levels)
         return df
-    df = rename_level_values(df, "dataset", {"MET": "MET"})
-    df = rename_level_values(df, "region", {
-        "Monojet": "monojet", "SingleMuon": "singlemu", "DoubleMuon": "doublemu",
-    })
-    df = rename_level_values(df, "process", {
-        "ZJetsToNuNu":    "znunu",
-        "DYJetsToMuMu":   "zmumu",
-        "WJetsToENu":     "wlnu",
-        "WJetsToMuNu":    "wlnu",
-        "WJetsToTauNu":   "wlnu",
-        "QCD":            "qcd",
-        "TTJets":         "bkg",
-        "Diboson":        "bkg",
-        "DYJetsToEE":     "bkg",
-        "DYJetsToTauTau": "bkg",
-        "EWKV2Jets":      "bkg",
-        "SingleTop":      "bkg",
-        "G1Jet":          "bkg",
-        "VGamma":         "bkg",
-        "MET":            "MET",
-        "SingleMuon":     "SingleMuon",
-        "SingleElectron": "SingleElectron",
-    })
+    df = rename_level_values(df, "dataset", cfg["dataset_conv"])
+    df = rename_level_values(df, "region", cfg["region_conv"])
+    df = rename_level_values(df, "process", cfg["process_conv"])
     df = df.groupby(df.index.names).sum()
 
     levels = df.index.names
     df = df.reset_index(["process", "dataset"])
-    df["drop"] = df.apply(lambda row: row["process"] in ["MET", "SingleMuon", "SingleElectron"]\
+    df["drop"] = df.apply(lambda row: row["process"] in cfg["dataset_conv"].keys()
                           and row["process"] != row["dataset"], axis=1)
     df = df.set_index(["process", "dataset"], append=True)\
             .reorder_levels(levels)
     df = df[~df["drop"]].drop("drop", axis=1)
+
+    # Select MET->(monojet, singlemu, doublemu) and
+    # SingleElectron->(singleele, doubleele)
+    df = df.reset_index(["process", "weight", "name", "bin0_low", "bin0_upp"])
+    df = df.loc[cfg["dataset_regions"]]
+    df = df.set_index(["process", "weight", "name", "bin0_low", "bin0_upp"], append=True)
+
     return df
 
-def create_datacards(df):
+def create_datacards(df, cfg):
+    allowed_datasets = cfg["dataset_conv"].keys()
     for category, dfgroup in df.groupby(["bin0_low", "bin0_upp"]):
         if np.isinf(category[0]):
             continue
 
         # data obs
-        df_obs = dfgroup[dfgroup.index.get_level_values("process").isin(["MET"])]["yield"]
+        df_obs = dfgroup[dfgroup.index.get_level_values("process").isin(allowed_datasets)]["yield"]
         df_obs = df_obs.reset_index([l for l in df.index.names if l != "region"], drop=True)
-        dfgroup = dfgroup[~dfgroup.index.get_level_values("process").isin(["MET"])]
+        dfgroup = dfgroup[~dfgroup.index.get_level_values("process").isin(allowed_datasets)]
 
         # mc rate
         df_rate = dfgroup[dfgroup.index.get_level_values("weight").isin(["nominal"])]["yield"]
@@ -112,13 +112,11 @@ def create_datacards(df):
         df_rate = df_rate.fillna(1e-10)
         df_rate = df_rate.reset_index("process")
         df_rate["proc"] = df_rate["process"].map(
-            dict(zip(*zip(*enumerate(["znunu", "zmumu", "wlnu", "qcd", "bkg"], 0))[::-1]))
+            dict(zip(*zip(*enumerate(cfg["processes"], 0))[::-1]))
         )
         df_rate = df_rate.set_index("process", append=True)
         df_rate[df_rate["yield"]<0.] = np.nan
         df_rate[df_rate.groupby("region").apply(lambda x: x/x.sum())["yield"]<0.001] = np.nan
-        print(df_rate)
-        exit()
 
         # nuisances
         df_nominal = dfgroup[dfgroup.index.get_level_values("weight").isin(["nominal"])]
@@ -135,9 +133,6 @@ def create_datacards(df):
         df_nuis.loc[df_nuis.index.get_level_values("process").isin(["wlnu"]),"lumiUp"] = 1.
         df_nuis.loc[df_nuis.index.get_level_values("process").isin(["wlnu"]),"lumiDown"] = 1.
 
-        # Fix for bug in zinv-analysis framework
-        df_nuis.loc[:,"metTrigSFDown"] = 1/df_nuis[["metTrigSFDown"]]
-
         # Fix one-sided uncertainties (lack of stats in events which differ)
         nuisances = list(set(c.replace("Up","").replace("Down","") for c in df_nuis.columns))
         for n in nuisances:
@@ -146,26 +141,24 @@ def create_datacards(df):
             df_temp.loc[((df_temp-1).prod(axis=1)>0) & (np.abs(df_temp[n+"Up"]-1)<np.abs(df_temp[n+"Down"]-1)), n+"Up"] = 1.
             df_nuis[[n+"Up", n+"Down"]] = df_temp
 
-        # symmetric uncertainties
-        #for n in nuisances:
-        #    df_nuis[n+"Up"] = np.sqrt(df_nuis[n+"Up"]/df_nuis[n+"Down"])
-        #    df_nuis[n+"Down"] = 1/df_nuis[n+"Up"]
-
         # order
-        order = [
-            ("monojet", "znunu"), ("monojet", "zmumu"), ("monojet", "wlnu"),
-            ("monojet", "qcd"), ("monojet", "bkg"),
-            ("singlemu", "znunu"), ("singlemu", "zmumu"), ("singlemu", "wlnu"),
-            ("singlemu", "qcd"), ("singlemu", "bkg"),
-            ("doublemu", "znunu"), ("doublemu", "zmumu"), ("doublemu", "wlnu"),
-            ("doublemu", "qcd"), ("doublemu", "bkg"),
+        regions = [r for d, r in cfg["dataset_regions"]]
+        processes = cfg["processes"]
+        proc_order = [
+            (r, p)
+            for r in regions
+            for p in processes
         ]
-        df_obs = df_obs.loc[list(set(o[0] for o in order))].dropna()
-        df_rate = df_rate.reindex(order).dropna()
+
+        bin_order = []
+        for bin, proc in proc_order:
+            if bin not in bin_order:
+                bin_order.append(bin)
+        df_obs = df_obs.reindex(bin_order, fill_value=0)
+        df_rate = df_rate.reindex(proc_order).dropna()
         df_nuis = df_nuis.loc[df_rate.index]
 
-        # Remove muonTrig
-        df_nuis = df_nuis[[c for c in df_nuis.columns if "muonTrig" not in c]]
+        df_nuis = df_nuis[[c for c in df_nuis.columns if c in cfg["systematics"]]]
 
         low = int(category[0]) if not np.isinf(category[0]) else "Inf"
         high = int(category[1]) if not np.isinf(category[1]) else "Inf"
@@ -234,12 +227,12 @@ def create_datacard(df_obs, df_rate, df_nuis, filename):
     tf_wlnu_regions = list(df_rate[df_rate["process"]=="wlnu"]["region"])
     r_nunu_regions = list(df_rate[df_rate["process"]=="znunu"]["region"])
     r_mumu_regions = list(df_rate[df_rate["process"]=="zmumu"]["region"])
+    r_ee_regions = list(df_rate[df_rate["process"]=="zee"]["region"])
 
     # PARAMS
     dc += tab(
-        [["tf_wlnu", "rateParam", region,  "wlnu",  1] for region in tf_wlnu_regions] +\
-        [["r_z",     "rateParam", region,  "znunu", 1] for region in r_nunu_regions] +\
-        [["r_z",     "rateParam", region, "zmumu", 1] for region in r_mumu_regions],
+        [["tf_wlnu", "rateParam", "*", "wlnu", 1, "[0,10]"]] +\
+        [["r_z", "rateParam", "*", "z*", 1, "[0,10]"]],
         [], tablefmt="plain",
     )
 
@@ -248,11 +241,15 @@ def create_datacard(df_obs, df_rate, df_nuis, filename):
     logger.info("Created {}".format(filename))
 
 def main():
-    options = parse_args()
+    options = parse_args_yaml()
 
-    df = open_df(options.input)
-    df = reformat(df, eval(options.binning))
-    create_datacards(df)
+    config_filenames = options.configs.split(",")
+    for config_filename in config_filenames:
+        with open(config_filename, 'r') as f:
+            config = yaml.load(f)
+        df = open_df(config)
+        df = reformat(df, config)
+        create_datacards(df, config)
 
 if __name__ == "__main__":
     main()

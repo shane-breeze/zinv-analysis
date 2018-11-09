@@ -124,6 +124,7 @@ class HistCollector(object):
         datasets = ["MET", "SingleMuon", "SingleElectron"]
 
         df = histograms.histograms
+        binning = histograms.binning
         all_columns = list(df.index.names)
         columns_noproc = [c for c in all_columns if c != "process"]
         columns_noproc_nobins = [c for c in columns_noproc if "bin" not in c]
@@ -145,9 +146,10 @@ class HistCollector(object):
                 filepath += "_" + categories[2]
 
             # Create args list for post-processing drawing
+            bins = binning[categories[3]][0]
             with open(filepath+".pkl", 'w') as f:
-                pickle.dump((df_group, filepath, self.cfg), f)
-            args.append((dist_ratio, (df_group, filepath, self.cfg)))
+                pickle.dump((df_group, bins, filepath, self.cfg), f)
+            args.append((dist_ratio, (df_group, bins, filepath, self.cfg)))
         return args
 
     def reload(self, outdir):

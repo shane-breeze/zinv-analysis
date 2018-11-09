@@ -12,9 +12,17 @@ class Histograms(object):
         self.histograms = None
         self.configs = []
         self.string_to_func = {}
+        self.binning = {}
 
     def extend(self, configs):
         self.configs.extend(configs)
+
+        # update binning
+        for config in self.configs:
+            name = config["name"]
+            if isinstance(name, list):
+                name = "__".join(name)
+            self.binning[name] = config["bins"]
 
     def begin(self, event, parents, selection):
         self.isdata = event.config.dataset.isdata
@@ -118,7 +126,13 @@ class Histograms(object):
         columns = [c for c in df.columns if c not in ["count", "yield", "variance"] and "bin" not in c]
         columns += bin_names + ["count", "yield", "variance"]
         df = df[columns]
-        return df
+        return self.make_sparse_df(df)
+
+    def make_sparse_df(self, df):
+        return df.loc[df["count"]!=0]
+
+    def make_dense_df(self, df):
+        pass
 
     def create_onedim_hists(self, bins, counts, yields, variance):
         counts_1d = counts.T.ravel()
@@ -156,11 +170,11 @@ class Histograms(object):
 
         path = os.path.join(outdir, "results.pkl")
         with open(path, 'w') as f:
-            pickle.dump(self.histograms, f, protocol=pickle.HIGHEST_PROTOCOL)
+            pickle.dump((self.binning, self.histograms), f, protocol=pickle.HIGHEST_PROTOCOL)
         return self
 
     def reload(self, outdir):
         path = os.path.join(outdir, "results.pkl")
         with open(path, 'r') as f:
-            self.histograms = pickle.load(f)
+            self.binning, self.histograms = pickle.load(f)
         return self

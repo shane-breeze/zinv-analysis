@@ -23,7 +23,7 @@ def make_error_boxes(ax, xlow, xhigh, ylow, yhigh, facecolor='r',
     ax.add_collection(pc)
     return errorboxes[0]
 
-def dist_scatter_pull(df, variations, filepath, cfg):
+def dist_scatter_pull(df, bins, variations, filepath, cfg):
     # # change stuff
     # bin1_low = df.index.get_level_values("bin1_low").values
     # bin1_upp = df.index.get_level_values("bin1_upp").values
@@ -39,7 +39,9 @@ def dist_scatter_pull(df, variations, filepath, cfg):
     attr = df.columns[0]
 
     # Remove underflow bin
+    bins = bins[1:-1]
     df = df[~np.isinf(df.index.get_level_values("bin1_low"))]
+    df = df[~np.isinf(df.index.get_level_values("bin1_upp"))]
 
     # Split into data and MC
     df_data = df[df.index.get_level_values('process').isin(datasets)]\
@@ -48,11 +50,13 @@ def dist_scatter_pull(df, variations, filepath, cfg):
             .reset_index("process", drop=True)
 
     # Get binning
-    bin_edges = list(df_data.index.get_level_values("bin1_low").values)
-    bin_edges.append(2*bin_edges[-1] - bin_edges[-2])
-    bin_edges = np.array(bin_edges)
-    bin_cents = (bin_edges[1:] + bin_edges[:-1])/2
-    bin_widths = (bin_edges[1:] - bin_edges[:-1])
+    bins = list(bins)
+    bins.append(2*bins[-1]-bins[-2])
+    bins = np.array(bins)
+    ylow = df_data.index.get_level_values("bin1_low").values
+    yupp = df_data.index.get_level_values("bin1_upp").values
+    ycents = (yupp + ylow)/2
+    ywidths = (yupp - ylow)
 
     # total uncertainty
     df_mc["{}_unc_up_total".format(attr)] = df_mc["{}_unc".format(attr)]**2
@@ -109,19 +113,18 @@ def dist_scatter_pull(df, variations, filepath, cfg):
     axmidnull.axis('off')
 
     # top axes
-    axtop.text(0, 1, r'$\mathbf{CMS}\ \mathit{Preliminary}$',
+    axtop.text(0, 1.005, r'$\mathbf{CMS}\ \mathit{Preliminary}$',
                ha='left', va='bottom', transform=axtop.transAxes,
                fontsize='large')
-
-    axtop.text(1, 1, r'$35.9\ \mathrm{fb}^{-1}(13\ \mathrm{TeV})$',
+    axtop.text(1, 1.005, r'$35.9\ \mathrm{fb}^{-1}(13\ \mathrm{TeV})$',
                ha='right', va='bottom', transform=axtop.transAxes,
                fontsize='large')
 
     # absolute MC boxes
     rect_eg = make_error_boxes(
         axtop,
-        bin_cents - bin_widths/2,
-        bin_cents + bin_widths/2,
+        ycents - ywidths/2,
+        ycents + ywidths/2,
         df_mc[attr] - df_mc["{}_unc_down_total".format(attr)],
         df_mc[attr] + df_mc["{}_unc_up_total".format(attr)],
         facecolor="#80b1d3",
@@ -130,8 +133,8 @@ def dist_scatter_pull(df, variations, filepath, cfg):
 
     # absolute data points
     axtop.errorbar(
-        bin_cents, df_data[attr],
-        xerr=bin_widths/2, yerr=df_data["{}_unc_total".format(attr)],
+        ycents, df_data[attr],
+        xerr=ywidths/2, yerr=df_data["{}_unc_total".format(attr)],
         fmt='o', markersize=3, linewidth=1,
         capsize=1.8, color="black", label="Data",
     )
@@ -173,8 +176,16 @@ def dist_scatter_pull(df, variations, filepath, cfg):
     #axtop.set_ylabel(r'$\mu(E_{T,\perp}^{miss}) / \langle p_{T}(\mu\mu) \rangle$')
 
     # Middle axes
+    axmid.axhline(1, ls='--', color='grey', lw=1)
+    axmid.set_ylabel("Data / MC", fontsize='large')
+    # TODO
+    #axmid.set_ylim((0.75, 1.25))
+
+    xlow = df_ratio.index.get_level_values("bin1_low").values
+    xupp = df_ratio.index.get_level_values("bin1_upp").values
+    xbins = np.array(list(xlow) + [xupp[-1]])
     axmid.fill_between(
-        bin_edges,
+        xbins,
         list(1.-df_ratio["ratio_mc_unc"])+[1.],
         list(1.+df_ratio["ratio_mc_unc"])+[1.],
         step = 'post',
@@ -183,19 +194,14 @@ def dist_scatter_pull(df, variations, filepath, cfg):
     )
 
     axmid.errorbar(
-        bin_cents, df_ratio["ratio"],
-        xerr=bin_widths/2, yerr=df_ratio["ratio_data_unc"],
+        ycents, df_ratio["ratio"],
+        xerr=ywidths/2, yerr=df_ratio["ratio_data_unc"],
         fmt='o', markersize=3, linewidth=1,
         capsize=1.8, color="black",
     )
 
-    axmid.axhline(1, ls='--', color='grey', lw=1)
-    axmid.set_ylabel("Data / MC", fontsize='large')
-    # TODO
-    #axmid.set_ylim((0.75, 1.25))
-
     # bottom axes
-    axbot.plot(bin_cents, df_pulls["pull"], 'o', ms=3, mfc='black', mec='black')
+    axbot.plot(ycents, df_pulls["pull"], 'o', ms=3, mfc='black', mec='black')
     axbot.set_xlabel(cfg.xlabel, fontsize='large')
     axbot.set_ylabel("Pull", fontsize='large')
 

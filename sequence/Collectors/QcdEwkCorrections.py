@@ -16,6 +16,7 @@ class QcdEwkCorrectionsReader(HistReader):
 class QcdEwkCorrectionsCollector(HistCollector):
     def draw(self, histograms):
         df = histograms.histograms
+        binning = histograms.binning
         all_columns = list(df.index.names)
         all_columns.insert(all_columns.index("process"), "key")
         all_columns.remove("process")
@@ -42,8 +43,9 @@ class QcdEwkCorrectionsCollector(HistCollector):
             filepath = os.path.abspath(os.path.join(path, name))
             cfg = copy.deepcopy(self.cfg)
             cfg.name = name
+            bins = binning[name]
             with open(filepath+".pkl", 'w') as f:
-                pickle.dump((df_group, filepath, cfg), f)
-            args.append((dist_comp, (df_group, filepath, cfg)))
+                pickle.dump((df_group, bins, filepath, cfg), f)
+            args.append((dist_comp, (df_group, bins, filepath, cfg)))
 
         return args

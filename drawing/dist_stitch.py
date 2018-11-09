@@ -1,19 +1,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 
-def dist_stitch(df, filepath, cfg):
+def dist_stitch(df, bins, filepath, cfg):
     all_columns = list(df.index.names)
     columns_noproc = [c for c in all_columns if c != "process"]
     columns_nobins = [c for c in all_columns if "bin" not in c]
     columns_nobins_noproc = [c for c in columns_nobins if c != "process"]
 
     # Remove under and overflow bins (add overflow into final bin)
-    def truncate(indf):
-        #indf.iloc[-2] += indf.iloc[-1]
-        indf = indf.iloc[1:-1]
-        indf = indf.reset_index(columns_nobins, drop=True)
-        return indf
-    df = df.groupby(columns_nobins).apply(truncate)
+    bins = np.array(bins[0][1:-1])
 
     df_pivot_proc = df.pivot_table(
         values='yield',
@@ -45,19 +41,26 @@ def dist_stitch(df, filepath, cfg):
         gridspec_kw={'height_ratios': [3, 1]},
         figsize = (4.8, 6.4),
     )
-    if cfg.log: axtop.set_yscale('log')
+    if cfg.log:
+        locmin = ticker.LogLocator(
+            base = 10.0,
+            subs = (0.1,0.2,0.4,0.6,0.8,1,2,4,6,8,10),
+        )
+        axtop.yaxis.set_minor_locator(locmin)
+        axtop.yaxis.set_minor_formatter(ticker.NullFormatter())
+        axtop.yaxis.set_major_formatter(ticker.LogFormatterSciNotation())
+        axtop.set_yscale('log')
 
     # Get the global bins
-    bins_low = list(df_pivot_proc.index.get_level_values("bin0_low"))
-    bins_upp = list(df_pivot_proc.index.get_level_values("bin0_upp"))
-    bins = np.array(bins_low[:]+[bins_upp[-1]])
-    bin_centers = (bins[1:]+bins[:-1])/2
-    bin_widths = (bins[1:]-bins[:-1])
+    xlow = df_pivot_proc.index.get_level_values("bin0_low").values
+    xupp = df_pivot_proc.index.get_level_values("bin0_upp").values
+    xcenters = (xupp + xlow)/2
 
     # Stacked plot
     sorted_processes = list(df_pivot_proc.sum().sort_values(ascending=False).index)
+    df_pivot_proc = df_pivot_proc.fillna(0)
     axtop.hist(
-        [bin_centers]*len(sorted_processes),
+        [xcenters]*len(sorted_processes),
         bins = bins,
         weights = [df_pivot_proc[proc].values for proc in sorted_processes],
         histtype='step',
@@ -88,17 +91,20 @@ def dist_stitch(df, filepath, cfg):
     axtop.legend(handles, labels)
 
     # Ratio plot
+    if df_ratio.shape[0] > 2:
+        df_ratio.iloc[-2] = 1.
     axbot.hist(
-        bin_centers,
+        xcenters,
         bins = bins,
         weights = df_ratio,
         color = "black",
         histtype = 'step',
     )
+
     axbot.fill_between(
-        bins,
-        list(1. - df_ratio_err.values) + [1.],
-        list(1. + df_ratio_err.values) + [1.],
+        xlow,
+        1. - df_ratio_err.values,
+        1. + df_ratio_err.values,
         step = 'post',
         color = "#aaaaaa",
         label = "MC stat. unc.",

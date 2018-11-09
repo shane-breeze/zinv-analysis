@@ -65,6 +65,8 @@ class SelectionProducer(object):
             "SingleMuon": baseline + es.baseline_selection + es.singlemuon_selection,
             "SingleMuonSB": baseline + es.baseline_selection + es.singlemuonsb_selection,
             "SingleMuonSR": baseline + es.baseline_selection + es.singlemuonsr_selection,
+            "SingleMuonPlus": baseline + es.baseline_selection + es.singlemuon_selection + es.singlemuonplus_selection,
+            "SingleMuonMinus": baseline + es.baseline_selection + es.singlemuon_selection + es.singlemuonminus_selection,
             "DoubleMuon": baseline + es.baseline_selection + es.doublemuon_selection,
             "DoubleMuon_unblind": [(n, s)
                                    for (n, s) in baseline \

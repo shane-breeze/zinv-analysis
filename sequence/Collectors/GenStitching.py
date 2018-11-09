@@ -27,6 +27,7 @@ processes = [
 class GenStitchingCollector(HistCollector):
     def draw(self, histograms):
         df = histograms.histograms
+        binning = histograms.binning
 
         all_columns = [i for i in df.index.names]
         all_columns.insert(all_columns.index("process")+1, "parent")
@@ -46,8 +47,9 @@ class GenStitchingCollector(HistCollector):
             filepath = os.path.abspath(os.path.join(path, "__".join([category[2],category[4]])))
             cfg = copy.deepcopy(self.cfg)
             cfg.name = category[4]
+            bins = binning[category[4]]
             with open(filepath+".pkl", 'w') as f:
-                pickle.dump((df_group, filepath, cfg), f)
-            args.append((dist_stitch, (df_group, filepath, cfg)))
+                pickle.dump((df_group, bins, filepath, cfg), f)
+            args.append((dist_stitch, (df_group, bins, filepath, cfg)))
 
         return args

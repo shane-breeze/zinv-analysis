@@ -2,15 +2,9 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import logging
-
 logging.basicConfig()
 
-#pd.set_option('display.max_rows', None)
-#pd.set_option('display.max_columns', None)
-#pd.set_option('display.max_colwidth', -1)
-#pd.set_option('display.width', None)
-
-def dist_multicomp(df, filepath, cfg):
+def dist_multicomp(df, bins, filepath, cfg):
     if "nominal" not in df.index.get_level_values("key").unique():
         return df
 
@@ -23,12 +17,7 @@ def dist_multicomp(df, filepath, cfg):
     columns_nokey_nobins = [c for c in columns_nokey if "bin" not in c]
 
     # Remove under and overflow bins (add overflow into final bin)
-    def truncate(indf):
-        indf.iloc[-2] += indf.iloc[-1]
-        indf = indf.iloc[1:-1]
-        indf = indf.reset_index(columns_nobins, drop=True)
-        return indf
-    df = df.groupby(columns_nobins).apply(truncate)
+    bins = bins[1:-1]
 
     df = df.reset_index(["bin0_low", "bin0_upp"])
     new_bins = list(np.linspace(0., 1000., 21))
@@ -166,7 +155,7 @@ def dist_multicomp(df, filepath, cfg):
     print("Creating {}.pdf".format(filepath))
 
     # Actually save the figure
-    plt.tight_layout()
+    #plt.tight_layout()
     fig.savefig(filepath+".pdf", format="pdf", bbox_inches="tight")
     plt.close(fig)
 

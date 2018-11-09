@@ -12,6 +12,8 @@ class Hist2DCollector(HistCollector):
         datasets = ["MET", "SingleMuon", "SingleElectron"]
 
         df = histograms.histograms
+        binning = histograms.binning
+
         all_columns = list(df.index.names)
         columns_nobins = [c for c in all_columns if "bin" not in c]
 
@@ -29,10 +31,10 @@ class Hist2DCollector(HistCollector):
             cfg = copy.deepcopy(self.cfg)
             cfg.xlabel = cfg.axis_label.get(xlab, xlab)
             cfg.ylabel = cfg.axis_label.get(ylab, ylab)
+            bins = binning[categories[4]]
 
             # Create args list for post-processing drawing
             with open(filepath+".pkl", 'w') as f:
-                pickle.dump((df_group, filepath, cfg), f)
-            #args.append((dist_2d, (df_group, filepath, cfg)))
-            dist_2d(df_group, filepath, cfg)
+                pickle.dump((df_group, bins, filepath, cfg), f)
+            args.append((dist_2d, (df_group, bins, filepath, cfg)))
         return args

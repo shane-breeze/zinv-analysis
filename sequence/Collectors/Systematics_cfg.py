@@ -6,10 +6,9 @@ inf = np.infty
 pi = np.pi+0.00001
 
 # dataset-cutflows split into regions
-monojet_categories = [("MET", "Monojet"), ("MET", "MonojetSB"), ("MET", "MonojetSR"),
-                      ("MET", "MonojetQCD"), ("MET", "MonojetQCDSB"), ("MET", "MonojetQCDSR"),
-                      ("MET", "Monojet_remove_muon_selection_fmt_0"),
-                      ("SingleMuon", "Monojet_remove_muon_selection_fmt_0")]
+monojet_categories = [("MET", "None"),
+                      ("MET", "Monojet"), ("MET", "MonojetSB"), ("MET", "MonojetSR"),
+                      ("MET", "MonojetQCD"), ("MET", "MonojetQCDSB"), ("MET", "MonojetQCDSR")]
 
 muon_met_categories = [("MET", "SingleMuon"), ("MET", "SingleMuonSB"), ("MET", "SingleMuonSR")]
 muon_mu_categories = [("SingleMuon", "SingleMuon"), ("SingleMuon", "SingleMuonSB"), ("SingleMuon", "SingleMuonSR")]
@@ -18,8 +17,7 @@ dimuon_mu_categories = [("SingleMuon", "DoubleMuon"),("SingleMuon", "DoubleMuonS
 ele_categories = [("SingleElectron", "SingleElectron"), ("SingleElectron", "SingleElectronSB"), ("SingleElectron", "SingleElectronSR")]
 diele_categories = [("SingleElectron", "DoubleElectron"), ("SingleElectron", "DoubleElectronSB"), ("SingleElectron", "DoubleElectronSR")]
 
-categories = [("MET", "None")]\
-        + monojet_categories\
+categories = monojet_categories\
         + muon_met_categories + muon_mu_categories\
         + dimuon_met_categories + dimuon_mu_categories\
         + ele_categories + diele_categories
@@ -141,14 +139,21 @@ sample_names = {
     "jes":       "JES",
     "jer":       "JER",
     "unclust":   "Unclust. En.",
-    "d1k_ew":    r'$\delta^{1}\kappa_{EW}$',
-    "d2k_ew_z":  r'$\delta^{2}\kappa_{EW}^{Z}$',
-    "d2k_ew_w":  r'$\delta^{2}\kappa_{EW}^{W}$',
-    "d3k_ew_z":  r'$\delta^{3}\kappa_{EW}^{Z}$',
-    "d3k_ew_w":  r'$\delta^{3}\kappa_{EW}^{W}$',
+    "d1k_ew":    r'$\delta^{(1)}\kappa_{EW}$',
+    "d2k_ew_z":  r'$\delta^{(2)}\kappa_{EW}^{Z}$',
+    "d2k_ew_w":  r'$\delta^{(2)}\kappa_{EW}^{W}$',
+    "d3k_ew_z":  r'$\delta^{(3)}\kappa_{EW}^{Z}$',
+    "d3k_ew_w":  r'$\delta^{(3)}\kappa_{EW}^{W}$',
     "eleIdIso":  "Ele. ID/Iso.",
     "eleReco":   "Ele. Reco.",
     "eleTrig":   "Ele. Trig.",
+
+    "znunu":    r'$Z_{\nu\nu}$+jets',
+    "wlnu":     r'$W_{l\nu}$+jets',
+    "bkg":      r'Bkg.',
+    "qcd":      r'QCD',
+    "zmumu":    r'$Z/\gamma^{*}_{\mu\mu}$+jets',
+    "zee":      r'$Z/\gamma^{*}_{e e}$+jets',
 }
 
 axis_label = {

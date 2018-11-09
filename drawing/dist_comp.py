@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-def dist_comp(df, filepath, cfg):
+def dist_comp(df, bins, filepath, cfg):
     # Define columns
     all_columns = list(df.index.names)
     columns_noname = [c for c in all_columns if c != "name"]
@@ -15,6 +15,7 @@ def dist_comp(df, filepath, cfg):
         indf = indf.reset_index(columns_nobins, drop=True)
         return indf
     df = df.groupby(columns_nobins).apply(truncate)
+    bins = bins[0][1:-1]
 
     df_pivot_name = df.pivot_table(
         values = 'yield',
@@ -35,11 +36,9 @@ def dist_comp(df, filepath, cfg):
     df_pivot_ratio = df_pivot_corr / df_pivot_uncorr
 
     # Get the global bins
-    bins_low = list(df_pivot_uncorr.index.get_level_values("bin0_low"))
-    bins_upp = list(df_pivot_uncorr.index.get_level_values("bin0_upp"))
-    bins = np.array(bins_low[:]+[bins_upp[-1]])
-    bin_centers = (bins[1:]+bins[:-1])/2
-    bin_widths = (bins[1:]-bins[:-1])
+    xlow = df_pivot_uncorr.index.get_level_values("bin0_low").values
+    xupp = df_pivot_uncorr.index.get_level_values("bin0_upp").values
+    xcenters = (xupp+xlow)/2
 
     # Split axis into top and bottom with ratio 3:1
     # Share the x axis, not the y axis
@@ -54,7 +53,7 @@ def dist_comp(df, filepath, cfg):
     # Draw hists
     all_keys = list(df.index.get_level_values("key").unique())
     axtop.hist(
-        [bin_centers]*len(all_keys),
+        [xcenters]*len(all_keys),
         bins = bins,
         weights = [df_pivot_uncorr[k] for k in all_keys],
         histtype = 'step',
@@ -64,7 +63,7 @@ def dist_comp(df, filepath, cfg):
     )
     handles, labels = axtop.get_legend_handles_labels()
     axtop.hist(
-        [bin_centers]*len(all_keys),
+        [xcenters]*len(all_keys),
         bins = bins,
         weights = [df_pivot_corr[k] for k in all_keys],
         histtype = 'step',
@@ -97,7 +96,7 @@ def dist_comp(df, filepath, cfg):
 
     # Ratio in bottom panel
     axbot.hist(
-        [bin_centers]*len(all_keys),
+        [xcenters]*len(all_keys),
         bins = bins,
         weights = [df_pivot_ratio[k] for k in all_keys],
         histtype = 'step',

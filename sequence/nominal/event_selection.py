@@ -23,6 +23,7 @@ jet_selection = "ev: (ev.JetSelection.size > 0) & "\
                     "(ev.LeadJetSelection.chHEF > 0.1) & "\
                     "(ev.LeadJetSelection.chHEF < 0.95)"
 muon_selection = "ev: (ev.MuonSelection.size == ev.MuonVeto.size) & (ev.MuonVeto.size == {})"
+muon_total_charge = "ev: ev.MuonTotalCharge == {}"
 ele_selection = "ev: (ev.ElectronSelection.size == ev.ElectronVeto.size) & (ev.ElectronVeto.size == {})"
 pho_veto = "ev: (ev.PhotonSelection.size == ev.PhotonVeto.size) & (ev.PhotonVeto.size == 0)"
 nbjet_veto = "ev: (ev.nBJetSelectionMedium == 0)"
@@ -95,6 +96,12 @@ event_selection.singlemuonsr_selection = [
     ("muon_selection_fmt_1", muon_selection.format(1)),
     ("ele_selection_fmt_0", ele_selection.format(0)),
     ("mtw_selection", mtw_selection),
+]
+event_selection.singlemuonplus_selection = [
+    ("muon_total_charge_fmt_pve1", muon_total_charge.format(1)),
+]
+event_selection.singlemuonminus_selection = [
+    ("muon_total_charge_fmt_nve1", muon_total_charge.format(-1)),
 ]
 
 event_selection.doublemuon_selection = [

@@ -36,6 +36,10 @@ class MetResponseResolutionCollector(HistCollector):
         datasets = ["MET", "SingleMuon", "SingleElectron"]
 
         df = histograms.histograms
+        if df.empty:
+            return []
+
+        binning = histograms.binning
         all_columns = list(df.index.names)
         columns_noproc = [c for c in all_columns if c != "process"]
         columns_nobin0 = [c for c in all_columns if "bin0" not in c]
@@ -169,9 +173,10 @@ class MetResponseResolutionCollector(HistCollector):
             ))
 
             # Create args list for post-process drawing
+            bins = binning[cat[4]][0] # 2D -> 1D profile
             with open(filepath+".pkl", 'w') as f:
-                pickle.dump((df_group, filepath, cfg), f)
-            args.append((dist_ratio, (df_group, filepath, cfg)))
+                pickle.dump((df_group, bins, filepath, cfg), f)
+            #args.append((dist_ratio, (df_group, bins, filepath, cfg)))
 
         df_fit = df_fit[~(
             df_fit.index.get_level_values("process").isin(datasets)\
@@ -207,9 +212,10 @@ class MetResponseResolutionCollector(HistCollector):
                 cfg.ylabel = ylabel
 
                 #dist_scatter_pull(df_toplot, self.variations, filepath, cfg)
+                bins = binning[cat[3]][0] # 2D -> 1D profile
                 with open(filepath+".pkl", 'w') as f:
-                    pickle.dump((df_toplot, self.variations, filepath, cfg), f)
-                args.append((dist_scatter_pull, (df_toplot, self.variations, filepath, cfg)))
+                    pickle.dump((df_toplot, bins, self.variations, filepath, cfg), f)
+                args.append((dist_scatter_pull, (df_toplot, bins, self.variations, filepath, cfg)))
 
         return args
 

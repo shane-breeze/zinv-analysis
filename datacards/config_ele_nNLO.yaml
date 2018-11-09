@@ -1,0 +1,63 @@
+input: output/systematics_collector/results.pkl
+binning: [250,300,350,400,500,600,800]
+shape: True
+dataset_regions:
+    - !!python/tuple ["MET", "monojet"]
+    - !!python/tuple ["MET", "singlemu"]
+    - !!python/tuple ["MET", "doublemu"]
+    - !!python/tuple ["SingleElectron", "singleele"]
+    - !!python/tuple ["SingleElectron", "doubleele"]
+processes:
+    - "znunu"
+    - "zmumu"
+    - "zee"
+    - "wlnu"
+    - "qcd"
+    - "bkg"
+systematics:
+    - "lumi"
+    - "d1k_ew"
+    - "d2k_ew_w"
+    - "d2k_ew_z"
+    - "d3k_ew_w"
+    - "d3k_ew_z"
+    - "metTrigSF"
+    - "muonId"
+    - "muonIso"
+    - "muonTrack"
+    # - "muonTrig"
+    - "pileup"
+    - "jer"
+    - "jes"
+    - "unclust"
+    - "eleIdIso"
+    - "eleReco"
+    - "eleTrig"
+dataset_conv:
+    MET: "MET"
+    SingleMuon: "SingleMuon"
+    SingleElectron: "SingleElectron"
+region_conv:
+    Monojet: "monojet"
+    SingleMuon: "singlemu"
+    DoubleMuon: "doublemu"
+    SingleElectron: "singleele"
+    DoubleElectron: "doubleele"
+process_conv:
+    ZJetsToNuNu: "znunu"
+    DYJetsToMuMu: "zmumu"
+    DYJetsToEE: "zee"
+    WJetsToENu: "wlnu"
+    WJetsToMuNu: "wlnu"
+    WJetsToTauNu: "wlnu"
+    QCD: "qcd"
+    TTJets: "bkg"
+    Diboson: "bkg"
+    DYJetsToTauTau: "bkg"
+    EWKV2Jets: "bkg"
+    SingleTop: "bkg"
+    G1Jet: "bkg"
+    VGamma: "bkg"
+    MET: "MET"
+    SingleMuon: "SingleMuon"
+    SingleElectron: "SingleElectron"

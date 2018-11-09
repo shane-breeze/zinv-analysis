@@ -19,6 +19,19 @@ class InvMassProducer(object):
         mll1[np.isnan(mll1)] = mll2[np.isnan(mll1)]
         event.MLL = mll1
 
+        event.MuonTotalCharge = create_charge_sum(muon)
+        event.ElectronTotalCharge = create_charge_sum(ele)
+
+def create_charge_sum(leps):
+    return create_charge_sum_jit(leps.charge.content, leps.starts, leps.stops)
+
+@njit
+def create_charge_sum_jit(charges, starts, stops):
+    total_charge = np.zeros(starts.shape[0], dtype=float32)
+    for iev, (start, stop) in enumerate(zip(starts, stops)):
+        total_charge[iev] = np.sum(charges[start:stop])
+    return total_charge
+
 def create_mll(leps):
     return create_mll_jit(leps.pt.content, leps.eta.content,
                           leps.phi.content, leps.mass.content,

@@ -2,12 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-pd.set_option('display.max_rows', None)
-pd.set_option('display.max_columns', None)
-pd.set_option('display.max_colwidth', -1)
-pd.set_option('display.width', None)
-
-def dist_2d(df, path, cfg):
+def dist_2d(df, bins, path, cfg):
     all_columns = list(df.index.names)
     columns_bins = [c for c in all_columns if "bin" in c]
 
@@ -15,24 +10,22 @@ def dist_2d(df, path, cfg):
     df = df.reset_index(columns_bins)
     df = df.loc[(~np.isinf(df)).all(axis=1)]\
             .set_index(columns_bins, append=True)
+    bins = [b[1:-1] for b in bins]
 
     # Create figure and axes
     fig, ax = plt.subplots(figsize=(5.76, 4.8))
 
-    xbin_low = df.index.get_level_values("bin0_low")
-    xbin_upp = df.index.get_level_values("bin0_upp")
-    ybin_low = df.index.get_level_values("bin1_low")
-    ybin_upp = df.index.get_level_values("bin1_upp")
+    xlow = df.index.get_level_values("bin0_low")
+    xupp = df.index.get_level_values("bin0_upp")
+    ylow = df.index.get_level_values("bin1_low")
+    yupp = df.index.get_level_values("bin1_upp")
 
-    xbins = (xbin_low + xbin_upp)/2
-    ybins = (ybin_low + ybin_upp)/2
-
-    xbins_unique = np.array(list(xbin_low.unique())+[xbin_upp.unique()[-1]])
-    ybins_unique = np.array(list(ybin_low.unique())+[ybin_upp.unique()[-1]])
+    x = (xlow + xupp)/2
+    y = (ylow + yupp)/2
 
     h = ax.hist2d(
-        xbins, ybins,
-        bins = [xbins_unique, ybins_unique],
+        x, y,
+        bins = bins,
         weights = df["yield"],
         cmap = "Blues",
     )

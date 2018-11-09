@@ -4,7 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.interpolate import spline
 
-def dist_ratio(df, filepath, cfg):
+def dist_ratio(df, bins, filepath, cfg):
     # Define columns
     datasets = ["MET", "SingleMuon", "SingleElectron"]
     all_columns = list(df.index.names)
@@ -13,12 +13,7 @@ def dist_ratio(df, filepath, cfg):
     columns_nobins_noproc = [c for c in columns_nobins if c != "process"]
 
     # Remove under and overflow bins (add overflow into final bin)
-    def truncate(indf):
-        indf.iloc[-2] += indf.iloc[-1]
-        indf = indf.iloc[1:-1]
-        indf = indf.reset_index(columns_nobins, drop=True)
-        return indf
-    df = df.groupby(columns_nobins).apply(truncate)
+    bins = np.array(bins[1:-1])
 
     # Sum (count, yield, variance) over all processes not data
     if not df.index.get_level_values('process').isin(["MCSum"]).any():
@@ -79,13 +74,6 @@ def dist_ratio(df, filepath, cfg):
     )
     if cfg.log: axtop.set_yscale('log')
 
-    # Get the global bins
-    bins_low = list(df_mcsum.index.get_level_values("bin0_low"))
-    bins_upp = list(df_mcsum.index.get_level_values("bin0_upp"))
-    bins = np.array(bins_low[:]+[bins_upp[-1]])
-    bin_centers = (bins[1:]+bins[:-1])/2
-    bin_widths = (bins[1:]-bins[:-1])
-
     df_mcall_pivot_proc = df_mcall.pivot_table(values='yield',
                                                index=columns_noproc,
                                                columns='process',
@@ -97,9 +85,13 @@ def dist_ratio(df, filepath, cfg):
         sorted_processes = ["Minor"]+sorted_processes
     df_mcall_pivot_proc = df_mcall_pivot_proc[sorted_processes]
 
+    df_mcall_pivot_proc = df_mcall_pivot_proc.fillna(0.)
     contents = [df_mcall_pivot_proc[process].values for process in sorted_processes]
+    xlow = df_mcall_pivot_proc.index.get_level_values("bin0_low")
+    xupp = df_mcall_pivot_proc.index.get_level_values("bin0_upp")
+    xcenters = (xupp + xlow)/2
     axtop.hist(
-        [bin_centers]*len(contents),
+        [xcenters]*len(contents),
         bins = bins,
         weights = contents,
         stacked = True,
@@ -108,8 +100,11 @@ def dist_ratio(df, filepath, cfg):
         label = sorted_processes,
     )
 
+    xlow = df_mcsum.index.get_level_values("bin0_low")
+    xupp = df_mcsum.index.get_level_values("bin0_upp")
+    xcenters = (xupp+xlow)/2
     axtop.hist(
-        bin_centers,
+        xcenters,
         bins = bins,
         weights = df_mcsum["yield"],
         histtype = 'step',
@@ -122,16 +117,18 @@ def dist_ratio(df, filepath, cfg):
             xs = (bins[1:] + bins[:-1])/2
             ys = df_mcsum["yield"].sum()*df_mcsum["formula"]/df_mcsum["formula"].sum()
             nans = np.isnan(ys)
-            xnew = np.linspace(xs[~nans].min(), xs[~nans].max(), xs[~nans].shape[0]*4)
-            ynew = spline(xs[~nans], ys[~nans], xnew)
+            xnew = np.linspace(xs.min(), xs.max(), xs.shape[0]*4)
+            ynew = spline(xs, ys[~nans], xnew)
             axtop.plot(xnew, ynew, color='r', ls='--', label="MC fit")
         except ValueError:
             pass
 
     has_data = df_data["yield"].sum()>0.
     if has_data:
+        df_data = df_data.reset_index(["bin0_low", "bin0_upp"])
+        df_data["bin0_cen"] = df_data.eval('(bin0_low+bin0_upp)/2')
         axtop.errorbar(
-            (bins[1:] + bins[:-1])/2,
+            df_data["bin0_cen"],
             df_data["yield"],
             yerr = np.sqrt(df_data["variance"]),
             fmt = 'o',
@@ -147,8 +144,8 @@ def dist_ratio(df, filepath, cfg):
                 xs = (bins[1:] + bins[:-1])/2
                 ys = df_data["yield"].sum()*df_data["formula"]/df_data["formula"].sum()
                 nans = np.isnan(ys)
-                xnew = np.linspace(xs[~nans].min(), xs[~nans].max(), xs[~nans].shape[0]*4)
-                ynew = spline(xs[~nans], ys[~nans], xnew)
+                xnew = np.linspace(xs.min(), xs.max(), xs.shape[0]*4)
+                ynew = spline(xs, ys[~nans], xnew)
                 axtop.plot(xnew, ynew, color='k', ls='--', label="Data fit")
             except ValueError:
                 pass
@@ -206,9 +203,11 @@ def dist_ratio(df, filepath, cfg):
     axtop.legend(handles, labels, title="\n".join(title), labelspacing=0.1)
 
     # Data/MC in the lower panel
+    df_ratio = df_ratio.reset_index(["bin0_low", "bin0_upp"])
+    df_ratio["bin0_cen"] = df_ratio.eval('(bin0_low+bin0_upp)/2')
     axbot.errorbar(
-        (bins[1:] + bins[:-1])/2,
-        df_ratio,
+        df_ratio["bin0_cen"],
+        df_ratio["yield"],
         yerr = np.sqrt(df_ratio_data_var),
         fmt = 'o',
         markersize = 3,
@@ -219,10 +218,16 @@ def dist_ratio(df, filepath, cfg):
     )
 
     # MC stat uncertainty in the lower panel
+    df_ratio_mc_var = df_ratio_mc_var.reset_index(["bin0_low", "bin0_upp"])
+    ratio = bins.copy()
+    match_idx = np.where(np.isin(df_ratio_mc_var["bin0_upp"], bins))
+    nomatch_idx = np.where(~np.isin(df_ratio_mc_var["bin0_low"], bins))
+    ratio[match_idx] = df_ratio_mc_var.iloc[match_idx][0]
+    ratio[nomatch_idx] = 0.
     axbot.fill_between(
         bins,
-        list(1.-np.sqrt(df_ratio_mc_var))+[1.],
-        list(1.+np.sqrt(df_ratio_mc_var))+[1.],
+        list(1.-np.sqrt(ratio[1:])) + [1.],
+        list(1.+np.sqrt(ratio[1:])) + [1.],
         step = 'post',
         color = "#aaaaaa",
         label = "MC stat. unc.",

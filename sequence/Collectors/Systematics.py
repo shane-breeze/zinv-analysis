@@ -29,6 +29,7 @@ class SystematicsCollector(HistCollector):
     def draw(self, histograms):
         datasets = ["MET", "SingleMuon", "SingleElectron"]
         df = histograms.histograms
+        binning = histograms.binning
 
         def rename_level_values(df, level, name_map):
             levels = df.index.names
@@ -92,9 +93,10 @@ class SystematicsCollector(HistCollector):
             # Create args list for post-processing drawing
             cfg = copy.deepcopy(self.cfg)
             cfg.name = cfg.axis_label.get(categories[3], categories[3])
+            bins = binning[categories[3]]
             with open(filepath+".pkl", 'w') as f:
-                pickle.dump((df_group, filepath, cfg), f)
-            args.append((dist_multicomp, (df_group, filepath, cfg)))
+                pickle.dump((df_group, bins, filepath, cfg), f)
+            args.append((dist_multicomp, (df_group, bins, filepath, cfg)))
 
         for categories, df_group in df.groupby(columns_nobins_nokey_noproc):
             # Create output directory structure
@@ -123,8 +125,9 @@ class SystematicsCollector(HistCollector):
             cfg.xlabel = cfg.axis_label.get(categories[2], categories[2])
             cfg.ylabel = "Relative uncertainty"
             cfg.name = categories[1]
+            bins = binning[categories[2]]
             with open(filepath+".pkl", 'w') as f:
-                pickle.dump((df_unstack, filepath, cfg), f)
-            args.append((dist_facet, (df_unstack, filepath, cfg)))
+                pickle.dump((df_unstack, bins, filepath, cfg), f)
+            args.append((dist_facet, (df_unstack, bins, filepath, cfg)))
 
         return args
