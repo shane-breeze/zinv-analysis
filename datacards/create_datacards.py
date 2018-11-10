@@ -1,8 +1,12 @@
 import argparse
+from array import array
 import copy
 import numpy as np
 from tabulate import tabulate as tab
 import yaml
+
+import ROOT
+ROOT.gROOT.SetBatch(True)
 
 try: import cPickle as pickle
 except ImportError: import pickle
@@ -22,18 +26,11 @@ def parse_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("input", type=str, help="Input pickle file")
+    parser.add_argument("config", type=str, help="Yaml config file")
     parser.add_argument("--binning", type=str, default="[200.]",
                         help="Binning to use")
-    parser.add_argument("--shape", type=bool, default=False,
+    parser.add_argument("--shape", default=False, action='store_true',
                         help="Create shape datacards")
-
-    return parser.parse_args()
-
-def parse_args_yaml():
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument("configs", type=str,
-                        help="Comma delimited list of yaml configs")
 
     return parser.parse_args()
 
@@ -95,7 +92,7 @@ def reformat(df, cfg):
 
     return df
 
-def create_datacards(df, cfg):
+def create_counting_datacards(df, cfg):
     allowed_datasets = cfg["dataset_conv"].keys()
     for category, dfgroup in df.groupby(["bin0_low", "bin0_upp"]):
         if np.isinf(category[0]):
@@ -158,15 +155,18 @@ def create_datacards(df, cfg):
         df_rate = df_rate.reindex(proc_order).dropna()
         df_nuis = df_nuis.loc[df_rate.index]
 
-        df_nuis = df_nuis[[c for c in df_nuis.columns if c in cfg["systematics"]]]
+        df_nuis = df_nuis[[
+            c for c in df_nuis.columns
+            if c.replace("Up","").replace("Down","") in cfg["systematics"]
+        ]]
 
         low = int(category[0]) if not np.isinf(category[0]) else "Inf"
         high = int(category[1]) if not np.isinf(category[1]) else "Inf"
         filename = "Zinv_METnoX-{}To{}.txt".format(low, high)
 
-        create_datacard(df_obs, df_rate, df_nuis, filename)
+        create_counting_datacard(df_obs, df_rate, df_nuis, filename)
 
-def create_datacard(df_obs, df_rate, df_nuis, filename):
+def create_counting_datacard(df_obs, df_rate, df_nuis, filename):
     # IDX
     dc = tab([
         ["imax * number of channels"],
@@ -224,10 +224,173 @@ def create_datacard(df_obs, df_rate, df_nuis, filename):
         nuisance_block.append(nuisance_subblock)
     dc += tab(nuisance_block, [], tablefmt="plain") + "\n" + "-"*80 + "\n"
 
-    tf_wlnu_regions = list(df_rate[df_rate["process"]=="wlnu"]["region"])
-    r_nunu_regions = list(df_rate[df_rate["process"]=="znunu"]["region"])
-    r_mumu_regions = list(df_rate[df_rate["process"]=="zmumu"]["region"])
-    r_ee_regions = list(df_rate[df_rate["process"]=="zee"]["region"])
+    # PARAMS
+    dc += tab(
+        [["tf_wlnu", "rateParam", "*", "wlnu", 1, "[0,10]"]] +\
+        [["r_z", "rateParam", "*", "z*", 1, "[0,10]"]],
+        [], tablefmt="plain",
+    )
+
+    with open(filename, 'w') as f:
+        f.write(dc)
+    logger.info("Created {}".format(filename))
+
+def create_shape_datacards(df, cfg):
+    binning = cfg["binning"]
+    all_columns = df.index.names
+    columns_no_bins = [c for c in all_columns if "bin" not in c]
+
+    # open ROOT file
+    rfile = ROOT.TFile.Open("Zinv_METnoX-Shapes.root", 'RECREATE')
+
+    # dataset, region, process, weight, variable
+    df = df.reset_index(["bin0_low", "bin0_upp"])
+    for (d, r, p, w, v), dfgrp in df.groupby(columns_no_bins):
+        if r not in [k.GetName() for k in rfile.GetListOfKeys()]:
+            rfile.mkdir(r)
+        rfile.cd(r)
+
+        bins = array('f', binning)
+        name = p
+        if w == "nominal":
+            if d == p:
+                name = "data_obs"
+        else:
+            if w not in [k.GetName() for k in ROOT.gDirectory.GetListOfKeys()]:
+                ROOT.gDirectory.mkdir(w)
+            ROOT.gDirectory.cd(w)
+        hist = ROOT.TH1D(name, name, len(bins)-1, bins)
+
+        for idx in range(1, hist.GetNbinsX()+1):
+            binlow = bins[idx-1]
+            binupp = bins[idx]
+            dfbin = dfgrp[(dfgrp["bin0_low"]==binlow) & (dfgrp["bin0_upp"]==binupp)]
+            if not dfbin.empty:
+                content = dfbin.iloc[0]["yield"]
+                error = np.sqrt(dfbin.iloc[0]["variance"])
+                hist.SetBinContent(idx, content)
+                hist.SetBinError(idx, error)
+        hist.Write()
+        rfile.cd()
+    rfile.Close()
+    logger.info("Created {}".format("Zinv_METnoX-Shapes.root"))
+
+    # df_obs
+    allowed_datasets = cfg["dataset_conv"].keys()
+    df_obs = df[df.index.get_level_values("process").isin(allowed_datasets)]["yield"]
+    df_obs = df_obs.groupby(df_obs.index.names).sum()
+
+    # df_rate
+    df_rate = df[df.index.get_level_values("weight").isin(["nominal"])]["yield"]
+    df_rate = df_rate.groupby(df_rate.index.names).sum()
+    df_rate = df_rate.reset_index("process")
+    df_rate["proc"] = df_rate["process"].map(
+        dict(zip(*zip(*enumerate(cfg["processes"], 0))[::-1]))
+    )
+    df_rate = df_rate.set_index("process", append=True)
+    df_rate[df_rate["yield"]<0.] = np.nan
+    df_rate[df_rate.groupby("region").apply(lambda x: x/x.sum())["yield"]<0.001] = np.nan
+    df_rate = df_rate.dropna()
+
+    # df_nuis
+    df_nominal = df[df.index.get_level_values("weight").isin(["nominal"])]
+    df_nominal = df_nominal.groupby(df_nominal.index.names).sum()
+    df_nuis = df.pivot_table(values='yield', index=['region', 'process'],
+                             columns=['weight'], aggfunc=np.sum)
+    df_nominal = df_nominal.pivot_table(values='yield', index=['region', 'process'],
+                                        columns=['weight'], aggfunc=np.sum)
+    df_nuis = df_nuis.divide(df_nominal["nominal"], axis=0)
+
+    df_nuis.loc[:,"lumiUp"] = 1.025
+    df_nuis.loc[:,"lumiDown"] = 1/1.025
+    df_nuis.loc[df_nuis.index.get_level_values("process").isin(["wlnu"]),"lumiUp"] = 1.
+    df_nuis.loc[df_nuis.index.get_level_values("process").isin(["wlnu"]),"lumiDown"] = 1.
+    df_nuis = df_nuis.fillna(1.)
+
+    df_nuis = df_nuis[[
+        c for c in df_nuis.columns
+        if c.replace("Up","").replace("Down","") in cfg["systematics"]
+    ]]
+
+    regions = [r for d, r in cfg["dataset_regions"]]
+    processes = cfg["processes"]
+    proc_order = [
+        (r, p)
+        for r in regions
+        for p in processes
+    ]
+
+    bin_order = []
+    for bin, proc in proc_order:
+        if bin not in bin_order:
+            bin_order.append(bin)
+    df_obs = df_obs.reset_index(["dataset", "process", "weight", "name"], drop=True)
+    df_rate = df_rate.reset_index(["dataset", "weight", "name"], drop=True)
+    df_obs = df_obs.reindex(bin_order, fill_value=0)
+    df_rate = df_rate.reindex(proc_order).dropna()
+    df_nuis = df_nuis.loc[df_rate.index]
+
+    create_shape_datacard(df_obs, df_rate, df_nuis, "Zinv_METnoX-Shapes.txt")
+
+def create_shape_datacard(df_obs, df_rate, df_nuis, filename):
+    # IDX
+    dc = tab([
+        ["imax * number of channels"],
+        ["jmax * number of backgrounds"],
+        ["kmax * number of nuisance parameters"],
+    ], [], tablefmt="plain") + "\n" + "-"*80 + "\n"
+
+    # SHAPES
+    df_obs = df_obs.reset_index()
+    dc += tab([
+        ["shapes", "*", "*", "Zinv_METnoX-Shapes.root", "$CHANNEL/$PROCESS", "$CHANNEL/$SYSTEMATIC/$PROCESS"]
+    ], [], tablefmt="plain") + "\n" + "-"*80 + "\n"
+
+    # OBS
+    dc += tab([
+        ["bin"] + list(df_obs["region"]),
+        ["observation"] + [-1]*df_obs.shape[0],
+    ], [], tablefmt="plain") + "\n" + "-"*80 + "\n"
+
+    # RATE
+    df_rate = df_rate.reset_index()
+    dc += tab([
+        ["bin"] + list(df_rate["region"]),
+        ["process"] + list(df_rate["process"]),
+        ["process"] + map(int, list(df_rate["proc"])),
+        ["rate"] + [-1]*df_rate.shape[0],
+    ], [], tablefmt="plain") + "\n" + "-"*80 + "\n"
+
+    # NUISANCES
+    nuisances = sorted(list(set(c.replace("Up", "").replace("Down", "") for c in df_nuis.columns)))
+    nuisances = [n for n in nuisances if "nominal" not in n]
+
+    nuisance_block = []
+    for nuis in nuisances:
+        if nuis in ["lumi"]:
+            nuisance_subblock = [nuis, "lnN"]
+        else:
+            nuisance_subblock = [nuis, "shape"]
+        for up, down in zip(df_nuis[nuis+"Up"], df_nuis[nuis+"Down"]):
+            if nuis in ["lumi"]:
+                value = str(np.sqrt(up/down))
+            else:
+                value = 1
+
+            if np.isnan([up, down]).any():
+                # non-number
+                value = "-"
+            else:
+                # number
+                if np.abs(up*down-1)<0.005:
+                    # symmetric
+                    mean = np.sqrt(up/down)
+                    if np.abs(mean-1)<1e-5:
+                        # zero
+                        value = "-"
+            nuisance_subblock.append(value)
+        nuisance_block.append(nuisance_subblock)
+    dc += tab(nuisance_block, [], tablefmt="plain") + "\n" + "-"*80 + "\n"
 
     # PARAMS
     dc += tab(
@@ -240,16 +403,21 @@ def create_datacard(df_obs, df_rate, df_nuis, filename):
         f.write(dc)
     logger.info("Created {}".format(filename))
 
-def main():
-    options = parse_args_yaml()
 
-    config_filenames = options.configs.split(",")
-    for config_filename in config_filenames:
-        with open(config_filename, 'r') as f:
-            config = yaml.load(f)
-        df = open_df(config)
-        df = reformat(df, config)
-        create_datacards(df, config)
+def main():
+    options = parse_args()
+
+    with open(options.config, 'r') as f:
+        config = yaml.load(f)
+    config["input"] = options.input
+    config["binning"] = eval(options.binning)
+    config["shape"] = options.shape
+    df = open_df(config)
+    df = reformat(df, config)
+    if config["shape"]:
+        create_shape_datacards(df, config)
+    else:
+        create_counting_datacards(df, config)
 
 if __name__ == "__main__":
     main()
