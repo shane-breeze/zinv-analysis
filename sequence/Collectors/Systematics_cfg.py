@@ -70,25 +70,25 @@ histogrammer_cfgs = [
         "name": "METnoX_pt",
         "categories": monojet_categories,
         "variables": ["ev: ev.METnoX_pt"],
-        "bins": [[-inf]+list(np.linspace(0., 1000., 41))+[inf]],
+        "bins": [[-inf]+list(np.linspace(0., 1000., 201))+[inf]],
         "weights": monojet_variations,
     }, {
         "name": "METnoX_pt",
         "categories": muon_met_categories + dimuon_met_categories,
         "variables": ["ev: ev.METnoX_pt"],
-        "bins": [[-inf]+list(np.linspace(0., 1000., 41))+[inf]],
+        "bins": [[-inf]+list(np.linspace(0., 1000., 201))+[inf]],
         "weights": muon_met_variations,
     }, {
         "name": "METnoX_pt",
         "categories": muon_mu_categories + dimuon_mu_categories,
         "variables": ["ev: ev.METnoX_pt"],
-        "bins": [[-inf]+list(np.linspace(0., 1000., 41))+[inf]],
+        "bins": [[-inf]+list(np.linspace(0., 1000., 201))+[inf]],
         "weights": muon_mu_variations,
     }, {
         "name": "METnoX_pt",
         "categories": ele_categories + diele_categories,
         "variables": ["ev: ev.METnoX_pt"],
-        "bins": [[-inf]+list(np.linspace(0., 1000., 41))+[inf]],
+        "bins": [[-inf]+list(np.linspace(0., 1000., 201))+[inf]],
         "weights": ele_variations,
     }
 ] + [
@@ -96,7 +96,7 @@ histogrammer_cfgs = [
         "name": "METnoX_pt",
         "categories": [(d, c+variation) for d, c in categories],
         "variables": ["ev: ev.METnoX_pt{}".format(variation)],
-        "bins": [[-inf]+list(np.linspace(0., 1000., 41))+[inf]],
+        "bins": [[-inf]+list(np.linspace(0., 1000., 201))+[inf]],
         "weights": [(variation, "ev: ev.Weight_{dataset}")],
     } for variation in ["jesUp", "jesDown",
                         "jerUp", "jerDown",
