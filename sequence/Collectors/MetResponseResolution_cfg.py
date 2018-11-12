@@ -11,8 +11,8 @@ bins = [200., 207., 214., 220., 226., 232., 238., 244., 250., 258., 268., 279.,
         292., 307., 326., 349., 380., 431., 563., 695.]
 
 all_variations = ["",
-                  "jesUp", "jesDown",
                   "jerUp", "jerDown",
+                  "jesTotalUp", "jesTotalDown",
                   "unclustUp", "unclustDown"]
 
 histogrammer_cfgs = [

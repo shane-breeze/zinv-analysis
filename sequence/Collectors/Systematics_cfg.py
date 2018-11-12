@@ -65,6 +65,30 @@ ele_variations = monojet_variations + [
     ("eleTrigDown", "ev: ev.Weight_{dataset}*ev.Weight_eleTrigDown"),
 ]
 
+jes_variation_names = [
+    "Total",
+    #"AbsoluteStat", "AbsoluteScale", "AbsoluteMPFBias",
+    #"Fragmentation",
+    #"SinglePionECAL", "SinglePionHCAL",
+    #"FlavorQCD",
+    #"TimePtEta",
+    #"RelativeJEREC1", "RelativeJEREC2", "RelativeJERHF",
+    #"RelativePtBB", "RelativePtEC1", "RelativePtEC2", "RelativePtHF",
+    #"RelativeBal",
+    #"RelativeFSR",
+    #"RelativeStatFSR", "RelativeStatEC", "RelativeStatHF",
+    #"PileUpDataMC",
+    #"PileUpPtRef", "PileUpPtBB", "PileUpPtEC1", "PileUpPtEC2", "PileUpPtHF",
+]
+jes_variations = [
+    "jes"+var+"Up" for var in jes_variation_names
+] + [
+    "jes"+var+"Down" for var in jes_variation_names
+] + [
+    "jerUp", "jerDown",
+    "unclustUp", "unclustDown",
+]
+
 histogrammer_cfgs = [
     {
         "name": "METnoX_pt",
@@ -98,9 +122,7 @@ histogrammer_cfgs = [
         "variables": ["ev: ev.METnoX_pt{}".format(variation)],
         "bins": [[-inf]+list(np.linspace(0., 1000., 201))+[inf]],
         "weights": [(variation, "ev: ev.Weight_{dataset}")],
-    } for variation in ["jesUp", "jesDown",
-                        "jerUp", "jerDown",
-                        "unclustUp", "unclustDown"]
+    } for variation in jes_variations
 ]
 
 cmap = plt.cm.viridis
@@ -114,7 +136,7 @@ sample_colours = {
     "muonIso":   colors[4],
     "muonTrack": colors[5],
     "muonTrig":  colors[6],
-    "jes":       colors[7],
+    "jesTotal":  colors[7],
     "jer":       colors[8],
     "unclust":   colors[9],
     "d1k_ew":    colors[10],
@@ -128,29 +150,55 @@ sample_colours = {
 }
 
 sample_names = {
-    "nominal":   "Nominal",
-    "mcstat":    "MC stat.",
-    "pileup":    "Pileup",
-    "metTrigSF": r'$E_{T}^{miss}$ Trig',
-    "muonId":    "Muon ID",
-    "muonIso":   "Muon Iso.",
-    "muonTrack": "Muon Track",
-    "muonTrig":  "Muon Trig.",
-    "jes":       "JES",
-    "jer":       "JER",
-    "unclust":   "Unclust. En.",
-    "d1k_ew":    r'$\delta^{(1)}\kappa_{EW}$',
-    "d2k_ew_z":  r'$\delta^{(2)}\kappa_{EW}^{Z}$',
-    "d2k_ew_w":  r'$\delta^{(2)}\kappa_{EW}^{W}$',
-    "d3k_ew_z":  r'$\delta^{(3)}\kappa_{EW}^{Z}$',
-    "d3k_ew_w":  r'$\delta^{(3)}\kappa_{EW}^{W}$',
-    "eleIdIso":  "Ele. ID/Iso.",
-    "eleReco":   "Ele. Reco.",
-    "eleTrig":   "Ele. Trig.",
+    "nominal":            r'Nominal',
+    "mcstat":             r'MC stat',
+    "pileup":             r'Pileup',
+    "metTrigSF":          r'$E_{T}^{miss}$ Trig',
+    "muonId":             r'Muon ID',
+    "muonIso":            r'Muon Iso',
+    "muonTrack":          r'Muon Track',
+    "muonTrig":           r'Muon Trig',
+    "jer":                r'JER',
+    "jesTotal":           r'JES',
+    "jesAbsoluteStat":    r'JES abs stat',
+    "jesAbsoluteScale":   r'JES abs scale',
+    "jesAbsoluteMPFBias": r'JES abs ISR+FSR bias',
+    "jesFragmentation":   r'JES frag',
+    "jesSinglePionECAL":  r'JES single $\pi$ ECAL',
+    "jesSinglePionHCAL":  r'JES single $\pi$ HCAL',
+    "jesFlavorQCD":       r'JES flavour QCD',
+    "jesTimePtEta":       r'JES time $p_{\rm{T}}$--$\eta$',
+    "jesRelativeJEREC1":  r'JER EC1',
+    "jesRelativeJEREC2":  r'JER EC2',
+    "jesRelativeJERHF":   r'JER HF',
+    "jesRelativePtBB":    r'JES $p_{\rm{T}}$ BB',
+    "jesRelativePtEC1":   r'JES $p_{\rm{T}}$ EC1',
+    "jesRelativePtEC2":   r'JES $p_{\rm{T}}$ EC2',
+    "jesRelativePtHF":    r'JES $p_{\rm{T}}$ HF',
+    "jesRelativeBal":     r'JES Bal',
+    "jesRelativeFSR":     r'JES ISR+FSR',
+    "jesRelativeStatFSR": r'JES ISR+FSR stat',
+    "jesRelativeStatEC":  r'JES EC stat',
+    "jesRelativeStatHF":  r'JES HF stat',
+    "jesPileUpDataMC":    r'JES PU Data/MC',
+    "jesPileUpPtRef":     r'JES PU $p_{\rm{T}}$ ref',
+    "jesPileUpPtBB":      r'JES PU $p_{\rm{T}}$ BB',
+    "jesPileUpPtEC1":     r'JES PU $p_{\rm{T}}$ EC1',
+    "jesPileUpPtEC2":     r'JES PU $p_{\rm{T}}$ EC2',
+    "jesPileUpPtHF":      r'JES PU $p_{\rm{T}}$ HF',
+    "unclust":            r'Unclust En',
+    "d1k_ew":             r'$\delta^{(1)}\kappa_{EW}$',
+    "d2k_ew_z":           r'$\delta^{(2)}\kappa_{EW}^{Z}$',
+    "d2k_ew_w":           r'$\delta^{(2)}\kappa_{EW}^{W}$',
+    "d3k_ew_z":           r'$\delta^{(3)}\kappa_{EW}^{Z}$',
+    "d3k_ew_w":           r'$\delta^{(3)}\kappa_{EW}^{W}$',
+    "eleIdIso":           r'Ele ID/Iso',
+    "eleReco":            r'Ele Reco',
+    "eleTrig":            r'Ele Trig',
 
     "znunu":    r'$Z_{\nu\nu}$+jets',
     "wlnu":     r'$W_{l\nu}$+jets',
-    "bkg":      r'Bkg.',
+    "bkg":      r'Bkg',
     "qcd":      r'QCD',
     "zmumu":    r'$Z/\gamma^{*}_{\mu\mu}$+jets',
     "zee":      r'$Z/\gamma^{*}_{e e}$+jets',
