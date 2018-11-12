@@ -241,7 +241,7 @@ def create_shape_datacards(df, cfg):
     columns_no_bins = [c for c in all_columns if "bin" not in c]
 
     # open ROOT file
-    rfile = ROOT.TFile.Open("Zinv_METnoX-Shapes.root", 'RECREATE')
+    rfile = ROOT.TFile.Open("Zinv_METnoX-ShapeTemplates.root", 'RECREATE')
 
     # dataset, region, process, weight, variable
     df = df.reset_index(["bin0_low", "bin0_upp"])
@@ -273,7 +273,7 @@ def create_shape_datacards(df, cfg):
         hist.Write()
         rfile.cd()
     rfile.Close()
-    logger.info("Created {}".format("Zinv_METnoX-Shapes.root"))
+    logger.info("Created {}".format("Zinv_METnoX-ShapeTemplates.root"))
 
     # df_obs
     allowed_datasets = cfg["dataset_conv"].keys()
@@ -343,7 +343,7 @@ def create_shape_datacard(df_obs, df_rate, df_nuis, filename):
     # SHAPES
     df_obs = df_obs.reset_index()
     dc += tab([
-        ["shapes", "*", "*", "Zinv_METnoX-Shapes.root", "$CHANNEL/$PROCESS", "$CHANNEL/$SYSTEMATIC/$PROCESS"]
+        ["shapes", "*", "*", "Zinv_METnoX-ShapeTemplates.root", "$CHANNEL/$PROCESS", "$CHANNEL/$SYSTEMATIC/$PROCESS"]
     ], [], tablefmt="plain") + "\n" + "-"*80 + "\n"
 
     # OBS
@@ -388,6 +388,7 @@ def create_shape_datacard(df_obs, df_rate, df_nuis, filename):
                     if np.abs(mean-1)<1e-5:
                         # zero
                         value = "-"
+
             nuisance_subblock.append(value)
         nuisance_block.append(nuisance_subblock)
     dc += tab(nuisance_block, [], tablefmt="plain") + "\n" + "-"*80 + "\n"
@@ -395,7 +396,8 @@ def create_shape_datacard(df_obs, df_rate, df_nuis, filename):
     # PARAMS
     dc += tab(
         [["tf_wlnu", "rateParam", "*", "wlnu", 1, "[0,10]"]] +\
-        [["r_z", "rateParam", "*", "z*", 1, "[0,10]"]],
+        [["r_z", "rateParam", "*", "z*", 1, "[0,10]"]] +\
+        [["*", "autoMCStats", "10"]],
         [], tablefmt="plain",
     )
 

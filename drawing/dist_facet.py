@@ -10,11 +10,11 @@ def dist_facet(df, bins, filepath, cfg):
     plt.rcParams['ytick.right'] = False
     with sns.plotting_context(context='paper', font_scale=1.8):
         variations = list(set(c.replace("Up","").replace("Down","") for c in df.columns))
-        df_up = df.loc[:,[c for c in df.columns if "Up" in c]]
-        df_down = df.loc[:,[c for c in df.columns if "Down" in c]]
-        df_up.columns = [cfg.sample_names[c.replace("Up","")] for c in df_up.columns]
+        df_up = df.loc[:,[c for c in df.columns if c.endswith("Up")]]
+        df_down = df.loc[:,[c for c in df.columns if c.endswith("Down")]]
+        df_up.columns = [cfg.sample_names[c[:-2]] for c in df_up.columns]
         df_up.columns.name = "key"
-        df_down.columns = [cfg.sample_names[c.replace("Down","")] for c in df_down.columns]
+        df_down.columns = [cfg.sample_names[c[:-4]] for c in df_down.columns]
         df_down.columns.name = "key"
 
         df_up = df_up.stack(level="key", dropna=False).reset_index()
