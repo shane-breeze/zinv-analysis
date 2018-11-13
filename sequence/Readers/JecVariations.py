@@ -2,32 +2,37 @@ import uproot
 import numpy as np
 from numba import njit, int32, float32
 from utils.Geometry import DeltaR2, RadToCart2D, CartToRad2D
+import re
+
+from collections import OrderedDict as odict
 
 np.random.seed(123456)
+regex = re.compile("jes(?P<source>.*)(Up|Down)")
 
 class JecVariations(object):
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
         self.unclust_threshold = 15.
-        self.variations = [("", (0., 0., 0.))]
+        self.variations = [("", [0.]*(len(self.sources)+2))]
+        if self.do_jes:
+            for idx, source in enumerate(self.sources):
+                self.variations.extend([
+                    ("jes"+source+"Up",   [0.]*idx + [ 1.] + [0.]*(len(self.sources)-idx-1) + [0., 0.]),
+                    ("jes"+source+"Down", [0.]*idx + [-1.] + [0.]*(len(self.sources)-idx-1) + [0., 0.]),
+                ])
         if self.do_jer:
             self.variations.extend([
-                ("jerUp",   ( 1., 0., 0.)),
-                ("jerDown", (-1., 0., 0.)),
-            ])
-        if self.do_jes:
-            self.variations.extend([
-                ("jesUp",   (0.,  1., 0.)),
-                ("jesDown", (0., -1., 0.)),
+                ("jerUp",   [0.]*len(self.sources) + [ 1., 0.]),
+                ("jerDown", [0.]*len(self.sources) + [-1., 0.]),
             ])
         if self.do_unclust:
             self.variations.extend([
-                ("unclustUp",   (0., 0.,  1.)),
-                ("unclustDown", (0., 0., -1.)),
+                ("unclustUp",   [0.]*len(self.sources) + [0., 1.]),
+                ("unclustDown", [0.]*len(self.sources) + [0.,-1.]),
             ])
 
-        self.jesuncs = read_jesunc_file(self.jes_unc_file, overflow=True)
+        self.jesuncs = read_jesunc_file(self.jes_unc_file, self.sources, overflow=True)
         self.jersfs = read_jersf_file(self.jer_sf_file, overflow=True)
         self.jers = read_jer_file(self.jer_file, overflow=True)
 
@@ -48,35 +53,51 @@ class JecVariations(object):
             event.Jet, event.GenJet,
         )
 
-        # Get JER correction, delta JER up and down - relative values
-        jersf, jerup, jerdown = get_jer_sfs(self.jersfs, event.Jet)
-        cjer, cjerup, cjerdown = get_jer_correction(
-            jersf, jerup, jerdown, event.Jet, event.GenJet,
+        # Get JER correction
+        jersf, jersf_up, jersf_down = get_jer_sfs(self.jersfs, event.Jet)
+        cjer, cjer_up, cjer_down = get_jer_correction(
+            jersf, jersf_up, jersf_down, event.Jet, event.GenJet,
         )
-        delta_jerup = cjerup - cjer
-        delta_jerdown = cjer - cjerdown
+        delta_jerup = cjer_up - cjer
+        delta_jerdown = cjer - cjer_down
         if not self.apply_jer_corrections:
             cjer = np.ones(cjer.shape)
         event.Jet_jerCorrection = uproot.interp.jagged.JaggedArray(
             cjer, event.Jet.starts, event.Jet.stops,
         )
 
-        # Get delta JES up and down - relative values
-        delta_jesup, delta_jesdown = get_jes_sfs(self.jesuncs, event.Jet)
-
         # Get delta unclustered energy x and y - absolute values
         delta_unclustx = event.MET_MetUnclustEnUpDeltaX
         delta_unclusty = event.MET_MetUnclustEnUpDeltaY
 
-        # Apply jet pt and mass corrections
         results = []
-        for key, (jer_var, jes_var, unclust_var) in self.variations:
-            djer = delta_jerup if jer_var>=0. else delta_jerdown
-            djes = delta_jesup if jes_var>=0. else delta_jesdown
+        for key, vars in self.variations:
+            match = regex.search(key)
+            if match:
+                source = match.group("source")
+            else:
+                source = key.replace("Up", "").replace("Down", "")
 
+            if source in ["", "jer", "unclust"]:
+                delta_jesup, delta_jesdown = 0., 0.
+                jes_var = 0.
+            else:
+                # Get delta JES up and down - relative values
+                delta_jesup, delta_jesdown = get_jes_sfs(self.jesuncs[source], event.Jet)
+                sidx = self.sources.index(source)
+                jes_var = vars[sidx]
+
+            # jes at [0, N-2). jer at N-2. unclust at N-1
+            jer_var = vars[-2]
+            unclust_var = vars[-1]
+            djes = delta_jesup if jes_var>=0. else delta_jesdown
+            djer = delta_jerup if jer_var>=0. else delta_jerdown
+
+            # jer_var and jes_var are additive
             (jets_pt, jets_mass), (met_pt, met_phi) = calculate_new_jets_met(
-                jer_var*djer, jes_var*djes, self.unclust_threshold,
+                jes_var*djes + jer_var*djer,
                 unclust_var*delta_unclustx, unclust_var*delta_unclusty,
+                self.unclust_threshold,
                 event.Jet, event.MET,
             )
             results.append((
@@ -252,9 +273,9 @@ def interp(x, xp, fp):
     return np.nan
 
 ################################################################################
-def calculate_new_jets_met(jer_var, jes_var, unclust_threshold, unclustx_var, unclusty_var, jets, met):
+def calculate_new_jets_met(jes_var, unclustx_var, unclusty_var, unclust_threshold, jets, met):
     results = jit_calculate_new_jets_met(
-        jer_var, jes_var, unclust_threshold, unclustx_var, unclusty_var,
+        jes_var, unclustx_var, unclusty_var, unclust_threshold,
         jets.jerCorrection.content, jets.pt.content, jets.phi.content, jets.mass.content,
         jets.rawFactor.content, jets.starts, jets.stops,
         met.pt, met.phi,
@@ -264,11 +285,11 @@ def calculate_new_jets_met(jer_var, jes_var, unclust_threshold, unclustx_var, un
         results[1],
     )
 @njit
-def jit_calculate_new_jets_met(jer_var, jes_var, unclust_threshold, unclustx_var, unclusty_var,
+def jit_calculate_new_jets_met(jes_var, unclustx_var, unclusty_var, unclust_threshold,
                                jets_jersf, jets_pt, jets_phi, jets_mass, jets_kraw, jets_starts, jets_stops,
                                met_pt, met_phi):
     # common jet correction factor
-    jets_corr = (1 + jer_var + jes_var)*jets_jersf
+    jets_corr = (1 + jes_var)*jets_jersf
 
     # Modified jet pt and mass
     new_jets_pt = jets_corr*jets_pt
@@ -299,25 +320,42 @@ def jit_calculate_new_jets_met(jer_var, jes_var, unclust_threshold, unclustx_var
     return ((new_jets_pt, new_jets_mass), (new_met_pt, new_met_phi))
 
 ################################################################################
-def read_jesunc_file(filename, overflow=True):
+def read_jesunc_file(filename, sources, overflow=True):
     with open(filename, 'r') as f:
-        lines = [l.strip().split() for l in f.read().splitlines()][1:]
+        lines = [l.strip() for l in f.read().splitlines()]
 
-    bins = np.array([map(float, l[:2]) for l in lines])
-    xvals = np.array([[float(l[3*(1+idx)]) for idx in range(50)] for l in lines])
-    yvals_up = np.array([[float(l[3*(1+idx)+1]) for idx in range(50)] for l in lines])
-    yvals_down = np.array([[float(l[3*(1+idx)+2]) for idx in range(50)] for l in lines])
+    lines = [l for l in lines if not l.startswith('#') and not l.startswith('{')]
+    source_idx = odict([
+        (l[1:-1], idx)
+        for idx, l in enumerate(lines) if l.startswith('[')
+    ])
 
-    if overflow:
-        bins[0,0] = -np.infty
-        bins[-1,-1] = np.infty
+    sources_lines = {}
+    for source in sources:
+        sidx = source_idx.values().index(source_idx[source])
+        sidx_start = source_idx.values()[sidx]+1
+        if sidx < len(source_idx):
+            sidx_stop = source_idx.values()[sidx+1]
+        else:
+            sidx_stop = len(lines)+1
+        source_lines = [l.split() for l in lines[sidx_start:sidx_stop]]
 
-    return {
-        "bins": bins,
-        "xvals": xvals,
-        "yvals_up": yvals_up,
-        "yvals_down": yvals_down,
-    }
+        bins = np.array([map(float, l[:2]) for l in source_lines])
+        xvals = np.array([[float(l[3*(1+idx)]) for idx in range(50)] for l in source_lines])
+        yvals_up = np.array([[float(l[3*(1+idx)+1]) for idx in range(50)] for l in source_lines])
+        yvals_down = np.array([[float(l[3*(1+idx)+2]) for idx in range(50)] for l in source_lines])
+
+        if overflow:
+            bins[0,0] = -np.infty
+            bins[-1,-1] = np.infty
+
+        sources_lines[source] = {
+            "bins": bins,
+            "xvals": xvals,
+            "yvals_up": yvals_up,
+            "yvals_down": yvals_down,
+        }
+    return sources_lines
 
 def read_jersf_file(filename, overflow=True):
     with open(filename, 'r') as f:

@@ -78,6 +78,8 @@ class SelectionProducer(object):
             "SingleElectron": baseline + es.baseline_selection + es.singleelectron_selection,
             "SingleElectronSB": baseline + es.baseline_selection + es.singleelectronsb_selection,
             "SingleElectronSR": baseline + es.baseline_selection + es.singleelectronsr_selection,
+            "SingleElectronPlus": baseline + es.baseline_selection + es.singleelectron_selection + es.singleelectronplus_selection,
+            "SingleElectronMinus": baseline + es.baseline_selection + es.singleelectron_selection + es.singleelectronminus_selection,
             "DoubleElectron": baseline + es.baseline_selection + es.doubleelectron_selection,
             "DoubleElectron_unblind": [(n, s)
                                        for (n, s) in baseline \

@@ -83,20 +83,41 @@ class SystematicsCollector(HistCollector):
                 .reorder_levels(all_columns)\
 
         args = []
-        for categories, df_group in df.groupby(columns_nobins_nokey):
-            # Create output directory structure
-            path = os.path.join(self.outdir, "plots", *categories[:2])
-            if not os.path.exists(path):
-                os.makedirs(path)
-            filepath = os.path.abspath(os.path.join(path, "__".join(categories[2:])))
+        #for categories, df_group in df.groupby(columns_nobins_nokey):
+        #    # Create output directory structure
+        #    path = os.path.join(self.outdir, "plots", *categories[:2])
+        #    if not os.path.exists(path):
+        #        os.makedirs(path)
+        #    filepath = os.path.abspath(os.path.join(path, "__".join(categories[2:])))
 
-            # Create args list for post-processing drawing
-            cfg = copy.deepcopy(self.cfg)
-            cfg.name = cfg.axis_label.get(categories[3], categories[3])
-            bins = binning[categories[3]]
-            with open(filepath+".pkl", 'w') as f:
-                pickle.dump((df_group, bins, filepath, cfg), f)
-            args.append((dist_multicomp, (df_group, bins, filepath, cfg)))
+        #    # Create args list for post-processing drawing
+        #    cfg = copy.deepcopy(self.cfg)
+        #    cfg.name = cfg.axis_label.get(categories[3], categories[3])
+        #    bins = binning[categories[3]]
+        #    with open(filepath+".pkl", 'w') as f:
+        #        pickle.dump((df_group, bins, filepath, cfg), f)
+        #    args.append((dist_multicomp, (df_group, bins, filepath, cfg)))
+
+        # Apply rebinning ranks
+        new_binning = [-np.inf,200,225,250,275,300,350,400,500,600,800,np.inf]
+        df["rank"] = 0
+        for bidx in range(len(new_binning)-1):
+            df.loc[
+                (df.index.get_level_values("bin0_low")>=new_binning[bidx])\
+                & (df.index.get_level_values("bin0_upp")<=new_binning[bidx+1]),
+                "rank"
+            ] = bidx
+        df = df.set_index("rank", append=True)
+        df = df.groupby(columns_nobins+["rank"]).sum()
+        df = df.reset_index("rank")
+
+        df["bin0_low"] = np.nan
+        df["bin0_upp"] = np.nan
+        for bidx in range(len(new_binning)-1):
+            df.loc[df["rank"]==bidx, "bin0_low"] = new_binning[bidx]
+            df.loc[df["rank"]==bidx, "bin0_upp"] = new_binning[bidx+1]
+        df = df.set_index(["bin0_low", "bin0_upp"], append=True)\
+                .drop("rank", axis=1)
 
         for categories, df_group in df.groupby(columns_nobins_nokey_noproc):
             # Create output directory structure
@@ -104,6 +125,7 @@ class SystematicsCollector(HistCollector):
             if not os.path.exists(path):
                 os.makedirs(path)
             filepath = os.path.abspath(os.path.join(path, "__".join(categories[2:])))
+
 
             # mc stat
             df_unstack = df_group["yield"].unstack(level="key")

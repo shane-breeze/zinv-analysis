@@ -10,11 +10,23 @@ from alphatwirl.loop import NullCollector
 
 import os
 datapath = os.path.join(os.environ["TOPDIR"], "data")
-#print(datapath)
 
-all_variations = ["jesUp", "jesDown",
-                  "jerUp", "jerDown",
-                  "unclustUp", "unclustDown"]
+jes_variations = [
+    "Total",
+    #"AbsoluteStat", "AbsoluteScale", "AbsoluteMPFBias", "Fragmentation", "SinglePionECAL", "SinglePionHCAL",
+    #"FlavorQCD", "TimePtEta", "RelativeJEREC1", "RelativeJEREC2", "RelativeJERHF", "RelativePtBB",
+    #"RelativePtEC1", "RelativePtEC2", "RelativePtHF", "RelativeBal", "RelativeFSR", "RelativeStatFSR", "RelativeStatEC",
+    #"RelativeStatHF", "PileUpDataMC", "PileUpPtRef", "PileUpPtBB", "PileUpPtEC1", "PileUpPtEC2", "PileUpPtHF",
+]
+
+all_variations = [
+    "jes"+var+"Up" for var in jes_variations
+] + [
+    "jes"+var+"Down" for var in jes_variations
+] + [
+    "jerUp", "jerDown",
+    "unclustUp", "unclustDown",
+]
 
 certified_lumi_checker = Readers.CertifiedLumiChecker(
     name = "certified_lumi_checker",
@@ -54,15 +66,14 @@ tau_cross_cleaning = Readers.ObjectCrossCleaning(
 
 jec_variations = Readers.JecVariations(
     name = "jec_variations",
-    jes_unc_file = datapath + "/jecs/Summer16_23Sep2016V4_MC_Uncertainty_AK4PFchs.txt",
+    jes_unc_file = datapath + "/jecs/Summer16_23Sep2016V4_MC_UncertaintySources_AK4PFchs.txt",
     jer_sf_file = datapath + "/jecs/Spring16_25nsV10a_MC_SF_AK4PFchs.txt",
-    #jer_sf_file = datapath + "/jecs/Summer16_25nsV1_MC_SF_AK4PFchs.txt",
     jer_file = datapath + "/jecs/Spring16_25nsV10_MC_PtResolution_AK4PFchs.txt",
-    #jer_file = datapath + "/jecs/Summer16_25nsV1_MC_PtResolution_AK4PFchs.txt",
     apply_jer_corrections = True,
-    do_jer = True,
     do_jes = True,
+    do_jer = True,
     do_unclust = True,
+    sources = jes_variations,
 )
 
 event_sums_producer = Readers.EventSumsProducer(
