@@ -13,20 +13,16 @@ datapath = os.path.join(os.environ["TOPDIR"], "data")
 
 jes_variations = [
     "Total",
-    #"AbsoluteStat", "AbsoluteScale", "AbsoluteMPFBias", "Fragmentation", "SinglePionECAL", "SinglePionHCAL",
-    #"FlavorQCD", "TimePtEta", "RelativeJEREC1", "RelativeJEREC2", "RelativeJERHF", "RelativePtBB",
-    #"RelativePtEC1", "RelativePtEC2", "RelativePtHF", "RelativeBal", "RelativeFSR", "RelativeStatFSR", "RelativeStatEC",
-    #"RelativeStatHF", "PileUpDataMC", "PileUpPtRef", "PileUpPtBB", "PileUpPtEC1", "PileUpPtEC2", "PileUpPtHF",
+    "AbsoluteStat", "AbsoluteScale", "AbsoluteMPFBias", "Fragmentation", "SinglePionECAL", "SinglePionHCAL",
+    "FlavorQCD", "TimePtEta", "RelativeJEREC1", "RelativeJEREC2", "RelativeJERHF", "RelativePtBB",
+    "RelativePtEC1", "RelativePtEC2", "RelativePtHF", "RelativeBal", "RelativeFSR", "RelativeStatFSR", "RelativeStatEC",
+    "RelativeStatHF", "PileUpDataMC", "PileUpPtRef", "PileUpPtBB", "PileUpPtEC1", "PileUpPtEC2", "PileUpPtHF",
 ]
+variations_noupdown = ["jes"+j for j in jes_variations]\
+        + ["jer", "unclust"]
 
-all_variations = [
-    "jes"+var+"Up" for var in jes_variations
-] + [
-    "jes"+var+"Down" for var in jes_variations
-] + [
-    "jerUp", "jerDown",
-    "unclustUp", "unclustDown",
-]
+all_variations = [var+"Up" for var in variations_noupdown]\
+        + [var+"Down" for var in variations_noupdown]
 
 certified_lumi_checker = Readers.CertifiedLumiChecker(
     name = "certified_lumi_checker",

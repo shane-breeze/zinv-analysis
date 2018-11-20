@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.interpolate import spline
+from utils.Colours import colours_dict
 
 def dist_ratio(df, bins, filepath, cfg):
     # Define columns
@@ -11,6 +12,18 @@ def dist_ratio(df, bins, filepath, cfg):
     columns_noproc = [c for c in all_columns if c != "process"]
     columns_nobins = [c for c in all_columns if "bin" not in c]
     columns_nobins_noproc = [c for c in columns_nobins if c != "process"]
+
+    def rename_level_values(df, level, name_map):
+        levels = df.index.names
+        df = df.reset_index(level)
+        df[level] = df[level].map(name_map, na_action='ignore')
+        df = df[~df[level].isna()]
+        df = df.set_index(level, append=True)\
+                .reorder_levels(levels)
+        return df
+
+    #df = rename_level_values(df, "process", singlemu_procs)
+    #df = df.groupby(df.index.names).sum()
 
     # Remove under and overflow bins (add overflow into final bin)
     bins = np.array(bins[1:-1])
@@ -69,8 +82,10 @@ def dist_ratio(df, bins, filepath, cfg):
     # Figure size is 4.8 by 6.4 inches
     fig, (axtop, axbot) = plt.subplots(
         nrows=2, ncols=1, sharex='col', sharey=False,
-        gridspec_kw={'height_ratios': [3, 1]},
-        figsize = (4.8, 6.4),
+        gridspec_kw={'height_ratios': [3, 1],
+                     'wspace': 0.1,
+                     'hspace': 0.1},
+        figsize = (4.8, 6),
     )
     if cfg.log: axtop.set_yscale('log')
 
@@ -110,6 +125,7 @@ def dist_ratio(df, bins, filepath, cfg):
         histtype = 'step',
         color = "black",
         label = "",
+        linewidth = 0.6,
     )
 
     if "formula" in df_mcsum.columns:
@@ -132,9 +148,9 @@ def dist_ratio(df, bins, filepath, cfg):
             df_data["yield"],
             yerr = np.sqrt(df_data["variance"]),
             fmt = 'o',
-            markersize = 3,
-            linewidth = 1,
-            capsize = 1.8,
+            markersize = 4,
+            linewidth = 0.6,
+            capsize = 2.5,
             color = "black",
             label = set(df_data.index.get_level_values("process")).pop(),
         )
@@ -151,24 +167,19 @@ def dist_ratio(df, bins, filepath, cfg):
                 pass
 
     axtop.set_xlim(bins[0], bins[-1])
+    #axtop.set_ylim(yrange)
 
     # Set ymin limit to maximum matplotlib's chosen minimum and 0.5
     ymin = max(axtop.get_ylim()[0], 0.5)
     axtop.set_ylim(ymin, None)
-    axtop.set_xlabel("")
-    axtop.set_ylabel("")
+    axtop.set_xlabel("", fontsize=12)
+    axtop.set_ylabel("Events", fontsize=12)
 
     # Add CMS text to top + energy + lumi
-    axtop.text(0, 1, r'$\mathbf{CMS}\ \mathit{Preliminary}$',
-               horizontalalignment='left',
-               verticalalignment='bottom',
-               transform=axtop.transAxes,
-               fontsize='large')
-    axtop.text(1, 1, r'$35.9\ \mathrm{fb}^{-1}(13\ \mathrm{TeV})$',
-               horizontalalignment='right',
-               verticalalignment='bottom',
-               transform=axtop.transAxes,
-               fontsize='large')
+    axtop.text(0.01, 1, r'$\mathbf{CMS}\ \mathit{Preliminary}$',
+               ha='left', va='bottom', transform=axtop.transAxes, fontsize=12)
+    axtop.text(0.99, 1, r'$35.9\ \mathrm{fb}^{-1}(13\ \mathrm{TeV})$',
+               ha='right', va='bottom', transform=axtop.transAxes, fontsize=12)
 
     # Legend - reverse the labels
     handles, labels = axtop.get_legend_handles_labels()
@@ -191,6 +202,8 @@ def dist_ratio(df, bins, filepath, cfg):
         ])
 
     fit_labels = [label for label in labels if "fit" in label]
+    #labels = [cfg.sample_names.get(label, label) for label in labels
+    #          if "fit" not in label] + fit_labels
     labels = ["{} {:.2f}".format(
         cfg.sample_names.get(label, label),
         df_int_fraction[df_int_fraction["process"].isin([label])]["yield"].iloc[0],
@@ -200,7 +213,7 @@ def dist_ratio(df, bins, filepath, cfg):
     title = []
     if hasattr(cfg, "text"):
         title.extend(cfg.text)
-    axtop.legend(handles, labels, title="\n".join(title), labelspacing=0.1)
+    axtop.legend(handles, labels, title="\n".join(title), labelspacing=0.15)
 
     # Data/MC in the lower panel
     df_ratio = df_ratio.reset_index(["bin0_low", "bin0_upp"])
@@ -210,9 +223,9 @@ def dist_ratio(df, bins, filepath, cfg):
         df_ratio["yield"],
         yerr = np.sqrt(df_ratio_data_var),
         fmt = 'o',
-        markersize = 3,
-        linewidth = 1,
-        capsize = 1.8,
+        markersize = 4,
+        linewidth = 0.6,
+        capsize = 2.5,
         color = 'black',
         label = "",
     )
@@ -220,10 +233,16 @@ def dist_ratio(df, bins, filepath, cfg):
     # MC stat uncertainty in the lower panel
     df_ratio_mc_var = df_ratio_mc_var.reset_index(["bin0_low", "bin0_upp"])
     ratio = bins.copy()
-    match_idx = np.where(np.isin(df_ratio_mc_var["bin0_upp"], bins))
-    nomatch_idx = np.where(~np.isin(df_ratio_mc_var["bin0_low"], bins))
-    ratio[match_idx] = df_ratio_mc_var.iloc[match_idx][0]
-    ratio[nomatch_idx] = 0.
+
+    bins_match_idx = np.where(np.isin(bins, df_ratio_mc_var["bin0_upp"]))
+    bins_nomatch_idx = np.where(~np.isin(bins, df_ratio_mc_var["bin0_upp"]))
+
+    df_match_idx = np.where(np.isin(df_ratio_mc_var["bin0_upp"], bins))
+    df_nomatch_idx = np.where(~np.isin(df_ratio_mc_var["bin0_upp"], bins))
+
+    ratio[bins_match_idx] = df_ratio_mc_var.iloc[df_match_idx][0]
+    ratio[bins_nomatch_idx] = 0.
+
     axbot.fill_between(
         bins,
         list(1.-np.sqrt(ratio[1:])) + [1.],
@@ -245,10 +264,8 @@ def dist_ratio(df, bins, filepath, cfg):
     name = set(df.index.get_level_values("name")).pop()
     name = name[0] if isinstance(name, list) else name
     name = name.split("__")[0]
-    axbot.set_xlabel(cfg.axis_label.get(name, name),
-                     fontsize='large')
-    axbot.set_ylabel("Data / SM Total",
-                     fontsize='large')
+    axbot.set_xlabel(cfg.axis_label.get(name, name), fontsize=12)
+    axbot.set_ylabel("Data / Simulation", fontsize=12)
 
     # Dashed line at 1. in the ratio plot
     axbot.plot(
@@ -262,7 +279,7 @@ def dist_ratio(df, bins, filepath, cfg):
     print("Creating {}.pdf".format(filepath))
 
     # Actually save the figure
-    plt.tight_layout()
+    #plt.tight_layout()
     fig.savefig(filepath+".pdf", format="pdf", bbox_inches="tight")
     plt.close(fig)
 

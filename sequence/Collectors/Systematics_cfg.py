@@ -6,16 +6,16 @@ inf = np.infty
 pi = np.pi+0.00001
 
 # dataset-cutflows split into regions
-monojet_categories = [("MET", "None"),
-                      ("MET", "Monojet"), ("MET", "MonojetSB"), ("MET", "MonojetSR"),
-                      ("MET", "MonojetQCD"), ("MET", "MonojetQCDSB"), ("MET", "MonojetQCDSR")]
-
-muon_met_categories = [("MET", "SingleMuon"), ("MET", "SingleMuonSB"), ("MET", "SingleMuonSR")]
-muon_mu_categories = [("SingleMuon", "SingleMuon"), ("SingleMuon", "SingleMuonSB"), ("SingleMuon", "SingleMuonSR")]
-dimuon_met_categories = [("MET", "DoubleMuon"), ("MET", "DoubleMuonSB"), ("MET", "DoubleMuonSR")]
-dimuon_mu_categories = [("SingleMuon", "DoubleMuon"),("SingleMuon", "DoubleMuonSB"), ("SingleMuon", "DoubleMuonSR")]
-ele_categories = [("SingleElectron", "SingleElectron"), ("SingleElectron", "SingleElectronSB"), ("SingleElectron", "SingleElectronSR")]
-diele_categories = [("SingleElectron", "DoubleElectron"), ("SingleElectron", "DoubleElectronSB"), ("SingleElectron", "DoubleElectronSR")]
+monojet_categories = [("MET", "None"), ("MET", "Monojet"), ("MET", "MonojetQCD")]
+muon_met_categories = [("MET", "SingleMuon"), ("MET", "SingleMuonPlus"), ("MET", "SingleMuonMinus"),
+                       ("MET", "SingleMuonQCD")]
+muon_mu_categories = [("SingleMuon", "SingleMuon"), ("SingleMuon", "SingleMuonPlus"), ("SingleMuon", "SingleMuonMinus"),
+                      ("SingleMuon", "SingleMuonQCD")]
+dimuon_met_categories = [("MET", "DoubleMuon")]
+dimuon_mu_categories = [("SingleMuon", "DoubleMuon")]
+ele_categories = [("SingleElectron", "SingleElectron"), ("SingleElectron", "SingleElectronPlus"), ("SingleElectron", "SingleElectronMinus"),
+                  ("SingleElectron", "SingleElectronQCD")]
+diele_categories = [("SingleElectron", "DoubleElectron")]
 
 categories = monojet_categories\
         + muon_met_categories + muon_mu_categories\
@@ -66,20 +66,15 @@ ele_variations = monojet_variations + [
 ]
 
 jes_variation_names = [
-    "Total",
-    #"AbsoluteStat", "AbsoluteScale", "AbsoluteMPFBias", "Fragmentation", "SinglePionECAL", "SinglePionHCAL",
-    #"FlavorQCD", "TimePtEta", "RelativeJEREC1", "RelativeJEREC2", "RelativeJERHF", "RelativePtBB",
-    #"RelativePtEC1", "RelativePtEC2", "RelativePtHF", "RelativeBal", "RelativeFSR", "RelativeStatFSR", "RelativeStatEC",
-    #"RelativeStatHF", "PileUpDataMC", "PileUpPtRef", "PileUpPtBB", "PileUpPtEC1", "PileUpPtEC2", "PileUpPtHF",
+    "jesTotal",
+    "jesAbsoluteStat", "jesAbsoluteScale", "jesAbsoluteMPFBias", "jesFragmentation", "jesSinglePionECAL", "jesSinglePionHCAL",
+    "jesFlavorQCD", "jesTimePtEta", "jesRelativeJEREC1", "jesRelativeJEREC2", "jesRelativeJERHF", "jesRelativePtBB",
+    "jesRelativePtEC1", "jesRelativePtEC2", "jesRelativePtHF", "jesRelativeBal", "jesRelativeFSR", "jesRelativeStatFSR", "jesRelativeStatEC",
+    "jesRelativeStatHF", "jesPileUpDataMC", "jesPileUpPtRef", "jesPileUpPtBB", "jesPileUpPtEC1", "jesPileUpPtEC2", "jesPileUpPtHF",
+    "jer", "unclust",
 ]
-jes_variations = [
-    "jes"+var+"Up" for var in jes_variation_names
-] + [
-    "jes"+var+"Down" for var in jes_variation_names
-] + [
-    "jerUp", "jerDown",
-    "unclustUp", "unclustDown",
-]
+jes_variations = [var+"Up" for var in jes_variation_names]\
+        + [var+"Down" for var in jes_variation_names]
 
 histogrammer_cfgs = [
     {

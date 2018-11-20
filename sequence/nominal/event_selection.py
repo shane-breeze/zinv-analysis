@@ -84,6 +84,12 @@ event_selection.singlemuon_selection = [
     ("ele_selection_fmt_0", ele_selection.format(0)),
     ("mtw_selection", mtw_selection),
 ]
+event_selection.singlemuonqcd_selection = [
+    ("dphi_jet_met_inv_selection", dphi_jet_met_inv_selection),
+    ("muon_selection_fmt_1", muon_selection.format(1)),
+    ("ele_selection_fmt_0", ele_selection.format(0)),
+    ("mtw_selection", mtw_selection),
+]
 event_selection.singlemuonsb_selection = [
     ("metsb_selection", metsb_selection),
     ("dphi_jet_met_selection", dphi_jet_met_selection),
@@ -130,6 +136,12 @@ event_selection.doublemuonsr_selection = [
 
 event_selection.singleelectron_selection = [
     ("dphi_jet_met_selection", dphi_jet_met_selection),
+    ("muon_selection_fmt_0", muon_selection.format(0)),
+    ("ele_selection_fmt_1", ele_selection.format(1)),
+    ("mtw_selection", mtw_selection),
+]
+event_selection.singleelectronqcd_selection = [
+    ("dphi_jet_met_inv_selection", dphi_jet_met_inv_selection),
     ("muon_selection_fmt_0", muon_selection.format(0)),
     ("ele_selection_fmt_1", ele_selection.format(1)),
     ("mtw_selection", mtw_selection),

@@ -63,6 +63,7 @@ class SelectionProducer(object):
                                                     + es.monojet_selection
                                                     if n not in ["muon_selection_fmt_0"]],
             "SingleMuon": baseline + es.baseline_selection + es.singlemuon_selection,
+            "SingleMuonQCD": baseline + es.baseline_selection + es.singlemuonqcd_selection,
             "SingleMuonSB": baseline + es.baseline_selection + es.singlemuonsb_selection,
             "SingleMuonSR": baseline + es.baseline_selection + es.singlemuonsr_selection,
             "SingleMuonPlus": baseline + es.baseline_selection + es.singlemuon_selection + es.singlemuonplus_selection,
@@ -76,6 +77,7 @@ class SelectionProducer(object):
             "DoubleMuonSB": baseline + es.baseline_selection + es.doublemuonsb_selection,
             "DoubleMuonSR": baseline + es.baseline_selection + es.doublemuonsr_selection,
             "SingleElectron": baseline + es.baseline_selection + es.singleelectron_selection,
+            "SingleElectronQCD": baseline + es.baseline_selection + es.singleelectronqcd_selection,
             "SingleElectronSB": baseline + es.baseline_selection + es.singleelectronsb_selection,
             "SingleElectronSR": baseline + es.baseline_selection + es.singleelectronsr_selection,
             "SingleElectronPlus": baseline + es.baseline_selection + es.singleelectron_selection + es.singleelectronplus_selection,
