@@ -108,9 +108,7 @@ def create_counting_datacards(df, cfg):
         df_rate = df_rate.reset_index([l for l in df.index.names if l not in ["region", "process"]], drop=True)
         df_rate = df_rate.fillna(1e-10)
         df_rate = df_rate.reset_index("process")
-        df_rate["proc"] = df_rate["process"].map(
-            dict(zip(*zip(*enumerate(cfg["processes"], 0))[::-1]))
-        )
+        df_rate["proc"] = df_rate["process"].map(cfg["proc_id"])
         df_rate = df_rate.set_index("process", append=True)
         df_rate[df_rate["yield"]<0.] = np.nan
         df_rate[df_rate.groupby("region").apply(lambda x: x/x.sum())["yield"]<0.001] = np.nan
@@ -131,7 +129,7 @@ def create_counting_datacards(df, cfg):
         df_nuis.loc[df_nuis.index.get_level_values("process").isin(["wlnu"]),"lumiDown"] = 1.
 
         # Fix one-sided uncertainties (lack of stats in events which differ)
-        nuisances = list(set(c.replace("Up","").replace("Down","") for c in df_nuis.columns))
+        nuisances = list(set(c[:-2] if c.endswith("Up") else c[:-4] for c in df_nuis.columns))
         for n in nuisances:
             df_temp = df_nuis.loc[:, [n+"Up", n+"Down"]]
             df_temp.loc[((df_temp-1).prod(axis=1)>0) & (np.abs(df_temp[n+"Up"]-1)>=np.abs(df_temp[n+"Down"]-1)), n+"Down"] = 1.
@@ -157,7 +155,7 @@ def create_counting_datacards(df, cfg):
 
         df_nuis = df_nuis[[
             c for c in df_nuis.columns
-            if c.replace("Up","").replace("Down","") in cfg["systematics"]
+            if (c[:-2] if c.endswith("Up") else c[:-4]) in cfg["systematics"]
         ]]
 
         low = int(category[0]) if not np.isinf(category[0]) else "Inf"
@@ -197,7 +195,7 @@ def create_counting_datacard(df_obs, df_rate, df_nuis, filename):
     ], [], tablefmt="plain") + "\n" + "-"*80 + "\n"
 
     # NUISANCES
-    nuisances = sorted(list(set(c.replace("Up", "").replace("Down", "") for c in df_nuis.columns)))
+    nuisances = sorted(list(set(c[:-2] if c.endswith("Up") else c[:-4] for c in df_nuis.columns)))
 
     nuisance_block = []
     for nuis in nuisances:
@@ -309,7 +307,7 @@ def create_shape_datacards(df, cfg):
 
     df_nuis = df_nuis[[
         c for c in df_nuis.columns
-        if c.replace("Up","").replace("Down","") in cfg["systematics"]
+        if (c[:-2] if c.endswith("Up") else c[:-4]) in cfg["systematics"]
     ]]
 
     regions = [r for d, r in cfg["dataset_regions"]]
@@ -362,7 +360,7 @@ def create_shape_datacard(df_obs, df_rate, df_nuis, filename):
     ], [], tablefmt="plain") + "\n" + "-"*80 + "\n"
 
     # NUISANCES
-    nuisances = sorted(list(set(c.replace("Up", "").replace("Down", "") for c in df_nuis.columns)))
+    nuisances = sorted(list(set((c[:-2] if c.endswith("Up") else c[:-4]) for c in df_nuis.columns)))
     nuisances = [n for n in nuisances if "nominal" not in n]
 
     nuisance_block = []
@@ -416,6 +414,7 @@ def main():
     config["shape"] = options.shape
     df = open_df(config)
     df = reformat(df, config)
+
     if config["shape"]:
         create_shape_datacards(df, config)
     else:

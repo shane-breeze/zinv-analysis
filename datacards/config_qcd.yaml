@@ -1,13 +1,20 @@
 dataset_regions:
     - !!python/tuple ["MET", "monojet"]
+    - !!python/tuple ["MET", "monojetqcd"]
     - !!python/tuple ["MET", "singlemu"]
-    - !!python/tuple ["MET", "doublemu"]
+    - !!python/tuple ["MET", "singlemuqcd"]
 processes:
     - "znunu"
     - "zmumu"
     - "wlnu"
     - "qcd"
     - "bkg"
+proc_id:
+    znunu: 1
+    zmumu: 2
+    wlnu: 3
+    qcd: 0
+    bkg: 4
 systematics:
     - "lumi"
     - "d1k_ew"
@@ -46,28 +53,39 @@ systematics:
     - "jesPileUpPtEC1"
     - "jesPileUpPtEC2"
     - "jesPileUpPtHF"
+    - "jesTotal"
+    - "jer"
     - "unclust"
+    - "eleIdIso"
+    - "eleReco"
+    - "eleTrig"
 dataset_conv:
-    MET:        "MET"
+    MET: "MET"
     SingleMuon: "SingleMuon"
+    SingleElectron: "SingleElectron"
 region_conv:
-    Monojet:    "monojet"
+    Monojet: "monojet"
+    MonojetQCD: "monojetqcd"
     SingleMuon: "singlemu"
+    SingleMuonQCD: "singlemuqcd"
     DoubleMuon: "doublemu"
+    SingleElectron: "singleele"
+    DoubleElectron: "doubleele"
 process_conv:
-    ZJetsToNuNu:    "znunu"
-    DYJetsToMuMu:   "zmumu"
-    WJetsToENu:     "wlnu"
-    WJetsToMuNu:    "wlnu"
-    WJetsToTauNu:   "wlnu"
-    QCD:            "qcd"
-    TTJets:         "bkg"
-    Diboson:        "bkg"
-    DYJetsToEE:     "bkg"
+    ZJetsToNuNu: "znunu"
+    DYJetsToMuMu: "zmumu"
+    DYJetsToEE: "zee"
+    WJetsToENu: "wlnu"
+    WJetsToMuNu: "wlnu"
+    WJetsToTauNu: "wlnu"
+    QCD: "qcd"
+    TTJets: "bkg"
+    Diboson: "bkg"
     DYJetsToTauTau: "bkg"
-    EWKV2Jets:      "bkg"
-    SingleTop:      "bkg"
-    G1Jet:          "bkg"
-    VGamma:         "bkg"
-    MET:            "MET"
-    SingleMuon:     "SingleMuon"
+    EWKV2Jets: "bkg"
+    SingleTop: "bkg"
+    G1Jet: "bkg"
+    VGamma: "bkg"
+    MET: "MET"
+    SingleMuon: "SingleMuon"
+    SingleElectron: "SingleElectron"
