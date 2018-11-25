@@ -61,7 +61,7 @@ vmem_dict = {
     "DYJetsToLL_Pt-50To100": 16,
     "DYJetsToLL_Pt-50To100_ext1": 16,
     "DYJetsToLL_Pt-100To250_ext3": 20,
-    "DYJetsToLL_Pt-250To400_ext3": 16,
+    "DYJetsToLL_Pt-250To400_ext3": 20,
     "G1Jet_Pt-250To400_ext2": 16,
     "SingleTop_t-channel_antitop_InclusiveDecays": 16,
     "SingleTop_t-channel_top_InclusiveDecays": 20,
@@ -173,8 +173,9 @@ if __name__ == "__main__":
         jobs = redraw(sequence, datasets, options)
     else:
         jobs = run(sequence, datasets, options)
-        jobs = [reduce(lambda x, y: x + y, [ssjobs
-            for ssjobs in sjobs
-            if not ssjobs is None
-        ]) for sjobs in jobs]
+        if len(jobs)!=0:
+            jobs = [reduce(lambda x, y: x + y, [ssjobs
+                for ssjobs in sjobs
+                if not ssjobs is None
+            ]) for sjobs in jobs]
     parallel_draw(jobs, options)
