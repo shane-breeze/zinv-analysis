@@ -134,6 +134,22 @@ event_selection.doublemuonsr_selection = [
     ("mll_selection", mll_selection),
 ]
 
+event_selection.triplemuon_selection = [
+    ("blind_mask", blind_mask),
+    ("dphi_jet_met_selection", dphi_jet_met_selection),
+    ("muon_selection_fmt_3", muon_selection.format(3)),
+    ("ele_selection_fmt_0", ele_selection.format(0)),
+    ("mll_selection", mll_selection),
+]
+
+event_selection.quadmuon_selection = [
+    ("blind_mask", blind_mask),
+    ("dphi_jet_met_selection", dphi_jet_met_selection),
+    ("muon_selection_fmt_4", muon_selection.format(4)),
+    ("ele_selection_fmt_0", ele_selection.format(0)),
+    ("mll_selection", mll_selection),
+]
+
 event_selection.singleelectron_selection = [
     ("dphi_jet_met_selection", dphi_jet_met_selection),
     ("muon_selection_fmt_0", muon_selection.format(0)),

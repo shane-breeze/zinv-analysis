@@ -10,9 +10,12 @@ monojet_categories = [("MET", "None"), ("MET", "Monojet"), ("MET", "MonojetQCD")
 muon_met_categories = [("MET", "SingleMuon"), ("MET", "SingleMuonPlus"), ("MET", "SingleMuonMinus"),
                        ("MET", "SingleMuonQCD")]
 muon_mu_categories = [("SingleMuon", "SingleMuon"), ("SingleMuon", "SingleMuonPlus"), ("SingleMuon", "SingleMuonMinus"),
-                      ("SingleMuon", "SingleMuonQCD")]
+                      ("SingleMuon", "SingleMuonQCD"),
+                      ("SingleMuon", "SingleMuon_noMETTrigger"), ("SingleMuon", "SingleMuon_METTrigger")]
 dimuon_met_categories = [("MET", "DoubleMuon")]
-dimuon_mu_categories = [("SingleMuon", "DoubleMuon")]
+dimuon_mu_categories = [("SingleMuon", "DoubleMuon"), ("SingleMuon", "DoubleMuon_METTrigger"), ("SingleMuon", "DoubleMuon_noMETTrigger")]
+trimuon_mu_categories = [("SingleMuon", "TripleMuon_METTrigger"), ("SingleMuon", "TripleMuon_noMETTrigger")]
+quadmuon_mu_categories = [("SingleMuon", "QuadMuon_METTrigger"), ("SingleMuon", "QuadMuon_noMETTrigger")]
 ele_categories = [("SingleElectron", "SingleElectron"), ("SingleElectron", "SingleElectronPlus"), ("SingleElectron", "SingleElectronMinus"),
                   ("SingleElectron", "SingleElectronQCD")]
 diele_categories = [("SingleElectron", "DoubleElectron")]
@@ -20,6 +23,7 @@ diele_categories = [("SingleElectron", "DoubleElectron")]
 categories = monojet_categories\
         + muon_met_categories + muon_mu_categories\
         + dimuon_met_categories + dimuon_mu_categories\
+        + trimuon_mu_categories + quadmuon_mu_categories\
         + ele_categories + diele_categories
 
 monojet_variations = [
@@ -67,14 +71,23 @@ ele_variations = monojet_variations + [
 
 jes_variation_names = [
     "jesTotal",
-    "jesAbsoluteStat", "jesAbsoluteScale", "jesAbsoluteMPFBias", "jesFragmentation", "jesSinglePionECAL", "jesSinglePionHCAL",
-    "jesFlavorQCD", "jesTimePtEta", "jesRelativeJEREC1", "jesRelativeJEREC2", "jesRelativeJERHF", "jesRelativePtBB",
-    "jesRelativePtEC1", "jesRelativePtEC2", "jesRelativePtHF", "jesRelativeBal", "jesRelativeFSR", "jesRelativeStatFSR", "jesRelativeStatEC",
-    "jesRelativeStatHF", "jesPileUpDataMC", "jesPileUpPtRef", "jesPileUpPtBB", "jesPileUpPtEC1", "jesPileUpPtEC2", "jesPileUpPtHF",
+    #"jesAbsoluteStat", "jesAbsoluteScale", "jesAbsoluteMPFBias", "jesFragmentation", "jesSinglePionECAL", "jesSinglePionHCAL",
+    #"jesFlavorQCD", "jesTimePtEta", "jesRelativeJEREC1", "jesRelativeJEREC2", "jesRelativeJERHF", "jesRelativePtBB",
+    #"jesRelativePtEC1", "jesRelativePtEC2", "jesRelativePtHF", "jesRelativeBal", "jesRelativeFSR", "jesRelativeStatFSR", "jesRelativeStatEC",
+    #"jesRelativeStatHF", "jesPileUpDataMC", "jesPileUpPtRef", "jesPileUpPtBB", "jesPileUpPtEC1", "jesPileUpPtEC2", "jesPileUpPtHF",
     "jer", "unclust",
 ]
 jes_variations = [var+"Up" for var in jes_variation_names]\
         + [var+"Down" for var in jes_variation_names]
+
+pdf_variations = [
+    ("lhePdf"+str(i), "ev: np.array(ev.LHEPdfWeight.tolist())[:,{0}] if {0} < ev.nLHEPdfWeight[0] else -1.*np.ones(ev.size)".format(i))
+    for i in range(150)
+]
+scale_variations = [
+    ("lheScale{}".format(i), "ev: np.array(ev.LHEScaleWeight.tolist())[:,{}]".format(i))
+    for i in (0,1,3,5,7,8)
+]
 
 histogrammer_cfgs = [
     {
@@ -82,25 +95,25 @@ histogrammer_cfgs = [
         "categories": monojet_categories,
         "variables": ["ev: ev.METnoX_pt"],
         "bins": [[-inf]+list(np.linspace(0., 1000., 201))+[inf]],
-        "weights": monojet_variations,
+        "weights": monojet_variations+pdf_variations+scale_variations,
     }, {
         "name": "METnoX_pt",
         "categories": muon_met_categories + dimuon_met_categories,
         "variables": ["ev: ev.METnoX_pt"],
         "bins": [[-inf]+list(np.linspace(0., 1000., 201))+[inf]],
-        "weights": muon_met_variations,
+        "weights": muon_met_variations+pdf_variations+scale_variations,
     }, {
         "name": "METnoX_pt",
-        "categories": muon_mu_categories + dimuon_mu_categories,
+        "categories": muon_mu_categories + dimuon_mu_categories + trimuon_mu_categories + quadmuon_mu_categories,
         "variables": ["ev: ev.METnoX_pt"],
         "bins": [[-inf]+list(np.linspace(0., 1000., 201))+[inf]],
-        "weights": muon_mu_variations,
+        "weights": muon_mu_variations+pdf_variations+scale_variations,
     }, {
         "name": "METnoX_pt",
         "categories": ele_categories + diele_categories,
         "variables": ["ev: ev.METnoX_pt"],
         "bins": [[-inf]+list(np.linspace(0., 1000., 201))+[inf]],
-        "weights": ele_variations,
+        "weights": ele_variations+pdf_variations+scale_variations,
     }
 ] + [
     {
@@ -135,6 +148,8 @@ sample_colours = {
     "eleReco":   colors[16],
     "eleTrig":   colors[17],
 }
+sample_colours.update({"lhePdf{}".format(i): 'blue' for i in range(102)})
+sample_colours.update({"lheScale{}".format(i): 'green' for i in range(9)})
 
 sample_names = {
     "nominal":            r'Nominal',
@@ -182,7 +197,6 @@ sample_names = {
     "eleIdIso":           r'Ele ID/Iso',
     "eleReco":            r'Ele Reco',
     "eleTrig":            r'Ele Trig',
-
     "znunu":    r'$Z_{\nu\nu}$+jets',
     "wlnu":     r'$W_{l\nu}$+jets',
     "bkg":      r'Bkg',
@@ -190,6 +204,8 @@ sample_names = {
     "zmumu":    r'$Z/\gamma^{*}_{\mu\mu}$+jets',
     "zee":      r'$Z/\gamma^{*}_{e e}$+jets',
 }
+sample_names.update({"lhePdf{}".format(i): r'PDF_{'+str(i)+'}' for i in range(102)})
+sample_names.update({"lheScale{}".format(i): r'Scale_{'+str(i)+'}' for i in range(9)})
 
 axis_label = {
     "METnoX_pt": r'$E_{T}^{miss}$ (GeV)',

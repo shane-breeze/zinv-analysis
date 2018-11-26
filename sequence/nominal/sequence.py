@@ -13,10 +13,10 @@ datapath = os.path.join(os.environ["TOPDIR"], "data")
 
 jes_variations = [
     "Total",
-    "AbsoluteStat", "AbsoluteScale", "AbsoluteMPFBias", "Fragmentation", "SinglePionECAL", "SinglePionHCAL",
-    "FlavorQCD", "TimePtEta", "RelativeJEREC1", "RelativeJEREC2", "RelativeJERHF", "RelativePtBB",
-    "RelativePtEC1", "RelativePtEC2", "RelativePtHF", "RelativeBal", "RelativeFSR", "RelativeStatFSR", "RelativeStatEC",
-    "RelativeStatHF", "PileUpDataMC", "PileUpPtRef", "PileUpPtBB", "PileUpPtEC1", "PileUpPtEC2", "PileUpPtHF",
+    #"AbsoluteStat", "AbsoluteScale", "AbsoluteMPFBias", "Fragmentation", "SinglePionECAL", "SinglePionHCAL",
+    #"FlavorQCD", "TimePtEta", "RelativeJEREC1", "RelativeJEREC2", "RelativeJERHF", "RelativePtBB",
+    #"RelativePtEC1", "RelativePtEC2", "RelativePtHF", "RelativeBal", "RelativeFSR", "RelativeStatFSR", "RelativeStatEC",
+    #"RelativeStatHF", "PileUpDataMC", "PileUpPtRef", "PileUpPtBB", "PileUpPtEC1", "PileUpPtEC2", "PileUpPtHF",
 ]
 variations_noupdown = ["jes"+j for j in jes_variations]\
         + ["jer", "unclust"]
@@ -32,7 +32,6 @@ certified_lumi_checker = Readers.CertifiedLumiChecker(
 
 trigger_checker = Readers.TriggerChecker(
     name = "trigger_checker",
-    mc = False,
 )
 
 collection_creator = Readers.CollectionCreator(

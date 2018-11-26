@@ -1,4 +1,5 @@
 import re
+import numpy as np
 
 trigger_selection = {
     "MET": {
@@ -57,17 +58,35 @@ class TriggerChecker(object):
         self.__dict__.update(kwargs)
 
     def begin(self, event):
+        self.trigger_dict = trigger_selection
+        self.isdata = event.config.dataset.isdata
+        if not self.isdata:
+            return
         match = self.regex.search(event.config.dataset.name)
         if match:
-            dataset = match.group("dataset")
-            run = match.group("run_letter")+match.group("version")
+            self.dataset = match.group("dataset")
+            self.run = match.group("run_letter")+match.group("version")
 
-        self.trigger_list = trigger_selection[dataset]
-        if dataset == "MET":
-            self.trigger_list = self.trigger_list[run]
+        self.trigger_dict["MET"] = self.trigger_dict["MET"][self.run]
 
     def event(self, event):
-        event.IsTriggered = reduce(lambda x,y: x | y,
-                                   [getattr(event, trigger)
-                                    for trigger in self.trigger_list
-                                    if event.hasbranch(trigger)])
+        # MC
+        if not self.isdata:
+            for dataset in self.trigger_dict.keys():
+                setattr(event, "Is{}Triggered".format(dataset), np.ones(event.size, dtype=bool))
+                event.IsTriggered = np.ones(event.size, dtype=bool)
+            return
+
+        # Data
+        for dataset, trigger_list in self.trigger_dict.items():
+            setattr(
+                event,
+                "Is{}Triggered".format(dataset),
+                reduce(
+                    lambda x,y: x|y,
+                    [getattr(event, trigger)
+                     for trigger in trigger_list
+                     if event.hasbranch(trigger)],
+                ),
+            )
+        event.IsTriggered = getattr(event, "Is{}Triggered".format(self.dataset))

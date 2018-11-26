@@ -1,0 +1,59 @@
+dataset_regions:
+    - !!python/tuple ["SingleMuon", "singlemu"]
+    - !!python/tuple ["SingleMuon", "doublemu"]
+    - !!python/tuple ["SingleMuon", "triplemu"]
+processes:
+    - "znunu"
+    - "zmumu"
+    - "zee"
+    - "wlnu"
+    - "qcd"
+    - "bkg"
+proc_id:
+    znunu: 1
+    zmumu: 2
+    zee: 3
+    wlnu: 4
+    qcd: 5
+    bkg: 6
+systematics:
+    - "lumi"
+    - "d1k_ew"
+    - "d2k_ew_w"
+    - "d2k_ew_z"
+    - "d3k_ew_w"
+    - "d3k_ew_z"
+    - "metTrigSF"
+    - "muonId"
+    - "muonIso"
+    - "muonTrack"
+    - "pileup"
+    - "jesTotal"
+    - "jer"
+    - "unclust"
+dataset_conv:
+    MET: "MET"
+    SingleMuon: "SingleMuon"
+    SingleElectron: "SingleElectron"
+region_conv:
+    SingleMuon_METTrigger: "singlemu"
+    DoubleMuon_METTrigger: "doublemu"
+    TripleMuon_METTrigger: "doublemu"
+process_conv:
+    ZJetsToNuNu: "znunu"
+    DYJetsToMuMu: "zmumu"
+    DYJetsToEE: "zee"
+    WJetsToENu: "wlnu"
+    WJetsToMuNu: "wlnu"
+    WJetsToTauNu: "wlnu"
+    QCD: "qcd"
+    TTJets: "bkg"
+    Diboson: "bkg"
+    DYJetsToTauTau: "bkg"
+    EWKV2Jets: "bkg"
+    SingleTop: "bkg"
+    G1Jet: "bkg"
+    VGamma: "bkg"
+    MET: "MET"
+    SingleMuon: "SingleMuon"
+    SingleElectron: "SingleElectron"
