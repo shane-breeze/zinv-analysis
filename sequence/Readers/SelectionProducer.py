@@ -109,24 +109,35 @@ class SelectionProducer(object):
                                       + es.baseline_selection\
                                       + es.triplemuon_selection
                                       if n not in ["met_selection", "blind_mask", "mtw_selection", "mll_selection"]],
-            "QuadMuon_noMETTrigger": [(n, s)
-                                      for (n, s) in baseline\
-                                      + es.baseline_selection\
-                                      + es.quadmuon_selection
-                                      if n not in ["met_selection", "blind_mask", "mtw_selection", "mll_selection"]],
-            "QuadMuon_METTrigger": [(n, s)
-                                    for (n, s) in baseline\
-                                    + [("met_trigger_selection", "ev: ev.IsMETTriggered")]\
-                                    + es.baseline_selection\
-                                    + es.quadmuon_selection
-                                    if n not in ["met_selection", "blind_mask", "mtw_selection", "mll_selection"]],
             "SingleElectron": baseline + es.baseline_selection + es.singleelectron_selection,
+            "SingleElectron_noMETTrigger": [(n, s)
+                                            for (n, s) in baseline\
+                                            + es.baseline_selection\
+                                            + es.singleelectron_selection
+                                            if n not in ["met_selection", "blind_mask", "mtw_selection", "mll_selection"]],
+            "SingleElectron_METTrigger": [(n, s)
+                                          for (n, s) in baseline\
+                                          + [("met_trigger_selection", "ev: ev.IsMETTriggered")]\
+                                          + es.baseline_selection\
+                                          + es.singleelectron_selection
+                                          if n not in ["met_selection", "blind_mask", "mtw_selection", "mll_selection"]],
             "SingleElectronQCD": baseline + es.baseline_selection + es.singleelectronqcd_selection,
             "SingleElectronSB": baseline + es.baseline_selection + es.singleelectronsb_selection,
             "SingleElectronSR": baseline + es.baseline_selection + es.singleelectronsr_selection,
             "SingleElectronPlus": baseline + es.baseline_selection + es.singleelectron_selection + es.singleelectronplus_selection,
             "SingleElectronMinus": baseline + es.baseline_selection + es.singleelectron_selection + es.singleelectronminus_selection,
             "DoubleElectron": baseline + es.baseline_selection + es.doubleelectron_selection,
+            "DoubleElectron_noMETTrigger": [(n, s)
+                                            for (n, s) in baseline\
+                                            + es.baseline_selection\
+                                            + es.doubleelectron_selection
+                                            if n not in ["met_selection", "blind_mask", "mtw_selection", "mll_selection"]],
+            "DoubleElectron_METTrigger": [(n, s)
+                                          for (n, s) in baseline\
+                                          + [("met_trigger_selection", "ev: ev.IsMETTriggered")]\
+                                          + es.baseline_selection\
+                                          + es.doubleelectron_selection
+                                          if n not in ["met_selection", "blind_mask", "mtw_selection", "mll_selection"]],
             "DoubleElectron_unblind": [(n, s)
                                        for (n, s) in baseline \
                                        + es.baseline_selection \
@@ -134,6 +145,17 @@ class SelectionProducer(object):
                                        if n not in ["met_selection", "blind_mask"]],
             "DoubleElectronSB": baseline + es.baseline_selection + es.doubleelectronsb_selection,
             "DoubleElectronSR": baseline + es.baseline_selection + es.doubleelectronsr_selection,
+            "TripleElectron_noMETTrigger": [(n, s)
+                                            for (n, s) in baseline\
+                                            + es.baseline_selection\
+                                            + es.tripleelectron_selection
+                                            if n not in ["met_selection", "blind_mask", "mtw_selection", "mll_selection"]],
+            "TripleElectron_METTrigger": [(n, s)
+                                          for (n, s) in baseline\
+                                          + [("met_trigger_selection", "ev: ev.IsMETTriggered")]\
+                                          + es.baseline_selection\
+                                          + es.tripleelectron_selection
+                                          if n not in ["met_selection", "blind_mask", "mtw_selection", "mll_selection"]],
         }
 
         # Create N-1 cutflows

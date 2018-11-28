@@ -10,3 +10,5 @@ from .QcdEwkCorrections import QcdEwkCorrectionsReader, QcdEwkCorrectionsCollect
 import QcdEwkCorrections_cfg
 from .Systematics import SystematicsReader, SystematicsCollector
 import Systematics_cfg
+from .TriggerEfficiency import TriggerEfficiencyReader, TriggerEfficiencyCollector
+import TriggerEfficiency_cfg

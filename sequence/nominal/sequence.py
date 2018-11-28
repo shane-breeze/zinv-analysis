@@ -182,26 +182,6 @@ weight_electrons = Readers.WeightObjects(
     data = False,
 )
 
-#weight_qcd_ewk = Readers.WeightQcdEwk(
-#    name = "weight_qcd_ewk",
-#    input_paths = {
-#        "ZJetsToNuNu": (datapath+"/qcd_ewk/vvj.dat", "vvj_pTV_{}"),
-#        "WJetsToLNu":  (datapath+"/qcd_ewk/evj.dat", "evj_pTV_{}"),
-#        "DYJetsToLL":  (datapath+"/qcd_ewk/eej.dat", "eej_pTV_{}"),
-#    },
-#    underflow = True,
-#    overflow = True,
-#    formula = "((K_NNLO + d1k_qcd*d1K_NNLO + d2k_qcd*d2K_NNLO + d3k_qcd*d3K_NNLO)"\
-#              " /(K_NLO + d1k_qcd*d1K_NLO + d2k_qcd*d2K_NLO + d3k_qcd*d3K_NLO))"\
-#              "*(1 + kappa_EW + d1k_ew*d1kappa_EW + isz*(d2k_ew_z*d2kappa_EW + d3k_ew_z*d3kappa_EW)"\
-#                                                 "+ isw*(d2k_ew_w*d2kappa_EW + d3k_ew_w*d3kappa_EW))"\
-#              "+ dk_mix*dK_NLO_mix",
-#    params = ["K_NLO", "d1K_NLO", "d2K_NLO", "d3K_NLO", "K_NNLO", "d1K_NNLO",
-#              "d2K_NNLO", "d3K_NNLO", "kappa_EW", "d1kappa_EW", "d2kappa_EW",
-#              "d3kappa_EW", "dK_NLO_mix"],
-#    nuisances = ["d1k_qcd", "d2k_qcd", "d3k_qcd", "d1k_ew", "d2k_ew_z",
-#                 "d2k_ew_w", "d3k_ew_z", "d3k_ew_w", "dk_mix"],
-#)
 weight_qcd_ewk = Readers.WeightQcdEwk(
     name = "weight_qcd_ewk",
     input_paths = {
@@ -211,11 +191,31 @@ weight_qcd_ewk = Readers.WeightQcdEwk(
     },
     underflow = True,
     overflow = True,
-    formula = "1 + kappa_EW + d1k_ew*d1kappa_EW + isz*(d2k_ew_z*d2kappa_EW + d3k_ew_z*d3kappa_EW)"\
-                                               "+ isw*(d2k_ew_w*d2kappa_EW + d3k_ew_w*d3kappa_EW)",
-    params = ["kappa_EW", "d1kappa_EW", "d2kappa_EW", "d3kappa_EW"],
-    nuisances = ["d1k_ew", "d2k_ew_z", "d2k_ew_w", "d3k_ew_z", "d3k_ew_w"],
+    formula = "((K_NNLO + d1k_qcd*d1K_NNLO + d2k_qcd*d2K_NNLO + d3k_qcd*d3K_NNLO)"\
+              " /(K_NLO + d1k_qcd*d1K_NLO + d2k_qcd*d2K_NLO + d3k_qcd*d3K_NLO))"\
+              "*(1 + kappa_EW + d1k_ew*d1kappa_EW + isz*(d2k_ew_z*d2kappa_EW + d3k_ew_z*d3kappa_EW)"\
+                                                 "+ isw*(d2k_ew_w*d2kappa_EW + d3k_ew_w*d3kappa_EW))"\
+              "+ dk_mix*dK_NLO_mix",
+    params = ["K_NLO", "d1K_NLO", "d2K_NLO", "d3K_NLO", "K_NNLO", "d1K_NNLO",
+              "d2K_NNLO", "d3K_NNLO", "kappa_EW", "d1kappa_EW", "d2kappa_EW",
+              "d3kappa_EW", "dK_NLO_mix"],
+    nuisances = ["d1k_qcd", "d2k_qcd", "d3k_qcd", "d1k_ew", "d2k_ew_z",
+                 "d2k_ew_w", "d3k_ew_z", "d3k_ew_w", "dk_mix"],
 )
+#weight_qcd_ewk = Readers.WeightQcdEwk(
+#    name = "weight_qcd_ewk",
+#    input_paths = {
+#        "ZJetsToNuNu": (datapath+"/qcd_ewk/vvj.dat", "vvj_pTV_{}"),
+#        "WJetsToLNu":  (datapath+"/qcd_ewk/evj.dat", "evj_pTV_{}"),
+#        "DYJetsToLL":  (datapath+"/qcd_ewk/eej.dat", "eej_pTV_{}"),
+#    },
+#    underflow = True,
+#    overflow = True,
+#    formula = "1 + kappa_EW + d1k_ew*d1kappa_EW + isz*(d2k_ew_z*d2kappa_EW + d3k_ew_z*d3kappa_EW)"\
+#                                               "+ isw*(d2k_ew_w*d2kappa_EW + d3k_ew_w*d3kappa_EW)",
+#    params = ["kappa_EW", "d1kappa_EW", "d2kappa_EW", "d3kappa_EW"],
+#    nuisances = ["d1k_ew", "d2k_ew_z", "d2k_ew_w", "d3k_ew_z", "d3k_ew_w"],
+#)
 
 selection_producer = Readers.SelectionProducer(
     name = "selection_producer",
@@ -284,6 +284,16 @@ systematics_collector = Collectors.SystematicsCollector(
     cfg = Collectors.Systematics_cfg,
 )
 
+trigger_efficiency_reader = Collectors.TriggerEfficiencyReader(
+    name = "trigger_efficiency_reader",
+    cfg = Collectors.TriggerEfficiency_cfg,
+)
+trigger_efficiency_collector = Collectors.TriggerEfficiencyCollector(
+    name = "trigger_efficiency_collector",
+    plot = True,
+    cfg = Collectors.TriggerEfficiency_cfg,
+)
+
 sequence = [
     # Creates object collections accessible through the event variable. e.g.
     # event.Jet.pt rather than event.Jet_pt. Simpler to pass a collection to
@@ -328,4 +338,5 @@ sequence = [
     (met_response_resolution_reader, met_response_resolution_collector),
     (qcd_ewk_corrections_reader, qcd_ewk_corrections_collector),
     (systematics_reader, systematics_collector),
+    (trigger_efficiency_reader, trigger_efficiency_collector),
 ]

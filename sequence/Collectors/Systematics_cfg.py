@@ -10,12 +10,9 @@ monojet_categories = [("MET", "None"), ("MET", "Monojet"), ("MET", "MonojetQCD")
 muon_met_categories = [("MET", "SingleMuon"), ("MET", "SingleMuonPlus"), ("MET", "SingleMuonMinus"),
                        ("MET", "SingleMuonQCD")]
 muon_mu_categories = [("SingleMuon", "SingleMuon"), ("SingleMuon", "SingleMuonPlus"), ("SingleMuon", "SingleMuonMinus"),
-                      ("SingleMuon", "SingleMuonQCD"),
-                      ("SingleMuon", "SingleMuon_noMETTrigger"), ("SingleMuon", "SingleMuon_METTrigger")]
+                      ("SingleMuon", "SingleMuonQCD")]
 dimuon_met_categories = [("MET", "DoubleMuon")]
-dimuon_mu_categories = [("SingleMuon", "DoubleMuon"), ("SingleMuon", "DoubleMuon_METTrigger"), ("SingleMuon", "DoubleMuon_noMETTrigger")]
-trimuon_mu_categories = [("SingleMuon", "TripleMuon_METTrigger"), ("SingleMuon", "TripleMuon_noMETTrigger")]
-quadmuon_mu_categories = [("SingleMuon", "QuadMuon_METTrigger"), ("SingleMuon", "QuadMuon_noMETTrigger")]
+dimuon_mu_categories = [("SingleMuon", "DoubleMuon")]
 ele_categories = [("SingleElectron", "SingleElectron"), ("SingleElectron", "SingleElectronPlus"), ("SingleElectron", "SingleElectronMinus"),
                   ("SingleElectron", "SingleElectronQCD")]
 diele_categories = [("SingleElectron", "DoubleElectron")]
@@ -23,8 +20,7 @@ diele_categories = [("SingleElectron", "DoubleElectron")]
 categories = monojet_categories\
         + muon_met_categories + muon_mu_categories\
         + dimuon_met_categories + dimuon_mu_categories\
-        + trimuon_mu_categories + quadmuon_mu_categories\
-        + ele_categories + diele_categories
+        + ele_categories + diele_categories\
 
 monojet_variations = [
     ("nominal",       "ev: ev.Weight_{dataset}"),
@@ -32,6 +28,12 @@ monojet_variations = [
     ("pileupDown",    "ev: ev.Weight_{dataset}*ev.Weight_pileupDown"),
     ("metTrigSFUp",   "ev: ev.Weight_{dataset}*ev.Weight_metTrigSFUp"),
     ("metTrigSFDown", "ev: ev.Weight_{dataset}*ev.Weight_metTrigSFDown"),
+    ("d1k_qcdUp",      "ev: ev.Weight_{dataset}*ev.WeightQcdEwk_d1k_qcdUp"),
+    ("d1k_qcdDown",    "ev: ev.Weight_{dataset}*ev.WeightQcdEwk_d1k_qcdDown"),
+    ("d2k_qcdUp",      "ev: ev.Weight_{dataset}*ev.WeightQcdEwk_d2k_qcdUp"),
+    ("d2k_qcdDown",    "ev: ev.Weight_{dataset}*ev.WeightQcdEwk_d2k_qcdDown"),
+    ("d3k_qcdUp",      "ev: ev.Weight_{dataset}*ev.WeightQcdEwk_d3k_qcdUp"),
+    ("d3k_qcdDown",    "ev: ev.Weight_{dataset}*ev.WeightQcdEwk_d3k_qcdDown"),
     ("d1k_ewUp",      "ev: ev.Weight_{dataset}*ev.WeightQcdEwk_d1k_ewUp"),
     ("d1k_ewDown",    "ev: ev.Weight_{dataset}*ev.WeightQcdEwk_d1k_ewDown"),
     ("d2k_ew_zUp",    "ev: ev.Weight_{dataset}*ev.WeightQcdEwk_d2k_ew_zUp"),
@@ -42,6 +44,8 @@ monojet_variations = [
     ("d3k_ew_zDown",  "ev: ev.Weight_{dataset}*ev.WeightQcdEwk_d3k_ew_zDown"),
     ("d3k_ew_wUp",    "ev: ev.Weight_{dataset}*ev.WeightQcdEwk_d3k_ew_wUp"),
     ("d3k_ew_wDown",  "ev: ev.Weight_{dataset}*ev.WeightQcdEwk_d3k_ew_wDown"),
+    ("dk_mixUp",      "ev: ev.Weight_{dataset}*ev.WeightQcdEwk_dk_mixUp"),
+    ("dk_mixDown",    "ev: ev.Weight_{dataset}*ev.WeightQcdEwk_dk_mixDown"),
 ]
 
 muon_met_variations = monojet_variations + [
@@ -71,22 +75,22 @@ ele_variations = monojet_variations + [
 
 jes_variation_names = [
     "jesTotal",
-    #"jesAbsoluteStat", "jesAbsoluteScale", "jesAbsoluteMPFBias", "jesFragmentation", "jesSinglePionECAL", "jesSinglePionHCAL",
-    #"jesFlavorQCD", "jesTimePtEta", "jesRelativeJEREC1", "jesRelativeJEREC2", "jesRelativeJERHF", "jesRelativePtBB",
-    #"jesRelativePtEC1", "jesRelativePtEC2", "jesRelativePtHF", "jesRelativeBal", "jesRelativeFSR", "jesRelativeStatFSR", "jesRelativeStatEC",
-    #"jesRelativeStatHF", "jesPileUpDataMC", "jesPileUpPtRef", "jesPileUpPtBB", "jesPileUpPtEC1", "jesPileUpPtEC2", "jesPileUpPtHF",
+#    #"jesAbsoluteStat", "jesAbsoluteScale", "jesAbsoluteMPFBias", "jesFragmentation", "jesSinglePionECAL", "jesSinglePionHCAL",
+#    #"jesFlavorQCD", "jesTimePtEta", "jesRelativeJEREC1", "jesRelativeJEREC2", "jesRelativeJERHF", "jesRelativePtBB",
+#    #"jesRelativePtEC1", "jesRelativePtEC2", "jesRelativePtHF", "jesRelativeBal", "jesRelativeFSR", "jesRelativeStatFSR", "jesRelativeStatEC",
+#    #"jesRelativeStatHF", "jesPileUpDataMC", "jesPileUpPtRef", "jesPileUpPtBB", "jesPileUpPtEC1", "jesPileUpPtEC2", "jesPileUpPtHF",
     "jer", "unclust",
 ]
 jes_variations = [var+"Up" for var in jes_variation_names]\
         + [var+"Down" for var in jes_variation_names]
 
 pdf_variations = [
-    ("lhePdf"+str(i), "ev: np.array(ev.LHEPdfWeight.tolist())[:,{0}] if {0} < ev.nLHEPdfWeight[0] else -1.*np.ones(ev.size)".format(i))
-    for i in range(150)
+#    ("lhePdf"+str(i), "ev: np.array(ev.LHEPdfWeight.tolist())[:,{0}] if {0} < ev.nLHEPdfWeight[0] else -1.*np.ones(ev.size)".format(i))
+#    for i in range(150)
 ]
 scale_variations = [
-    ("lheScale{}".format(i), "ev: np.array(ev.LHEScaleWeight.tolist())[:,{}]".format(i))
-    for i in (0,1,3,5,7,8)
+#    ("lheScale{}".format(i), "ev: np.array(ev.LHEScaleWeight.tolist())[:,{}]".format(i))
+#    for i in (0,1,3,5,7,8)
 ]
 
 histogrammer_cfgs = [
@@ -104,7 +108,7 @@ histogrammer_cfgs = [
         "weights": muon_met_variations+pdf_variations+scale_variations,
     }, {
         "name": "METnoX_pt",
-        "categories": muon_mu_categories + dimuon_mu_categories + trimuon_mu_categories + quadmuon_mu_categories,
+        "categories": muon_mu_categories + dimuon_mu_categories,
         "variables": ["ev: ev.METnoX_pt"],
         "bins": [[-inf]+list(np.linspace(0., 1000., 201))+[inf]],
         "weights": muon_mu_variations+pdf_variations+scale_variations,
@@ -139,11 +143,15 @@ sample_colours = {
     "jesTotal":  colors[7],
     "jer":       colors[8],
     "unclust":   colors[9],
+    "d1k_qcd":   colors[10],
+    "d2k_qcd":   colors[10],
+    "d3k_qcd":   colors[10],
     "d1k_ew":    colors[10],
     "d2k_ew_z":  colors[11],
     "d2k_ew_w":  colors[12],
     "d3k_ew_z":  colors[13],
     "d3k_ew_w":  colors[14],
+    "dk_mix":    colors[14],
     "eleIdIso":  colors[15],
     "eleReco":   colors[16],
     "eleTrig":   colors[17],
@@ -155,7 +163,7 @@ sample_names = {
     "nominal":            r'Nominal',
     "mcstat":             r'MC stat',
     "pileup":             r'Pileup',
-    "metTrigSF":          r'$E_{T}^{miss}$ Trig',
+    "metTrigSF":          r'$E_{\mathrm{T}}^{\mathrm{miss}}$ Trig',
     "muonId":             r'Muon ID',
     "muonIso":            r'Muon Iso',
     "muonTrack":          r'Muon Track',
@@ -173,27 +181,31 @@ sample_names = {
     "jesRelativeJEREC1":  r'JER EC1',
     "jesRelativeJEREC2":  r'JER EC2',
     "jesRelativeJERHF":   r'JER HF',
-    "jesRelativePtBB":    r'JES $p_{\rm{T}}$ BB',
-    "jesRelativePtEC1":   r'JES $p_{\rm{T}}$ EC1',
-    "jesRelativePtEC2":   r'JES $p_{\rm{T}}$ EC2',
-    "jesRelativePtHF":    r'JES $p_{\rm{T}}$ HF',
+    "jesRelativePtBB":    r'JES $p_{\mathrm{T}}$ BB',
+    "jesRelativePtEC1":   r'JES $p_{\mathrm{T}}$ EC1',
+    "jesRelativePtEC2":   r'JES $p_{\mathrm{T}}$ EC2',
+    "jesRelativePtHF":    r'JES $p_{\mathrm{T}}$ HF',
     "jesRelativeBal":     r'JES Bal',
     "jesRelativeFSR":     r'JES ISR+FSR',
     "jesRelativeStatFSR": r'JES ISR+FSR stat',
     "jesRelativeStatEC":  r'JES EC stat',
     "jesRelativeStatHF":  r'JES HF stat',
     "jesPileUpDataMC":    r'JES PU Data/MC',
-    "jesPileUpPtRef":     r'JES PU $p_{\rm{T}}$ ref',
-    "jesPileUpPtBB":      r'JES PU $p_{\rm{T}}$ BB',
-    "jesPileUpPtEC1":     r'JES PU $p_{\rm{T}}$ EC1',
-    "jesPileUpPtEC2":     r'JES PU $p_{\rm{T}}$ EC2',
-    "jesPileUpPtHF":      r'JES PU $p_{\rm{T}}$ HF',
+    "jesPileUpPtRef":     r'JES PU $p_{\mathrm{T}}$ ref',
+    "jesPileUpPtBB":      r'JES PU $p_{\mathrm{T}}$ BB',
+    "jesPileUpPtEC1":     r'JES PU $p_{\mathrm{T}}$ EC1',
+    "jesPileUpPtEC2":     r'JES PU $p_{\mathrm{T}}$ EC2',
+    "jesPileUpPtHF":      r'JES PU $p_{\mathrm{T}}$ HF',
     "unclust":            r'Unclust En',
-    "d1k_ew":             r'$\delta^{(1)}\kappa_{EW}$',
-    "d2k_ew_z":           r'$\delta^{(2)}\kappa_{EW}^{Z}$',
-    "d2k_ew_w":           r'$\delta^{(2)}\kappa_{EW}^{W}$',
-    "d3k_ew_z":           r'$\delta^{(3)}\kappa_{EW}^{Z}$',
-    "d3k_ew_w":           r'$\delta^{(3)}\kappa_{EW}^{W}$',
+    "d1k_qcd":            r'$\delta^{(1)}K_{\mathrm{QCD}}$',
+    "d2k_qcd":            r'$\delta^{(1)}K_{\mathrm{QCD}}$',
+    "d3k_qcd":            r'$\delta^{(1)}K_{\mathrm{QCD}}$',
+    "d1k_ew":             r'$\delta^{(1)}\kappa_{\mathrm{EW}}$',
+    "d2k_ew_z":           r'$\delta^{(2)}\kappa_{\mathrm{EW}}^{\mathrm{Z}}$',
+    "d2k_ew_w":           r'$\delta^{(2)}\kappa_{\mathrm{EW}}^{\mathrm{W}}$',
+    "d3k_ew_z":           r'$\delta^{(3)}\kappa_{\mathrm{EW}}^{\mathrm{Z}}$',
+    "d3k_ew_w":           r'$\delta^{(3)}\kappa_{\mathrm{EW}}^{\mathrm{W}}$',
+    "dk_mix":             r'$\delta K_{\mathrm{mix}}$',
     "eleIdIso":           r'Ele ID/Iso',
     "eleReco":            r'Ele Reco',
     "eleTrig":            r'Ele Trig',
