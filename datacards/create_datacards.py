@@ -12,10 +12,10 @@ try: import cPickle as pickle
 except ImportError: import pickle
 
 import pandas as pd
-#pd.set_option('display.max_rows', None)
-#pd.set_option('display.max_columns', None)
-#pd.set_option('display.max_colwidth', -1)
-#pd.set_option('display.width', None)
+pd.set_option('display.max_rows', None)
+pd.set_option('display.max_columns', None)
+pd.set_option('display.max_colwidth', -1)
+pd.set_option('display.width', None)
 
 import logging
 logging.basicConfig()
@@ -62,6 +62,38 @@ def reformat(df, cfg):
     bins = [-np.infty]+list(binning)+[np.infty]
     df = rebin(df, bins)
 
+    if "dataset_region_process_conv" in cfg:
+        levels = df.index.names
+        df = df.reset_index(["dataset", "region", "process"])
+        df["drp"] = df["dataset"]+"__"+df["region"]+"__"+df["process"]
+        rp_map = {"__".join(k): "__".join(v) for k, v in cfg["dataset_region_process_conv"].items()}
+        df["drp"] = df["drp"].map(rp_map, na_action='ignore')
+        df = df[~df["drp"].isna()]
+        df["dataset"] = df["drp"].apply(lambda x: x.split("__")[0])
+        df["region"] = df["drp"].apply(lambda x: x.split("__")[1])
+        df["process"] = df["drp"].apply(lambda x: x.split("__")[2])
+        df = df.set_index(["dataset", "region", "process"], append=True)\
+                .drop("drp", axis=1)\
+                .reorder_levels(levels)
+
+    for _, apply in cfg["apply"].items():
+        levels = list(df.index.names)
+        tdf = df.reset_index().set_index(apply["levels"])
+        try:
+            args = [
+                tdf.loc[tuple(arg),:].reset_index(drop=True)\
+                .set_index([l for l in levels if l not in apply["levels"]])
+                for arg in apply["args"]
+            ]
+        except KeyError:
+            continue
+        new_df = eval('lambda {}'.format(apply["formula"]))(*args)
+        for idx, level in enumerate(apply["levels"]):
+            new_df[level] = apply["new_levels"][idx]
+        new_df = new_df.set_index(apply["levels"], append=True)\
+                .reorder_levels(levels)
+        df = pd.concat([df, new_df], axis=0)
+
     # Rename regions
     def rename_level_values(df, level, name_map):
         levels = df.index.names
@@ -87,13 +119,13 @@ def reformat(df, cfg):
     # Select MET->(monojet, singlemu, doublemu) and
     # SingleElectron->(singleele, doubleele)
     df = df.reset_index(["process", "weight", "name", "bin0_low", "bin0_upp"])
-    df = df.loc[cfg["dataset_regions"]]
+    df = df.loc[cfg["dataset_regions"]].dropna()
     df = df.set_index(["process", "weight", "name", "bin0_low", "bin0_upp"], append=True)
 
     return df
 
 def create_counting_datacards(df, cfg):
-    allowed_datasets = cfg["dataset_conv"].keys()
+    allowed_datasets = cfg["dataset_conv"].values()
     for category, dfgroup in df.groupby(["bin0_low", "bin0_upp"]):
         if np.isinf(category[0]):
             continue
@@ -107,11 +139,8 @@ def create_counting_datacards(df, cfg):
         df_rate = dfgroup[dfgroup.index.get_level_values("weight").isin(["nominal"])]["yield"]
         df_rate = df_rate.reset_index([l for l in df.index.names if l not in ["region", "process"]], drop=True)
         df_rate = df_rate.fillna(1e-10)
-        df_rate = df_rate.reset_index("process")
-        df_rate["proc"] = df_rate["process"].map(cfg["proc_id"])
-        df_rate = df_rate.set_index("process", append=True)
-        df_rate[df_rate["yield"]<0.] = np.nan
-        df_rate[df_rate.groupby("region").apply(lambda x: x/x.sum())["yield"]<0.001] = np.nan
+        df_rate[df_rate<0.] = np.nan
+        df_rate[df_rate.groupby("region").apply(lambda x: x/x.sum())<0.001] = np.nan
 
         # nuisances
         df_nominal = dfgroup[dfgroup.index.get_level_values("weight").isin(["nominal"])]
@@ -123,10 +152,11 @@ def create_counting_datacards(df, cfg):
                                             columns=['weight'], aggfunc=np.sum)
         df_nuis = df_nuis.divide(df_nominal["nominal"], axis=0)
 
-        df_nuis.loc[:,"lumiUp"] = 1.025
-        df_nuis.loc[:,"lumiDown"] = 1/1.025
-        df_nuis.loc[df_nuis.index.get_level_values("process").isin(["wlnu"]),"lumiUp"] = 1.
-        df_nuis.loc[df_nuis.index.get_level_values("process").isin(["wlnu"]),"lumiDown"] = 1.
+        if cfg["systematics"] and "lumi" in cfg["systematics"]:
+            df_nuis.loc[:,"lumiUp"] = 1.025
+            df_nuis.loc[:,"lumiDown"] = 1/1.025
+            df_nuis.loc[df_nuis.index.get_level_values("process").isin(["wlnu"]),"lumiUp"] = 1.
+            df_nuis.loc[df_nuis.index.get_level_values("process").isin(["wlnu"]),"lumiDown"] = 1.
 
         # Fix one-sided uncertainties (lack of stats in events which differ)
         nuisances = list(set(c[:-2] if c.endswith("Up") else c[:-4] for c in df_nuis.columns))
@@ -150,7 +180,10 @@ def create_counting_datacards(df, cfg):
             if bin not in bin_order:
                 bin_order.append(bin)
         df_obs = df_obs.reindex(bin_order, fill_value=0)
-        df_rate = df_rate.reindex(proc_order).dropna()
+        df_rate = df_rate.reindex(proc_order, fill_value=1e-10).dropna()
+        df_rate = df_rate.reset_index("process")
+        df_rate["proc"] = df_rate["process"].map(cfg["proc_id"])
+        df_rate = df_rate.set_index("process", append=True)
         df_nuis = df_nuis.loc[df_rate.index]
 
         df_nuis = df_nuis[[
@@ -162,9 +195,9 @@ def create_counting_datacards(df, cfg):
         high = int(category[1]) if not np.isinf(category[1]) else "Inf"
         filename = "Zinv_METnoX-{}To{}.txt".format(low, high)
 
-        create_counting_datacard(df_obs, df_rate, df_nuis, filename)
+        create_counting_datacard(df_obs, df_rate, df_nuis, cfg["parameters"], filename)
 
-def create_counting_datacard(df_obs, df_rate, df_nuis, filename):
+def create_counting_datacard(df_obs, df_rate, df_nuis, params, filename):
     # IDX
     dc = tab([
         ["imax * number of channels"],
@@ -223,11 +256,7 @@ def create_counting_datacard(df_obs, df_rate, df_nuis, filename):
     dc += tab(nuisance_block, [], tablefmt="plain") + "\n" + "-"*80 + "\n"
 
     # PARAMS
-    dc += tab(
-        [["tf_wlnu", "rateParam", "*", "wlnu", 1, "[0,10]"]] +\
-        [["r_z", "rateParam", "*", "z*", 1, "[0,10]"]],
-        [], tablefmt="plain",
-    )
+    dc += tab([[k]+v for k, v in params.items()], [], tablefmt="plain")
 
     with open(filename, 'w') as f:
         f.write(dc)
@@ -328,9 +357,9 @@ def create_shape_datacards(df, cfg):
     df_rate = df_rate.reindex(proc_order).dropna()
     df_nuis = df_nuis.loc[df_rate.index]
 
-    create_shape_datacard(df_obs, df_rate, df_nuis, "Zinv_METnoX-Shapes.txt")
+    create_shape_datacard(df_obs, df_rate, df_nuis, cfg["parameters"], "Zinv_METnoX-Shapes.txt")
 
-def create_shape_datacard(df_obs, df_rate, df_nuis, filename):
+def create_shape_datacard(df_obs, df_rate, df_nuis, params, filename):
     # IDX
     dc = tab([
         ["imax * number of channels"],
@@ -392,12 +421,7 @@ def create_shape_datacard(df_obs, df_rate, df_nuis, filename):
     dc += tab(nuisance_block, [], tablefmt="plain") + "\n" + "-"*80 + "\n"
 
     # PARAMS
-    dc += tab(
-        [["tf_wlnu", "rateParam", "*", "wlnu", 1, "[0,10]"]] +\
-        [["r_z", "rateParam", "*", "z*", 1, "[0,10]"]] +\
-        [["*", "autoMCStats", "10"]],
-        [], tablefmt="plain",
-    )
+    dc += tab([[k]+v for k, v in params.items()], [], tablefmt="plain")
 
     with open(filename, 'w') as f:
         f.write(dc)

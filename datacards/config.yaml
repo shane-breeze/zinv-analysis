@@ -11,6 +11,29 @@ processes:
     - "wlnu"
     - "qcd"
     - "bkg"
+proc_id:
+    znunu: 0
+    zmumu: 1
+    zee: 2
+    wlnu: 3
+    qcd: 4
+    bkg: 5
+parameters:
+    tf_wlnu:
+        - "rateParam"
+        - "*"
+        - "wlnu"
+        - 1
+        - [0,2]
+    r_z:
+        - "rateParam"
+        - "*"
+        - "z*"
+        - 1
+        - [0,2]
+    "*":
+        - "autoMCStats"
+        - "10"
 systematics:
     - "lumi"
     - "d1k_ew"
@@ -82,4 +105,4 @@ process_conv:
     VGamma: "bkg"
     MET: "MET"
     SingleMuon: "SingleMuon"
-    SingleElectron: "SingleElectron"
+    gingleElectron: "SingleElectron"

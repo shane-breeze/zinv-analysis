@@ -1,59 +1,92 @@
 dataset_regions:
-    - !!python/tuple ["SingleMuon", "singlemu"]
-    - !!python/tuple ["SingleMuon", "doublemu"]
-    - !!python/tuple ["SingleMuon", "triplemu"]
+    - !!python/tuple ["singlemu", "singlemu_pass"]
+    - !!python/tuple ["singlemu", "singlemu_fail"]
+    - !!python/tuple ["doublemu", "doublemu_pass"]
+    - !!python/tuple ["doublemu", "doublemu_fail"]
+    - !!python/tuple ["triplemu", "triplemu_pass"]
+    - !!python/tuple ["triplemu", "triplemu_fail"]
 processes:
-    - "znunu"
-    - "zmumu"
-    - "zee"
-    - "wlnu"
-    - "qcd"
-    - "bkg"
+    - "singlemu_tot"
+    - "doublemu_tot"
+    - "triplemu_tot"
 proc_id:
-    znunu: 1
-    zmumu: 2
-    zee: 3
-    wlnu: 4
-    qcd: 5
-    bkg: 6
+    singlemu_tot: 1
+    doublemu_tot: 2
+    triplemu_tot: 3
+parameters:
+    eff:    ["rateParam", "singlemu_pass", "singlemu_tot", "0.75",         "[0,1.5]"]
+    mueff:  ["rateParam", "singlemu_pass", "singlemu_tot", "0.75",         "[0,1.5]"]
+    ineff1: ["rateParam", "singlemu_fail", "singlemu_tot", "(1-@0*@1)",    "eff,mueff"]
+    eff2:   ["rateParam", "doublemu_pass", "doublemu_tot", "@0*@1**2",     "eff,mueff"]
+    ineff2: ["rateParam", "doublemu_fail", "doublemu_tot", "(1-@0*@1**2)", "eff,mueff"]
+    eff3:   ["rateParam", "triplemu_pass", "triplemu_tot", "@0*@1**3",     "eff,mueff"]
+    ineff3: ["rateParam", "triplemu_fail", "triplemu_tot", "(1-@0*@1**3)", "eff,mueff"]
 systematics:
-    - "lumi"
-    - "d1k_ew"
-    - "d2k_ew_w"
-    - "d2k_ew_z"
-    - "d3k_ew_w"
-    - "d3k_ew_z"
-    - "metTrigSF"
-    - "muonId"
-    - "muonIso"
-    - "muonTrack"
-    - "pileup"
-    - "jesTotal"
-    - "jer"
-    - "unclust"
 dataset_conv:
-    MET: "MET"
-    SingleMuon: "SingleMuon"
-    SingleElectron: "SingleElectron"
+    SingleMuon: "singlemu"
+    DoubleMuon: "doublemu"
+    TripleMuon: "triplemu"
 region_conv:
-    SingleMuon_METTrigger: "singlemu"
-    DoubleMuon_METTrigger: "doublemu"
-    TripleMuon_METTrigger: "doublemu"
+    SingleMuon_METTrigger: "singlemu_pass"
+    DoubleMuon_METTrigger: "doublemu_pass"
+    TripleMuon_METTrigger: "triplemu_pass"
+    SingleMuon_FailMETTrigger: "singlemu_fail"
+    DoubleMuon_FailMETTrigger: "doublemu_fail"
+    TripleMuon_FailMETTrigger: "triplemu_fail"
 process_conv:
-    ZJetsToNuNu: "znunu"
-    DYJetsToMuMu: "zmumu"
-    DYJetsToEE: "zee"
-    WJetsToENu: "wlnu"
-    WJetsToMuNu: "wlnu"
-    WJetsToTauNu: "wlnu"
-    QCD: "qcd"
-    TTJets: "bkg"
-    Diboson: "bkg"
-    DYJetsToTauTau: "bkg"
-    EWKV2Jets: "bkg"
-    SingleTop: "bkg"
-    G1Jet: "bkg"
-    VGamma: "bkg"
-    MET: "MET"
-    SingleMuon: "SingleMuon"
-    SingleElectron: "SingleElectron"
+    SingleMuon: "singlemu"
+    DoubleMuon: "doublemu"
+    TripleMuon: "triplemu"
+    SingleMuon_Total: "singlemu_tot"
+    DoubleMuon_Total: "doublemu_tot"
+    TripleMuon_Total: "triplemu_tot"
+dataset_region_process_conv:
+    !!python/tuple ["SingleMuon", "SingleMuon",              "SingleMuon"]: !!python/tuple ["SingleMuon", "SingleMuon",            "SingleMuon_Drop"]
+    !!python/tuple ["SingleMuon", "DoubleMuon",              "SingleMuon"]: !!python/tuple ["DoubleMuon", "DoubleMuon",            "DoubleMuon_Drop"]
+    !!python/tuple ["SingleMuon", "TripleMuon",              "SingleMuon"]: !!python/tuple ["TripleMuon", "TripleMuon",            "TripleMuon_Drop"]
+    !!python/tuple ["SingleMuon", "SingleMuon_noMETTrigger", "SingleMuon"]: !!python/tuple ["SingleMuon", "SingleMuon_METTrigger", "SingleMuon_Total"]
+    !!python/tuple ["SingleMuon", "DoubleMuon_noMETTrigger", "SingleMuon"]: !!python/tuple ["DoubleMuon", "DoubleMuon_METTrigger", "DoubleMuon_Total"]
+    !!python/tuple ["SingleMuon", "TripleMuon_noMETTrigger", "SingleMuon"]: !!python/tuple ["TripleMuon", "TripleMuon_METTrigger", "TripleMuon_Total"]
+    !!python/tuple ["SingleMuon", "SingleMuon_METTrigger",   "SingleMuon"]: !!python/tuple ["SingleMuon", "SingleMuon_METTrigger", "SingleMuon"]
+    !!python/tuple ["SingleMuon", "DoubleMuon_METTrigger",   "SingleMuon"]: !!python/tuple ["DoubleMuon", "DoubleMuon_METTrigger", "DoubleMuon"]
+    !!python/tuple ["SingleMuon", "TripleMuon_METTrigger",   "SingleMuon"]: !!python/tuple ["TripleMuon", "TripleMuon_METTrigger", "TripleMuon"]
+apply:
+    SingleMuon:
+        levels: ["dataset", "region", "process"]
+        new_levels: ["SingleMuon", "SingleMuon_FailMETTrigger", "SingleMuon"]
+        args:
+            - ["SingleMuon", "SingleMuon_METTrigger", "SingleMuon_Total"]
+            - ["SingleMuon", "SingleMuon_METTrigger", "SingleMuon"]
+        formula: "tot, pas: tot - pas"
+    DoubleMuon:
+        levels: ["dataset", "region", "process"]
+        new_levels: ["DoubleMuon", "DoubleMuon_FailMETTrigger", "DoubleMuon"]
+        args:
+            - ["DoubleMuon", "DoubleMuon_METTrigger", "DoubleMuon_Total"]
+            - ["DoubleMuon", "DoubleMuon_METTrigger", "DoubleMuon"]
+        formula: "tot, pas: tot - pas"
+    TripleMuon:
+        levels: ["dataset", "region", "process"]
+        new_levels: ["TripleMuon", "TripleMuon_FailMETTrigger", "TripleMuon"]
+        args:
+            - ["TripleMuon", "TripleMuon_METTrigger", "TripleMuon_Total"]
+            - ["TripleMuon", "TripleMuon_METTrigger", "TripleMuon"]
+        formula: "tot, pas: tot - pas"
+    SingleMuon_Total:
+        levels: ["dataset", "region", "process"]
+        new_levels: ["SingleMuon", "SingleMuon_FailMETTrigger", "SingleMuon_Total"]
+        args:
+            - ["SingleMuon", "SingleMuon_METTrigger", "SingleMuon_Total"]
+        formula: "tot: tot"
+    DoubleMuon_Total:
+        levels: ["dataset", "region", "process"]
+        new_levels: ["DoubleMuon", "DoubleMuon_FailMETTrigger", "DoubleMuon_Total"]
+        args:
+            - ["DoubleMuon", "DoubleMuon_METTrigger", "DoubleMuon_Total"]
+        formula: "tot: tot"
+    TripleMuon_Total:
+        levels: ["dataset", "region", "process"]
+        new_levels: ["TripleMuon", "TripleMuon_FailMETTrigger", "TripleMuon_Total"]
+        args:
+            - ["TripleMuon", "TripleMuon_METTrigger", "TripleMuon_Total"]
+        formula: "tot: tot"
