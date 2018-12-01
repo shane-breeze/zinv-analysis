@@ -63,7 +63,7 @@ class Histograms(object):
         dfs = []
         for config in self.full_configs:
             weight = config["weight"].lower()
-            if "up" in weight or "down" in weight or "lhepdf" in weight or "lhescale" in weight:
+            if self.isdata and ("up" in weight or "down" in weight or "lhepdf" in weight or "lhescale" in weight):
                 continue
 
             df = self.generate_dataframe(event, config)
