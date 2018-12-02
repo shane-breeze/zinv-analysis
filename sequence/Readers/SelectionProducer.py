@@ -47,6 +47,17 @@ class SelectionProducer(object):
         self.selections = {
             "None": [],
             "Monojet": baseline + es.baseline_selection + es.monojet_selection,
+            "Monojet_noMETTrigger": [(n, s)
+                                     for (n, s) in baseline \
+                                     + es.baseline_selection \
+                                     + es.monojet_selection
+                                     if n not in ["met_selection", "blind_mask"]],
+            "Monojet_METTrigger": [(n, s)
+                                   for (n, s) in baseline \
+                                   + [("met_trigger_selection", "ev: ev.IsMETTriggered")] \
+                                   + es.baseline_selection \
+                                   + es.monojet_selection
+                                   if n not in ["met_selection", "blind_mask"]],
             "Monojet_unblind": [(n, s)
                                 for (n, s) in baseline \
                                 + es.baseline_selection \

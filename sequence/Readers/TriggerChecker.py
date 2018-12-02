@@ -49,7 +49,14 @@ trigger_selection = {
     },
     "SingleMuon": ["HLT_IsoMu24", "HLT_IsoTkMu24"],
     "SingleElectron": ["HLT_Ele27_WPTight_Gsf"]
-                       #"HLT_Ele105_CaloIdVT_GsfTrkIdT"],
+}
+
+trigger_selection_mc = {
+    "MET": ['HLT_PFMETNoMu120_PFMHTNoMu120_IDTight',
+            'HLT_PFMET170_HBHECleaned',
+            'HLT_PFMET170_HBHE_BeamHaloCleaned'],
+    "SingleMuon": ["HLT_IsoMu24", "HLT_IsoTkMu24"],
+    "SingleElectron": ["HLT_Ele27_WPTight_Gsf"]
 }
 
 class TriggerChecker(object):
@@ -61,6 +68,7 @@ class TriggerChecker(object):
         self.trigger_dict = trigger_selection
         self.isdata = event.config.dataset.isdata
         if not self.isdata:
+            self.trigger_dict = trigger_selection_mc
             return
         match = self.regex.search(event.config.dataset.name)
         if match:
