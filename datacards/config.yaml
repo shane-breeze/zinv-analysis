@@ -19,59 +19,24 @@ proc_id:
     qcd: 4
     bkg: 5
 parameters:
-    tf_wlnu:
-        - "rateParam"
-        - "*"
-        - "wlnu"
-        - 1
-        - [0,2]
-    r_z:
-        - "rateParam"
-        - "*"
-        - "z*"
-        - 1
-        - [0,2]
-    "*":
-        - "autoMCStats"
-        - "10"
+    tf_wlnu: ["rateParam", "*", "wlnu", "1", "[0,2]"]
+    r_z:     ["rateParam", "*", "z*",   "1", "[0,2]"]
 systematics:
     - "lumi"
+    - "d1k_qcd"
+    - "d2k_qcd"
+    - "d3k_qcd"
     - "d1k_ew"
     - "d2k_ew_w"
     - "d2k_ew_z"
     - "d3k_ew_w"
     - "d3k_ew_z"
+    - "dk_mix"
     - "metTrigSF"
     - "muonId"
     - "muonIso"
     - "muonTrack"
     - "pileup"
-    - "jesAbsoluteStat"
-    - "jesAbsoluteScale"
-    - "jesAbsoluteMPFBias"
-    - "jesFragmentation"
-    - "jesSinglePionECAL"
-    - "jesSinglePionHCAL"
-    - "jesFlavorQCD"
-    - "jesTimePtEta"
-    - "jesRelativeJEREC1"
-    - "jesRelativeJEREC2"
-    - "jesRelativeJERHF"
-    - "jesRelativePtBB"
-    - "jesRelativePtEC1"
-    - "jesRelativePtEC2"
-    - "jesRelativePtHF"
-    - "jesRelativeBal"
-    - "jesRelativeFSR"
-    - "jesRelativeStatFSR"
-    - "jesRelativeStatEC"
-    - "jesRelativeStatHF"
-    - "jesPileUpDataMC"
-    - "jesPileUpPtRef"
-    - "jesPileUpPtBB"
-    - "jesPileUpPtEC1"
-    - "jesPileUpPtEC2"
-    - "jesPileUpPtHF"
     - "jesTotal"
     - "jer"
     - "unclust"
@@ -105,4 +70,5 @@ process_conv:
     VGamma: "bkg"
     MET: "MET"
     SingleMuon: "SingleMuon"
-    gingleElectron: "SingleElectron"
+    SingleElectron: "SingleElectron"
+apply: {}

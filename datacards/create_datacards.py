@@ -76,23 +76,24 @@ def reformat(df, cfg):
                 .drop("drp", axis=1)\
                 .reorder_levels(levels)
 
-    for _, apply in cfg["apply"].items():
-        levels = list(df.index.names)
-        tdf = df.reset_index().set_index(apply["levels"])
-        try:
-            args = [
-                tdf.loc[tuple(arg),:].reset_index(drop=True)\
-                .set_index([l for l in levels if l not in apply["levels"]])
-                for arg in apply["args"]
-            ]
-        except KeyError:
-            continue
-        new_df = eval('lambda {}'.format(apply["formula"]))(*args)
-        for idx, level in enumerate(apply["levels"]):
-            new_df[level] = apply["new_levels"][idx]
-        new_df = new_df.set_index(apply["levels"], append=True)\
-                .reorder_levels(levels)
-        df = pd.concat([df, new_df], axis=0)
+    if "apply" in cfg:
+        for _, apply in cfg["apply"].items():
+            levels = list(df.index.names)
+            tdf = df.reset_index().set_index(apply["levels"])
+            try:
+                args = [
+                    tdf.loc[tuple(arg),:].reset_index(drop=True)\
+                    .set_index([l for l in levels if l not in apply["levels"]])
+                    for arg in apply["args"]
+                ]
+            except KeyError:
+                continue
+            new_df = eval('lambda {}'.format(apply["formula"]))(*args)
+            for idx, level in enumerate(apply["levels"]):
+                new_df[level] = apply["new_levels"][idx]
+            new_df = new_df.set_index(apply["levels"], append=True)\
+                    .reorder_levels(levels)
+            df = pd.concat([df, new_df], axis=0)
 
     # Rename regions
     def rename_level_values(df, level, name_map):
@@ -184,7 +185,7 @@ def create_counting_datacards(df, cfg):
         df_rate = df_rate.reset_index("process")
         df_rate["proc"] = df_rate["process"].map(cfg["proc_id"])
         df_rate = df_rate.set_index("process", append=True)
-        df_nuis = df_nuis.loc[df_rate.index]
+        df_nuis = df_nuis.reindex(df_rate.index)
 
         df_nuis = df_nuis[[
             c for c in df_nuis.columns
@@ -215,7 +216,7 @@ def create_counting_datacard(df_obs, df_rate, df_nuis, params, filename):
     # OBS
     dc += tab([
         ["bin"] + list(df_obs["region"]),
-        ["observation"] + map(int, list(df_obs["yield"])),
+        ["observation"] + list(df_obs["yield"]), #map(int, list(df_obs["yield"])),
     ], [], tablefmt="plain") + "\n" + "-"*80 + "\n"
 
     # RATE
@@ -256,7 +257,8 @@ def create_counting_datacard(df_obs, df_rate, df_nuis, params, filename):
     dc += tab(nuisance_block, [], tablefmt="plain") + "\n" + "-"*80 + "\n"
 
     # PARAMS
-    dc += tab([[k]+v for k, v in params.items()], [], tablefmt="plain")
+    if params is not None:
+        dc += tab([[k]+v for k, v in params.items()], [], tablefmt="plain")
 
     with open(filename, 'w') as f:
         f.write(dc)
@@ -421,7 +423,8 @@ def create_shape_datacard(df_obs, df_rate, df_nuis, params, filename):
     dc += tab(nuisance_block, [], tablefmt="plain") + "\n" + "-"*80 + "\n"
 
     # PARAMS
-    dc += tab([[k]+v for k, v in params.items()], [], tablefmt="plain")
+    if params is not None:
+        dc += tab([[k]+v for k, v in params.items()], [], tablefmt="plain")
 
     with open(filename, 'w') as f:
         f.write(dc)
@@ -438,6 +441,9 @@ def main():
     config["shape"] = options.shape
     df = open_df(config)
     df = reformat(df, config)
+
+    with open("trigger_df.pkl", 'w') as f:
+        pickle.dump(df, f)
 
     if config["shape"]:
         create_shape_datacards(df, config)
