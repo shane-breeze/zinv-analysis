@@ -6,7 +6,8 @@ inf = np.infty
 pi = np.pi+0.00001
 
 # dataset-cutflows split into regions
-monojet_categories = [("MET", "None"), ("MET", "Monojet"), ("MET", "MonojetQCD")]
+monojet_categories = [#("MET", "None"),
+                      ("MET", "Monojet"), ("MET", "MonojetQCD")]
 muon_met_categories = [("MET", "SingleMuon"), ("MET", "SingleMuonPlus"), ("MET", "SingleMuonMinus"),
                        ("MET", "SingleMuonQCD")]
 muon_mu_categories = [("SingleMuon", "SingleMuon"), ("SingleMuon", "SingleMuonPlus"), ("SingleMuon", "SingleMuonMinus"),
@@ -77,22 +78,22 @@ ele_variations = monojet_variations + [
 
 jes_variation_names = [
     "jesTotal",
-#    #"jesAbsoluteStat", "jesAbsoluteScale", "jesAbsoluteMPFBias", "jesFragmentation", "jesSinglePionECAL", "jesSinglePionHCAL",
-#    #"jesFlavorQCD", "jesTimePtEta", "jesRelativeJEREC1", "jesRelativeJEREC2", "jesRelativeJERHF", "jesRelativePtBB",
-#    #"jesRelativePtEC1", "jesRelativePtEC2", "jesRelativePtHF", "jesRelativeBal", "jesRelativeFSR", "jesRelativeStatFSR", "jesRelativeStatEC",
-#    #"jesRelativeStatHF", "jesPileUpDataMC", "jesPileUpPtRef", "jesPileUpPtBB", "jesPileUpPtEC1", "jesPileUpPtEC2", "jesPileUpPtHF",
+    #"jesAbsoluteStat", "jesAbsoluteScale", "jesAbsoluteMPFBias", "jesFragmentation", "jesSinglePionECAL", "jesSinglePionHCAL",
+    #"jesFlavorQCD", "jesTimePtEta", "jesRelativeJEREC1", "jesRelativeJEREC2", "jesRelativeJERHF", "jesRelativePtBB",
+    #"jesRelativePtEC1", "jesRelativePtEC2", "jesRelativePtHF", "jesRelativeBal", "jesRelativeFSR", "jesRelativeStatFSR", "jesRelativeStatEC",
+    #"jesRelativeStatHF", "jesPileUpDataMC", "jesPileUpPtRef", "jesPileUpPtBB", "jesPileUpPtEC1", "jesPileUpPtEC2", "jesPileUpPtHF",
     "jer", "unclust",
 ]
 jes_variations = [var+"Up" for var in jes_variation_names]\
         + [var+"Down" for var in jes_variation_names]
 
 pdf_variations = [
-#    ("lhePdf"+str(i), "ev: np.array(ev.LHEPdfWeight.tolist())[:,{0}] if {0} < ev.nLHEPdfWeight[0] else -1.*np.ones(ev.size)".format(i))
-#    for i in range(150)
+    ("lhePdf"+str(i), "ev: ev.LHEPdfWeightList[:,{0}] if {0} < ev.nLHEPdfWeight[0] else -1.*np.ones(ev.size)".format(i))
+    for i in range(0,110)
 ]
 scale_variations = [
-#    ("lheScale{}".format(i), "ev: np.array(ev.LHEScaleWeight.tolist())[:,{}]".format(i))
-#    for i in (0,1,3,5,7,8)
+    ("lheScale{}".format(i), "ev: ev.LHEScaleWeightList[:,{}]".format(i))
+    for i in (0,1,3,5,7,8)
 ]
 
 histogrammer_cfgs = [

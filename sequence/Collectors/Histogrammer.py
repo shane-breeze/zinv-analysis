@@ -104,6 +104,8 @@ class HistCollector(object):
 
         histograms = None
         for dataset, readers in dataset_readers_list:
+            if len(readers)==0:
+                continue
             # Get histograms
             if histograms is None:
                 histograms = readers[0].histograms

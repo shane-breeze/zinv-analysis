@@ -10,7 +10,11 @@ from Histogrammer import Config, HistReader, HistCollector
 from drawing.dist_multicomp import dist_multicomp
 from drawing.dist_facet import dist_facet
 
-SystematicsReader = HistReader
+class SystematicsReader(HistReader):
+    def event(self, event):
+        #event.LHEPdfWeightList = np.array(event.LHEPdfWeight.tolist())
+        #event.LHEScaleWeightList = np.array(event.LHEScaleWeight.tolist())
+        super(SystematicsReader, self).event(event)
 
 class SystematicsCollector(HistCollector):
     def save(self, histograms):
