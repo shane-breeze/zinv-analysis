@@ -49,7 +49,7 @@ tau_veto = "t: (t.pt>20.) & "\
               "(np.abs(t.eta)<2.3) & "\
               "(t.idMVAoldDM>=1)"
 tau_sele = "t: (t.pt>40.) & "\
-              "(np.abs(t.eta)<2.1) & "\
+              "(np.abs(t.eta)<2.3) & "\
               "(t.idMVAoldDM>=8)"
 
 physics_object_selection.selection_dict = {

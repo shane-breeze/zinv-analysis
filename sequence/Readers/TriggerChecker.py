@@ -82,10 +82,9 @@ class TriggerChecker(object):
         if not self.isdata:
             for dataset in self.trigger_dict.keys():
                 setattr(event, "Is{}Triggered".format(dataset), np.ones(event.size, dtype=bool))
-                event.IsTriggered = np.ones(event.size, dtype=bool)
+            event.IsTriggered = np.ones(event.size, dtype=float)
             return
 
-        # Data
         for dataset, trigger_list in self.trigger_dict.items():
             setattr(
                 event,

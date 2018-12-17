@@ -45,17 +45,17 @@ skim_collections = Readers.SkimCollections(
     variations = all_variations,
 )
 
-jet_cross_cleaning = Readers.ObjectCrossCleaning(
-    name = "jet_cross_cleaning",
-    collections = ("Jet",),
-    ref_collections = ("MuonVeto", "ElectronVeto", "PhotonVeto"),
-    variations = all_variations,
-)
-
 tau_cross_cleaning = Readers.ObjectCrossCleaning(
     name = "tau_cross_cleaning",
     collections = ("Tau",),
     ref_collections = ("MuonVeto", "ElectronVeto"),
+)
+
+jet_cross_cleaning = Readers.ObjectCrossCleaning(
+    name = "jet_cross_cleaning",
+    collections = ("Jet",),
+    ref_collections = ("MuonVeto", "ElectronVeto", "PhotonVeto", "TauVeto"),
+    variations = all_variations,
 )
 
 jec_variations = Readers.JecVariations(
@@ -216,6 +216,16 @@ weight_qcd_ewk = Readers.WeightQcdEwk(
 #    nuisances = ["d1k_ew", "d2k_ew_z", "d2k_ew_w", "d3k_ew_z", "d3k_ew_w"],
 #)
 
+weight_prefiring = Readers.WeightPreFiring(
+    name = "weight_prefiring",
+    jet_eff_map_path = datapath+"/prefiring/L1prefiring_jetpt_2016BtoH.txt",
+    photon_eff_map_path = datapath+"/prefiring/L1prefiring_photonpt_2016BtoH.txt",
+    jet_selection = "j: (j.pt>20) & ((2<np.abs(j.eta)) & (np.abs(j.eta)<3))",
+    photon_selection = "y: (y.pt>20) & ((2<np.abs(y.eta)) & (np.abs(y.eta)<3))",
+    syst = 0.2,
+    apply = False,
+)
+
 selection_producer = Readers.SelectionProducer(
     name = "selection_producer",
     event_selection = event_selection,
@@ -293,6 +303,16 @@ trigger_efficiency_collector = Collectors.TriggerEfficiencyCollector(
     cfg = Collectors.TriggerEfficiency_cfg,
 )
 
+qcd_estimation_reader = Collectors.QcdEstimationReader(
+    name = "qcd_estimation_reader",
+    cfg = Collectors.QcdEstimation_cfg,
+)
+qcd_estimation_collector = Collectors.QcdEstimationCollector(
+    name = "qcd_estimation_collector",
+    plot = True,
+    cfg = Collectors.QcdEstimation_cfg,
+)
+
 sequence = [
     # Creates object collections accessible through the event variable. e.g.
     # event.Jet.pt rather than event.Jet_pt. Simpler to pass a collection to
@@ -308,8 +328,8 @@ sequence = [
     # Cross cleaning must be placed after the veto and selection collections
     # are created but before they're used anywhere to allow the collection
     # selection mask to be updated
-    (jet_cross_cleaning, NullCollector()),
     (tau_cross_cleaning, NullCollector()),
+    (jet_cross_cleaning, NullCollector()),
     # General event variable producers
     (event_sums_producer, NullCollector()),
     (inv_mass_producer, NullCollector()),
@@ -328,14 +348,16 @@ sequence = [
     (weight_muons, NullCollector()),
     (weight_electrons, NullCollector()),
     (weight_qcd_ewk, NullCollector()),
+    (weight_prefiring, NullCollector()),
     (selection_producer, NullCollector()),
     # Add collectors (with accompanying readers) at the end so that all
     # event attributes are available to them
     (hist_reader, hist_collector),
-    (hist2d_reader, hist2d_collector),
-    (gen_stitching_reader, gen_stitching_collector),
-    (met_response_resolution_reader, met_response_resolution_collector),
-    (qcd_ewk_corrections_reader, qcd_ewk_corrections_collector),
-    (systematics_reader, systematics_collector),
-    (trigger_efficiency_reader, trigger_efficiency_collector),
+    #(hist2d_reader, hist2d_collector),
+    #(gen_stitching_reader, gen_stitching_collector),
+    #(met_response_resolution_reader, met_response_resolution_collector),
+    #(qcd_ewk_corrections_reader, qcd_ewk_corrections_collector),
+    #(systematics_reader, systematics_collector),
+    #(trigger_efficiency_reader, trigger_efficiency_collector),
+    #(qcd_estimation_reader, qcd_estimation_collector),
 ]

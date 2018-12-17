@@ -12,3 +12,5 @@ from .Systematics import SystematicsReader, SystematicsCollector
 import Systematics_cfg
 from .TriggerEfficiency import TriggerEfficiencyReader, TriggerEfficiencyCollector
 import TriggerEfficiency_cfg
+from .QcdEstimation import QcdEstimationReader, QcdEstimationCollector
+import QcdEstimation_cfg

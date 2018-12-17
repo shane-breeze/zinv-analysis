@@ -6,22 +6,12 @@ inf = np.infty
 pi = np.pi+0.00001
 
 # dataset-cutflows split into regions
-monojet_categories = [("MET", "None"),
-                      ("MET", "Monojet"), ("MET", "MonojetQCD")]
-muon_met_categories = [("MET", "SingleMuon"), ("MET", "SingleMuonPlus"), ("MET", "SingleMuonMinus"),
-                       ("MET", "SingleMuonQCD")]
-muon_mu_categories = [("SingleMuon", "SingleMuon"), ("SingleMuon", "SingleMuonPlus"), ("SingleMuon", "SingleMuonMinus"),
-                      ("SingleMuon", "SingleMuonQCD")]
-dimuon_met_categories = [("MET", "DoubleMuon")]
-dimuon_mu_categories = [("SingleMuon", "DoubleMuon")]
-ele_categories = [("SingleElectron", "SingleElectron"), ("SingleElectron", "SingleElectronPlus"), ("SingleElectron", "SingleElectronMinus"),
-                  ("SingleElectron", "SingleElectronQCD")]
-diele_categories = [("SingleElectron", "DoubleElectron")]
+monojet_categories = [("MET", "MonojetQCD")]
+muon_met_categories = [("MET", "SingleMuonQCD")]
+muon_mu_categories = [("SingleMuon", "SingleMuonQCD")]
+ele_categories = [("SingleElectron", "SingleElectronQCD")]
 
-categories = monojet_categories\
-        + muon_met_categories + muon_mu_categories\
-        + dimuon_met_categories + dimuon_mu_categories\
-        + ele_categories + diele_categories\
+categories = monojet_categories + muon_met_categories + muon_mu_categories + ele_categories
 
 monojet_variations = [
     ("nominal",         "ev: ev.Weight_{dataset}"),
@@ -98,36 +88,42 @@ scale_variations = [
 
 histogrammer_cfgs = [
     {
-        "name": "METnoX_pt",
+        "name": ["METnoX_pt", "NearestJetToMETnoX_pt"],
         "categories": monojet_categories,
-        "variables": ["ev: ev.METnoX_pt"],
-        "bins": [[-inf]+list(np.linspace(0., 1000., 201))+[inf]],
+        "variables": ["ev: ev.METnoX_pt", "ev: ev.NearestJetToMETnoX_pt"],
+        "bins": [[-inf]+list(np.linspace(0., 1000., 201))+[inf],
+                 [-inf]+list(np.linspace(0., 1000., 201))+[inf]],
         "weights": monojet_variations+pdf_variations+scale_variations,
     }, {
-        "name": "METnoX_pt",
-        "categories": muon_met_categories + dimuon_met_categories,
-        "variables": ["ev: ev.METnoX_pt"],
-        "bins": [[-inf]+list(np.linspace(0., 1000., 201))+[inf]],
+        "name": ["METnoX_pt", "NearestJetToMETnoX_pt"],
+        "categories": muon_met_categories,
+        "variables": ["ev: ev.METnoX_pt", "ev: ev.NearestJetToMETnoX_pt"],
+        "bins": [[-inf]+list(np.linspace(0., 1000., 201))+[inf],
+                 [-inf]+list(np.linspace(0., 1000., 201))+[inf]],
         "weights": muon_met_variations+pdf_variations+scale_variations,
     }, {
-        "name": "METnoX_pt",
-        "categories": muon_mu_categories + dimuon_mu_categories,
-        "variables": ["ev: ev.METnoX_pt"],
-        "bins": [[-inf]+list(np.linspace(0., 1000., 201))+[inf]],
+        "name": ["METnoX_pt", "NearestJetToMETnoX_pt"],
+        "categories": muon_mu_categories,
+        "variables": ["ev: ev.METnoX_pt", "ev: ev.NearestJetToMETnoX_pt"],
+        "bins": [[-inf]+list(np.linspace(0., 1000., 201))+[inf],
+                 [-inf]+list(np.linspace(0., 1000., 201))+[inf]],
         "weights": muon_mu_variations+pdf_variations+scale_variations,
     }, {
-        "name": "METnoX_pt",
-        "categories": ele_categories + diele_categories,
-        "variables": ["ev: ev.METnoX_pt"],
-        "bins": [[-inf]+list(np.linspace(0., 1000., 201))+[inf]],
+        "name": ["METnoX_pt", "NearestJetToMETnoX_pt"],
+        "categories": ele_categories,
+        "variables": ["ev: ev.METnoX_pt", "ev: ev.NearestJetToMETnoX_pt"],
+        "bins": [[-inf]+list(np.linspace(0., 1000., 201))+[inf],
+                 [-inf]+list(np.linspace(0., 1000., 201))+[inf]],
         "weights": ele_variations+pdf_variations+scale_variations,
     }
 ] + [
     {
-        "name": "METnoX_pt",
+        "name": ["METnoX_pt", "NearestJetToMETnoX_pt"],
         "categories": [(d, c+variation) for d, c in categories],
-        "variables": ["ev: ev.METnoX_pt{}".format(variation)],
-        "bins": [[-inf]+list(np.linspace(0., 1000., 201))+[inf]],
+        "variables": ["ev: ev.METnoX_pt{}".format(variation),
+                      "ev: ev.NearestJetToMETnoX_pt{}".format(variation)],
+        "bins": [[-inf]+list(np.linspace(0., 1000., 201))+[inf],
+                 [-inf]+list(np.linspace(0., 1000., 201))+[inf]],
         "weights": [(variation, "ev: ev.Weight_{dataset}")],
     } for variation in jes_variations
 ]
@@ -226,4 +222,5 @@ sample_names.update({"lheScale{}".format(i): r'Scale_{'+str(i)+'}' for i in rang
 
 axis_label = {
     "METnoX_pt": r'$p_{\mathrm{T}}^{\mathrm{miss}}$ (GeV)',
+    "NearestJetToMETnoX_pt": r'$p_{\mathrm{T}}(j_{\mathrm{min}(\Delta\Phi(j,p_{\mathrm{T}}^{\mathrm{miss}}))})$ (GeV)',
 }

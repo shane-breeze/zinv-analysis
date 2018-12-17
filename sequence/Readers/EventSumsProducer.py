@@ -126,7 +126,8 @@ class EventSumsProducer(object):
 
         # Create Lead and Second Lepton collections
         for collection in ["LeadMuonSelection", "SecondMuonSelection",
-                           "LeadElectronSelection", "SecondElectronSelection"]:
+                           "LeadElectronSelection", "SecondElectronSelection",
+                           "LeadTauSelection", "SecondTauSelection"]:
             for attr in ["pt", "eta", "phi"]:
                 ref_collection = collection.replace("Lead", "").replace("Second", "")
                 pos = 0 if "Lead" in collection else 1
@@ -310,8 +311,9 @@ def create_metnox_jit(met, mephi,
     mets_out = np.zeros(nev, dtype=float32)
     mephis_out = np.zeros(nev, dtype=float32)
 
-    for iev, (musta, musto, elsta, elsto) in enumerate(zip(mustarts, mustops,
-                                                           elstarts, elstops)):
+    for iev, (musta, musto, elsta, elsto) in enumerate(zip(
+        mustarts, mustops, elstarts, elstops
+    )):
         mex, mey = RadToCart2D(met[iev], mephi[iev])
         for muidx in range(musta, musto):
             mux, muy = RadToCart2D(mupt[muidx], muphi[muidx])

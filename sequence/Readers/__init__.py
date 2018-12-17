@@ -18,5 +18,6 @@ from .WeightPileup import WeightPileup
 from .WeightMetTrigger import WeightMetTrigger
 from .WeightObjects import WeightObjects
 from .WeightQcdEwk import WeightQcdEwk
+from .WeightPreFiring import WeightPreFiring
 
 from .SelectionProducer import SelectionProducer

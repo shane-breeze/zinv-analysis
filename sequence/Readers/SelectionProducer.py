@@ -167,6 +167,12 @@ class SelectionProducer(object):
                                           + es.baseline_selection\
                                           + es.tripleelectron_selection
                                           if n not in ["met_selection", "blind_mask", "mtw_selection", "mll_selection"]],
+            "SingleTau": baseline + es.baseline_selection + es.singletau_selection,
+            "SingleTauSB": baseline + es.baseline_selection + es.singletausb_selection,
+            "SingleTauSR": baseline + es.baseline_selection + es.singletausr_selection,
+            "DoubleTau": baseline + es.baseline_selection + es.doubletau_selection,
+            "DoubleTauSB": baseline + es.baseline_selection + es.doubletausb_selection,
+            "DoubleTauSR": baseline + es.baseline_selection + es.doubletausr_selection,
         }
 
         # Create N-1 cutflows

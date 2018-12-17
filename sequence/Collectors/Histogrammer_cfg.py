@@ -22,10 +22,14 @@ diele_categories = [("SingleElectron", "DoubleElectron"),
                     ("SingleElectron", "DoubleElectronSB"),
                     ("SingleElectron", "DoubleElectronSR")]
 
+tau_categories = [("MET", "SingleTau"), ("MET", "SingleTauSB"), ("MET", "SingleTauSR")]
+ditau_categories = [("MET", "DoubleTau"), ("MET", "DoubleTauSB"), ("MET", "DoubleTauSR")]
+
 categories = [("MET", "None")]\
         + monojet_categories\
         + muon_categories + dimuon_categories \
-        + ele_categories + diele_categories
+        + ele_categories + diele_categories \
+        + tau_categories + ditau_categories
 
 histogrammer_cfgs = [
     {
@@ -205,7 +209,7 @@ histogrammer_cfgs = [
         "name": "LeadJetSelection_pt",
         "categories": categories,
         "variables": ["ev: ev.LeadJetSelection_pt"],
-        "bins": [[-inf]+list(np.linspace(0., 1200., 49))+[inf]],
+        "bins": [[-inf]+list(np.linspace(0., 800., 41))+[inf]],
         "weights": [("", "ev: ev.Weight_{dataset}")],
     }, {
         "name": "LeadJetSelection_eta",
@@ -306,8 +310,7 @@ histogrammer_cfgs = [
         "weights": [("", "ev: ev.Weight_{dataset}")],
     }, {
         "name": "nTauVeto",
-        "categories": categories + [(d, "{}_remove_tau_veto".format(c))
-                                    for d, c in categories if c!="None" and "remove" not in c],
+        "categories": categories,
         "variables": ["ev: ev.TauVeto.size"],
         "bins": [[-inf]+list(np.linspace(0., 5., 6))+[inf]],
         "weights": [("", "ev: ev.Weight_{dataset}")],
@@ -364,7 +367,7 @@ histogrammer_cfgs = [
         "name": "LeadElectronSelection_pt",
         "categories": ele_categories + diele_categories,
         "variables": ["ev: ev.LeadElectronSelection_pt"],
-        "bins": [[-inf]+list(np.linspace(0., 1000., 51))+[inf]],
+        "bins": [[-inf]+list(np.linspace(0., 500., 51))+[inf]],
         "weights": [("", "ev: ev.Weight_{dataset}")],
     }, {
         "name": "LeadElectronSelection_eta",
@@ -382,7 +385,7 @@ histogrammer_cfgs = [
         "name": "SecondElectronSelection_pt",
         "categories": diele_categories,
         "variables": ["ev: ev.SecondElectronSelection_pt"],
-        "bins": [[-inf]+list(np.linspace(0., 1000., 51))+[inf]],
+        "bins": [[-inf]+list(np.linspace(0., 500., 51))+[inf]],
         "weights": [("", "ev: ev.Weight_{dataset}")],
     }, {
         "name": "SecondElectronSelection_eta",
@@ -394,6 +397,42 @@ histogrammer_cfgs = [
         "name": "SecondElectronSelection_phi",
         "categories": diele_categories,
         "variables": ["ev: ev.SecondElectronSelection_phi"],
+        "bins": [[-inf]+list(np.linspace(-pi, pi, 51))+[inf]],
+        "weights": [("", "ev: ev.Weight_{dataset}")],
+    }, {
+        "name": "LeadTauSelection_pt",
+        "categories": tau_categories + ditau_categories,
+        "variables": ["ev: ev.LeadTauSelection_pt"],
+        "bins": [[-inf]+list(np.linspace(0., 500., 51))+[inf]],
+        "weights": [("", "ev: ev.Weight_{dataset}")],
+    }, {
+        "name": "LeadTauSelection_eta",
+        "categories": tau_categories + ditau_categories,
+        "variables": ["ev: ev.LeadTauSelection_eta"],
+        "bins": [[-inf]+list(np.linspace(-5., 5., 51))+[inf]],
+        "weights": [("", "ev: ev.Weight_{dataset}")],
+    }, {
+        "name": "LeadTauSelection_phi",
+        "categories": tau_categories + ditau_categories,
+        "variables": ["ev: ev.LeadTauSelection_phi"],
+        "bins": [[-inf]+list(np.linspace(-pi, pi, 51))+[inf]],
+        "weights": [("", "ev: ev.Weight_{dataset}")],
+    }, {
+        "name": "SecondTauSelection_pt",
+        "categories": ditau_categories,
+        "variables": ["ev: ev.SecondTauSelection_pt"],
+        "bins": [[-inf]+list(np.linspace(0., 500., 51))+[inf]],
+        "weights": [("", "ev: ev.Weight_{dataset}")],
+    }, {
+        "name": "SecondTauSelection_eta",
+        "categories": ditau_categories,
+        "variables": ["ev: ev.SecondTauSelection_eta"],
+        "bins": [[-inf]+list(np.linspace(-5., 5., 51))+[inf]],
+        "weights": [("", "ev: ev.Weight_{dataset}")],
+    }, {
+        "name": "SecondTauSelection_phi",
+        "categories": ditau_categories,
+        "variables": ["ev: ev.SecondTauSelection_phi"],
         "bins": [[-inf]+list(np.linspace(-pi, pi, 51))+[inf]],
         "weights": [("", "ev: ev.Weight_{dataset}")],
     }, {
@@ -524,6 +563,24 @@ histogrammer_cfgs = [
         "variables": ["ev: ev.Weight_MET"],
         "bins": [[-inf]+list(np.linspace(-50, 950, 51))+[inf]],
         "weights": [("", "ev: ev.Weight_{dataset}")],
+    }, {
+        "name": "Weight_PreFiring",
+        "categories": categories,
+        "variables": ["ev: ev.Weight_PreFiring"],
+        "bins": [[-inf]+list(np.linspace(0., 1.1, 56))+[inf]],
+        "weights": [("", "ev: ev.Weight_{dataset}")],
+    }, {
+        "name": "Weight_PreFiringUp",
+        "categories": categories,
+        "variables": ["ev: ev.Weight_PreFiringUp"],
+        "bins": [[-inf]+list(np.linspace(0., 1.1, 56))+[inf]],
+        "weights": [("", "ev: ev.Weight_{dataset}")],
+    }, {
+        "name": "Weight_PreFiringDown",
+        "categories": categories,
+        "variables": ["ev: ev.Weight_PreFiringDown"],
+        "bins": [[-inf]+list(np.linspace(0., 1.1, 56))+[inf]],
+        "weights": [("", "ev: ev.Weight_{dataset}")],
     },
 ]
 
@@ -637,6 +694,12 @@ axis_label = {
     "SecondElectronSelection_pt": r'$p_{\rm{T}}(e_{1})$ (GeV)',
     "SecondElectronSelection_eta": r'$\eta(e_{1})$',
     "SecondElectronSelection_phi": r'$\phi(e_{1})$',
+    "LeadTauSelection_pt": r'$p_{\rm{T}}(\tau_{0})$ (GeV)',
+    "LeadTauSelection_eta": r'$\eta(\tau_{0})$',
+    "LeadTauSelection_phi": r'$\phi(\tau_{0})$',
+    "SecondTauSelection_pt": r'$p_{\rm{T}}(\tau_{1})$ (GeV)',
+    "SecondTauSelection_eta": r'$\eta(\tau_{1})$',
+    "SecondTauSelection_phi": r'$\phi(\tau_{1})$',
     "PV_npvsGood": r'No. of good PVs',
     "LeptonDevay": r'Lepton decay pdg ID',
     "nGenBosons": r'No. of gen. bosons',
@@ -654,4 +717,7 @@ axis_label = {
     "SecondGenPartBosonDaughters_phi": r'Gen. 2nd lepton $\phi$',
     "SecondGenPartBosonDaughters_p3": r'Gen. 2nd lepton $|p|$ (GeV)',
     "Jet_genPtClosure": r'$(p_{\rm{T}}^{j} - p_{\rm{T},\rm{gen}}^{j})/p_{\rm{T}}^{j}$',
+    "Weight_PreFiring": r'Pre-firing non-probability',
+    "Weight_PreFiringUp": r'Pre-firing non-probability ($+1\sigma$)',
+    "Weight_PreFiringDown": r'Pre-firing non-probability ($-1\sigma$)',
 }
