@@ -1,4 +1,4 @@
-import uproot
+import awkward
 import numpy as np
 from numba import njit, int32, float32
 from utils.Geometry import DeltaR2, RadToCart2D, CartToRad2D
@@ -12,21 +12,29 @@ regex = re.compile("jes(?P<source>.*)(Up|Down)")
 class JecVariations(object):
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
-
         self.unclust_threshold = 15.
+
+    def begin(self, event):
+        self.isdata = event.config.dataset.isdata
+
+        self.sources = list(set([
+            v.replace("Up", "").replace("Down", "") for v in event.variations
+            if "jes" in v
+        ]))
+
         self.variations = [("", [0.]*(len(self.sources)+2))]
         if self.do_jes:
             for idx, source in enumerate(self.sources):
                 self.variations.extend([
-                    ("jes"+source+"Up",   [0.]*idx + [ 1.] + [0.]*(len(self.sources)-idx-1) + [0., 0.]),
-                    ("jes"+source+"Down", [0.]*idx + [-1.] + [0.]*(len(self.sources)-idx-1) + [0., 0.]),
+                    (source+"Up",   [0.]*idx + [ 1.] + [0.]*(len(self.sources)-idx-1) + [0., 0.]),
+                    (source+"Down", [0.]*idx + [-1.] + [0.]*(len(self.sources)-idx-1) + [0., 0.]),
                 ])
-        if self.do_jer:
+        if self.do_jer and any("jer" in v for v in event.variations):
             self.variations.extend([
                 ("jerUp",   [0.]*len(self.sources) + [ 1., 0.]),
                 ("jerDown", [0.]*len(self.sources) + [-1., 0.]),
             ])
-        if self.do_unclust:
+        if self.do_unclust and any("unclust" in v for v in event.variations):
             self.variations.extend([
                 ("unclustUp",   [0.]*len(self.sources) + [0., 1.]),
                 ("unclustDown", [0.]*len(self.sources) + [0.,-1.]),
@@ -35,9 +43,6 @@ class JecVariations(object):
         self.jesuncs = read_jesunc_file(self.jes_unc_file, self.sources, overflow=True)
         self.jersfs = read_jersf_file(self.jer_sf_file, overflow=True)
         self.jers = read_jer_file(self.jer_file, overflow=True)
-
-    def begin(self, event):
-        self.isdata = event.config.dataset.isdata
 
     def event(self, event):
         if self.isdata:
@@ -62,8 +67,8 @@ class JecVariations(object):
         delta_jerdown = cjer - cjer_down
         if not self.apply_jer_corrections:
             cjer = np.ones(cjer.shape)
-        event.Jet_jerCorrection = uproot.interp.jagged.JaggedArray(
-            cjer, event.Jet.starts, event.Jet.stops,
+        event.Jet_jerCorrection = awkward.JaggedArray(
+            event.Jet.starts, event.Jet.stops, cjer,
         )
 
         # Get delta unclustered energy x and y - absolute values
@@ -83,8 +88,8 @@ class JecVariations(object):
                 jes_var = 0.
             else:
                 # Get delta JES up and down - relative values
-                delta_jesup, delta_jesdown = get_jes_sfs(self.jesuncs[source], event.Jet)
-                sidx = self.sources.index(source)
+                delta_jesup, delta_jesdown = get_jes_sfs(self.jesuncs["jes"+source], event.Jet)
+                sidx = self.sources.index("jes"+source)
                 jes_var = vars[sidx]
 
             # jes at [0, N-2). jer at N-2. unclust at N-1
@@ -121,13 +126,13 @@ class JecVariations(object):
 ################################################################################
 def get_jet_ptresolution(jers, jets, rho):
     """Function to modify arguments that are sent to a numba-jitted function"""
-    return uproot.interp.jagged.JaggedArray(
+    return awkward.JaggedArray(
+        jets.starts, jets.stops,
         jit_get_jet_ptresolution(
             jers["bins"], jers["var_range"], jers["params"],
             jets.pt.content, jets.eta.content, jets.starts, jets.stops,
             rho,
         ),
-        jets.starts, jets.stops,
     )
 
 @njit
@@ -156,7 +161,8 @@ def jit_get_jet_ptresolution(bins, var_ranges, params,
 ################################################################################
 def match_jets_genjets(jets, genjets):
     """Function to modify arguments that are sent to a numba-jitted function"""
-    return uproot.interp.jagged.JaggedArray(
+    return awkward.JaggedArray(
+        jets.starts, jets.stops,
         jit_match_jets_genjets(
             jets.pt.content, jets.eta.content,
             jets.phi.content, jets.ptResolution.content,
@@ -164,7 +170,6 @@ def match_jets_genjets(jets, genjets):
             genjets.pt.content, genjets.eta.content, genjets.phi.content,
             genjets.starts, genjets.stops,
         ),
-        jets.starts, jets.stops,
     )
 
 @njit
@@ -281,7 +286,7 @@ def calculate_new_jets_met(jes_var, unclustx_var, unclusty_var, unclust_threshol
         met.pt, met.phi,
     )
     return (
-        (uproot.interp.jagged.JaggedArray(r, jets.starts, jets.stops) for r in results[0]),
+        (awkward.JaggedArray(jets.starts, jets.stops, r) for r in results[0]),
         results[1],
     )
 @njit
@@ -332,7 +337,7 @@ def read_jesunc_file(filename, sources, overflow=True):
 
     sources_lines = {}
     for source in sources:
-        sidx = source_idx.values().index(source_idx[source])
+        sidx = source_idx.values().index(source_idx[source.replace("jes", "")])
         sidx_start = source_idx.values()[sidx]+1
         if sidx < len(source_idx):
             sidx_stop = source_idx.values()[sidx+1]

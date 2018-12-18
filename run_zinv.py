@@ -49,6 +49,10 @@ def parse_args():
     parser.add_argument("--redraw", default=False, action='store_true',
                         help="Overrides most options. Runs over collectors "
                              "only to rerun the draw function on outdir")
+    parser.add_argument("--systs", default="nominal", type=str,
+                        help="If any, which systematics to run over "
+                             "(\"nominal\", \"jec1\", \"jec2\", \"jec3\", "
+                             "\"jec4\", \"lhe\")")
     return parser.parse_args()
 
 def generate_report(outdir):
@@ -168,6 +172,10 @@ if __name__ == "__main__":
         samples = options.sample.split(",")
         datasets = [d for d in datasets
                     if d.name in samples or d.parent in samples]
+
+    # Pass any other options through to the datasets
+    for d in datasets:
+        d.systs = options.systs
 
     if options.redraw:
         jobs = redraw(sequence, datasets, options)

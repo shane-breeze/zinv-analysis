@@ -11,7 +11,7 @@ class SkimCollections(object):
         if not self.isdata:
             # Add variation jet collections
             variation_selection_dict = {}
-            for variation in self.variations:
+            for variation in event.variations:
                 variation_selection_dict.update({
                     (incoll, outcoll+variation):
                     selection.replace("pt", "pt{}".format(variation))

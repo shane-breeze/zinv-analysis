@@ -188,7 +188,9 @@ class SelectionProducer(object):
 
         # Create variation cutflows
         for cutflow, selection in self.selections.items():
-            for variation in self.variations:
+            for variation in event.variations:
+                if variation == "":
+                    continue
                 new_selection = selection[:]
                 for attr, new_attr in self.attr_variation_conv.items():
                     new_selection = [

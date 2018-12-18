@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-import uproot
+import awkward
 from numba import njit, float32
 
 from utils.NumbaFuncs import get_bin_indices
@@ -34,20 +34,18 @@ class WeightPreFiring(object):
 
         jets = Collection("JetsForPreFiring", event, "Jet", event.Jet(self.functions[self.jet_selection]))
         jet_effs, jet_effs_stat = get_efficiencies(jets, self.jet_eff_map)
-        jet_effs_err = uproot.interp.jagged.JaggedArray(
+        jet_effs_err = awkward.JaggedArray(
+            jets.starts, jets.stops,
             np.sqrt(jet_effs_stat.content**2 + self.syst*jet_effs.content),
-            jets.starts,
-            jets.stops,
         )
         jets.preFiringEff = jet_effs
         jets.preFiringEffErr = jet_effs_err
 
         photons = Collection("PhotonsForPreFiring", event, "Photon", event.Photon(self.functions[self.photon_selection]))
         photon_effs, photon_effs_stat = get_efficiencies(photons, self.photon_eff_map)
-        photon_effs_err = uproot.interp.jagged.JaggedArray(
+        photon_effs_err = awkward.JaggedArray(
+            photons.starts, photons.stops,
             np.sqrt(photon_effs_stat.content**2 + self.syst*photon_effs.content),
-            photons.starts,
-            photons.stops,
         )
         photons.preFiringEff = photon_effs
         photons.preFiringEffErr = photon_effs_err
@@ -78,14 +76,11 @@ def get_efficiencies(objects, effmap):
 
     indices = ylow.shape[0]*xind + yind
     df = effmap.iloc[indices]
-    return uproot.interp.jagged.JaggedArray(
-        df["content"].values,
-        objects.starts,
-        objects.stops,
-    ), uproot.interp.jagged.JaggedArray(
+    return awkward.JaggedArray(
+        objects.starts, objects.stops, df["content"].values,
+    ), awkward.JaggedArray(
+        objects.starts, objects.stops,
         df["error"].values,
-        objects.starts,
-        objects.stops,
     )
 
 def get_event_nonprefiring_prob(photons, jets):

@@ -11,9 +11,17 @@ from drawing.dist_multicomp import dist_multicomp
 from drawing.dist_facet import dist_facet
 
 class SystematicsReader(HistReader):
+    def begin(self, event):
+        # Only run for variations defined in the event
+        self.histograms.configs = [
+            c for c in self.histograms.configs
+            if any(v in c["weight"][0] for v in event.variations)
+        ]
+
     def event(self, event):
-        #event.LHEPdfWeightList = np.array(event.LHEPdfWeight.tolist())
-        #event.LHEScaleWeightList = np.array(event.LHEScaleWeight.tolist())
+        if "lhe" in event.variations:
+            event.LHEPdfWeightList = np.array(event.LHEPdfWeight.tolist())
+            event.LHEScaleWeightList = np.array(event.LHEScaleWeight.tolist())
         super(SystematicsReader, self).event(event)
 
 class SystematicsCollector(HistCollector):

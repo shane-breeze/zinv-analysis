@@ -11,18 +11,21 @@ from alphatwirl.loop import NullCollector
 import os
 datapath = os.path.join(os.environ["TOPDIR"], "data")
 
+# Create all possible variations
 jes_variations = [
     "Total",
-    #"AbsoluteStat", "AbsoluteScale", "AbsoluteMPFBias", "Fragmentation", "SinglePionECAL", "SinglePionHCAL",
-    #"FlavorQCD", "TimePtEta", "RelativeJEREC1", "RelativeJEREC2", "RelativeJERHF", "RelativePtBB",
-    #"RelativePtEC1", "RelativePtEC2", "RelativePtHF", "RelativeBal", "RelativeFSR", "RelativeStatFSR", "RelativeStatEC",
-    #"RelativeStatHF", "PileUpDataMC", "PileUpPtRef", "PileUpPtBB", "PileUpPtEC1", "PileUpPtEC2", "PileUpPtHF",
+    "AbsoluteStat", "AbsoluteScale", "AbsoluteMPFBias", "Fragmentation", "SinglePionECAL", "SinglePionHCAL",
+    "FlavorQCD", "TimePtEta", "RelativeJEREC1", "RelativeJEREC2", "RelativeJERHF", "RelativePtBB",
+    "RelativePtEC1", "RelativePtEC2", "RelativePtHF", "RelativeBal", "RelativeFSR", "RelativeStatFSR", "RelativeStatEC",
+    "RelativeStatHF", "PileUpDataMC", "PileUpPtRef", "PileUpPtBB", "PileUpPtEC1", "PileUpPtEC2", "PileUpPtHF",
 ]
 variations_noupdown = ["jes"+j for j in jes_variations] + ["jer", "unclust"]
 
-all_variations = [var+"Up" for var in variations_noupdown]\
+all_variations = [""]\
+        + [var+"Up" for var in variations_noupdown]\
         + [var+"Down" for var in variations_noupdown]
 
+# Initialise readers and collectors
 certified_lumi_checker = Readers.CertifiedLumiChecker(
     name = "certified_lumi_checker",
     lumi_json_path = datapath + "/json/Cert_271036-284044_13TeV_23Sep2016ReReco_Collisions16_JSON.txt",
@@ -37,25 +40,26 @@ collection_creator = Readers.CollectionCreator(
     name = "collection_creator",
     collections = ["CaloMET", "MET", "Jet", "Electron", "Muon", "Photon", "Tau",
                    "GenMET", "GenPart", "GenJet", "GenDressedLepton", "LHEPart"],
+    variations = all_variations,
 )
 
 skim_collections = Readers.SkimCollections(
     name = "skim_collections",
     selection_dict = physics_object_selection.selection_dict,
-    variations = all_variations,
 )
 
 tau_cross_cleaning = Readers.ObjectCrossCleaning(
     name = "tau_cross_cleaning",
     collections = ("Tau",),
     ref_collections = ("MuonVeto", "ElectronVeto"),
+    variations = "none",
 )
 
 jet_cross_cleaning = Readers.ObjectCrossCleaning(
     name = "jet_cross_cleaning",
     collections = ("Jet",),
     ref_collections = ("MuonVeto", "ElectronVeto", "PhotonVeto", "TauVeto"),
-    variations = all_variations,
+    variations = "all",
 )
 
 jec_variations = Readers.JecVariations(
@@ -67,12 +71,10 @@ jec_variations = Readers.JecVariations(
     do_jes = True,
     do_jer = True,
     do_unclust = True,
-    sources = jes_variations,
 )
 
 event_sums_producer = Readers.EventSumsProducer(
     name = "event_sums_producer",
-    variations = all_variations,
 )
 signal_region_blinder = Readers.SignalRegionBlinder(
     name = "signal_region_blinder",
@@ -229,7 +231,6 @@ weight_prefiring = Readers.WeightPreFiring(
 selection_producer = Readers.SelectionProducer(
     name = "selection_producer",
     event_selection = event_selection,
-    variations = all_variations,
 )
 
 hist_reader = Collectors.HistReader(
@@ -270,7 +271,6 @@ met_response_resolution_collector = Collectors.MetResponseResolutionCollector(
     name = "met_response_resolution_collector",
     plot = True,
     cfg = Collectors.MetResponseResolution_cfg,
-    variations = all_variations,
 )
 
 qcd_ewk_corrections_reader = Collectors.QcdEwkCorrectionsReader(
@@ -355,7 +355,7 @@ sequence = [
     (hist_reader, hist_collector),
     (hist2d_reader, hist2d_collector),
     (gen_stitching_reader, gen_stitching_collector),
-    (met_response_resolution_reader, met_response_resolution_collector),
+    #(met_response_resolution_reader, met_response_resolution_collector),
     (qcd_ewk_corrections_reader, qcd_ewk_corrections_collector),
     (systematics_reader, systematics_collector),
     (trigger_efficiency_reader, trigger_efficiency_collector),

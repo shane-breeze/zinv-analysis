@@ -1,6 +1,6 @@
 import numpy as np
 from numba import njit, boolean, int32, float32
-import uproot
+import awkward
 from . import Collection
 from utils.Geometry import DeltaR2, LorTHPMToXYZE, LorXYZEToTHPM
 from utils.NumbaFuncs import get_nth_sorted_object_indices
@@ -42,8 +42,8 @@ class GenBosonProducer(object):
         genpart_dressedlepidx = genpart_matched_dressedlepton(
             gpbd, event.GenDressedLepton,
         )
-        event.GenPartBosonDaughters_genDressedLeptonIdx = uproot.interp.jagged.JaggedArray(
-            genpart_dressedlepidx, gpbd.starts, gpbd.stops,
+        event.GenPartBosonDaughters_genDressedLeptonIdx = awkward.JaggedArray(
+            gpbd.starts, gpbd.stops, genpart_dressedlepidx,
         )
 
         event.GenPartBoson = Collection("GenPartBoson", event)

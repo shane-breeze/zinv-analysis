@@ -1,4 +1,4 @@
-import uproot
+import awkward
 import numpy as np
 from numba import njit, float32, int32
 from utils.Geometry import RadToCart2D, CartToRad2D, BoundPhi, PartCoorToCart3D, CartToPartCoor3D
@@ -26,8 +26,7 @@ class EventSumsProducer(object):
         event.DiElectron_phi = diele_phi
 
         self.isdata = event.config.dataset.isdata
-        variations = [""]+self.variations if not self.isdata else [""]
-        for variation in variations:
+        for variation in event.variations:
             # Create lead jet selection collection
             setattr(event, "LeadJetSelection{}".format(variation),
                     Collection("LeadJetSelection{}".format(variation), event))
@@ -199,12 +198,12 @@ def create_minDPhiJ1234METnoX_jit(jets_dphi, starts, stops):
     return mindphis
 
 def create_jDPhiMETnoX(jets, met, variation):
-    return uproot.interp.jagged.JaggedArray(
+    return awkward.JaggedArray(
+        jets.starts, jets.stops,
         create_jDPhiMETnoX_jit(
             getattr(met, "phi{}".format(variation)),
             jets.phi.content, jets.starts, jets.stops,
         ),
-        jets.starts, jets.stops,
     )
 
 @njit
