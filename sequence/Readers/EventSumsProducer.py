@@ -33,6 +33,8 @@ class EventSumsProducer(object):
                     Collection("LeadJetSelection{}".format(variation), event))
             setattr(event, "SecondJetSelection{}".format(variation),
                     Collection("SecondJetSelection{}".format(variation), event))
+            setattr(event, "NearestJetToMETnoX{}".format(variation),
+                    Collection("NearestJetToMETnoX{}".format(variation), event))
 
             # MET
             met, mephi = create_metnox(
@@ -80,14 +82,29 @@ class EventSumsProducer(object):
             setattr(event, "HMiss_phi{}".format(variation), hmiss_phi)
 
             # dPhi(J, METnoX)
-            setattr(
-                event, "Jet_dPhiMETnoX{}".format(variation),
-                create_jDPhiMETnoX(event.Jet, event.METnoX, variation),
-            )
+            dphi_j_metnox = create_jDPhiMETnoX(event.Jet, event.METnoX, variation)
+            setattr(event, "Jet_dPhiMETnoX{}".format(variation), dphi_j_metnox)
             setattr(
                 event, "MinDPhiJ1234METnoX{}".format(variation),
                 create_minDPhiJ1234METnoX(event.JetSelection, variation),
             )
+
+            # Nearest(J, METnoX)
+            ref_collection = "JetSelection{}".format(variation)
+            nearest_jet_indices = create_nearest_jet_metnox_indices(
+                getattr(event, ref_collection),
+                variation,
+            )
+            out_collection = "NearestJetToMETnoX{}".format(variation)
+            for attr in ["pt", "eta", "phi"]:
+                attr_name = attr+variation
+                if attr!="pt" and variation!="":
+                    attr_name = attr
+
+                ref_coll_content = getattr(getattr(event, ref_collection), attr_name).content
+                out_coll_content = np.full(event.size, np.nan)
+                out_coll_content[nearest_jet_indices>=0] = ref_coll_content[nearest_jet_indices[nearest_jet_indices>=0]]
+                setattr(event, out_collection+"_"+attr_name, out_coll_content)
 
             # nbjet
             setattr(
@@ -197,6 +214,20 @@ def create_jDPhiMETnoX_jit(mephi, jetphi, starts, stops):
         for jet_index in range(start, stop):
             jet_dphis[jet_index] = BoundPhi(jetphi[jet_index] - mephi[iev])
     return jet_dphis
+
+def create_nearest_jet_metnox_indices(jets, variation):
+    return create_nearest_jet_metnox_indices_jit(
+        getattr(jets, "dPhiMETnoX{}".format(variation)).content,
+        jets.starts, jets.stops,
+    )
+
+@njit
+def create_nearest_jet_metnox_indices_jit(jets_dphimet, starts, stops):
+    nearest_jet_metnox_indices = -1*np.ones(starts.shape[0], dtype=int32)
+    for iev, (start, stop) in enumerate(zip(starts, stops)):
+        if start < stop:
+            nearest_jet_metnox_indices[iev] = start+np.argmin(jets_dphimet[start:stop])
+    return nearest_jet_metnox_indices
 
 def create_mht(jets, variation):
     return create_mht_jit(
