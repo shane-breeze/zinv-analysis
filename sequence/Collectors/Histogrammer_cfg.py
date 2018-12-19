@@ -5,25 +5,18 @@ inf = np.infty
 pi = np.pi+0.00001
 
 # dataset-cutflows split into regions
-monojet_categories = [("MET", "Monojet"), ("MET", "MonojetSB"), ("MET", "MonojetSR"),
-                      ("MET", "MonojetQCD"), ("MET", "MonojetQCDSB"), ("MET", "MonojetQCDSR"),
+monojet_categories = [("MET", "Monojet"), ("MET", "MonojetQCD"),
                       ("MET", "Monojet_remove_muon_selection_fmt_0"),
                       ("SingleMuon", "Monojet_remove_muon_selection_fmt_0")]
 
-muon_categories = [("MET", "SingleMuon"), ("MET", "SingleMuonSB"), ("MET", "SingleMuonSR"),
-                   ("SingleMuon", "SingleMuon"), ("SingleMuon", "SingleMuonSB"), ("SingleMuon", "SingleMuonSR")]
-dimuon_categories = [("MET", "DoubleMuon"), ("MET", "DoubleMuonSB"), ("MET", "DoubleMuonSR"),
-                     ("SingleMuon", "DoubleMuon"),("SingleMuon", "DoubleMuonSB"), ("SingleMuon", "DoubleMuonSR")]
+muon_categories = [("MET", "SingleMuon"), ("SingleMuon", "SingleMuon")]
+dimuon_categories = [("MET", "DoubleMuon"), ("SingleMuon", "DoubleMuon")]
 
-ele_categories = [("SingleElectron", "SingleElectron"),
-                  ("SingleElectron", "SingleElectronSB"),
-                  ("SingleElectron", "SingleElectronSR")]
-diele_categories = [("SingleElectron", "DoubleElectron"),
-                    ("SingleElectron", "DoubleElectronSB"),
-                    ("SingleElectron", "DoubleElectronSR")]
+ele_categories = [("SingleElectron", "SingleElectron")]
+diele_categories = [("SingleElectron", "DoubleElectron")]
 
-tau_categories = [("MET", "SingleTau"), ("MET", "SingleTauSB"), ("MET", "SingleTauSR")]
-ditau_categories = [("MET", "DoubleTau"), ("MET", "DoubleTauSB"), ("MET", "DoubleTauSR")]
+tau_categories = [("MET", "SingleTau")]
+ditau_categories = [("MET", "DoubleTau")]
 
 categories = [("MET", "None")]\
         + monojet_categories\

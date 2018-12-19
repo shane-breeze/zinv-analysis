@@ -63,11 +63,7 @@ class SelectionProducer(object):
                                 + es.baseline_selection \
                                 + es.monojet_selection
                                 if n not in ["met_selection", "blind_mask", "muon_selection_fmt_0"]],
-            "MonojetSB": baseline + es.baseline_selection + es.monojetsb_selection,
-            "MonojetSR": baseline + es.baseline_selection + es.monojetsr_selection,
             "MonojetQCD": baseline + es.baseline_selection + es.monojetqcd_selection,
-            "MonojetQCDSB": baseline + es.baseline_selection + es.monojetqcdsb_selection,
-            "MonojetQCDSR": baseline + es.baseline_selection + es.monojetqcdsr_selection,
             "Monojet_remove_muon_selection_fmt_0": [(n, s)
                                                     for (n, s) in baseline \
                                                     + es.baseline_selection \
@@ -86,8 +82,6 @@ class SelectionProducer(object):
                                       + es.singlemuon_selection
                                       if n not in ["met_selection", "blind_mask", "mtw_selection", "mll_selection"]],
             "SingleMuonQCD": baseline + es.baseline_selection + es.singlemuonqcd_selection,
-            "SingleMuonSB": baseline + es.baseline_selection + es.singlemuonsb_selection,
-            "SingleMuonSR": baseline + es.baseline_selection + es.singlemuonsr_selection,
             "SingleMuonPlus": baseline + es.baseline_selection + es.singlemuon_selection + es.singlemuonplus_selection,
             "SingleMuonMinus": baseline + es.baseline_selection + es.singlemuon_selection + es.singlemuonminus_selection,
             "DoubleMuon": baseline + es.baseline_selection + es.doublemuon_selection,
@@ -107,8 +101,6 @@ class SelectionProducer(object):
                                    + es.baseline_selection \
                                    + es.doublemuon_selection
                                    if n not in ["met_selection", "blind_mask"]],
-            "DoubleMuonSB": baseline + es.baseline_selection + es.doublemuonsb_selection,
-            "DoubleMuonSR": baseline + es.baseline_selection + es.doublemuonsr_selection,
             "TripleMuon_noMETTrigger": [(n, s)
                                         for (n, s) in baseline\
                                         + es.baseline_selection\
@@ -133,8 +125,6 @@ class SelectionProducer(object):
                                           + es.singleelectron_selection
                                           if n not in ["met_selection", "blind_mask", "mtw_selection", "mll_selection"]],
             "SingleElectronQCD": baseline + es.baseline_selection + es.singleelectronqcd_selection,
-            "SingleElectronSB": baseline + es.baseline_selection + es.singleelectronsb_selection,
-            "SingleElectronSR": baseline + es.baseline_selection + es.singleelectronsr_selection,
             "SingleElectronPlus": baseline + es.baseline_selection + es.singleelectron_selection + es.singleelectronplus_selection,
             "SingleElectronMinus": baseline + es.baseline_selection + es.singleelectron_selection + es.singleelectronminus_selection,
             "DoubleElectron": baseline + es.baseline_selection + es.doubleelectron_selection,
@@ -154,8 +144,6 @@ class SelectionProducer(object):
                                        + es.baseline_selection \
                                        + es.doubleelectron_selection
                                        if n not in ["met_selection", "blind_mask"]],
-            "DoubleElectronSB": baseline + es.baseline_selection + es.doubleelectronsb_selection,
-            "DoubleElectronSR": baseline + es.baseline_selection + es.doubleelectronsr_selection,
             "TripleElectron_noMETTrigger": [(n, s)
                                             for (n, s) in baseline\
                                             + es.baseline_selection\
@@ -168,11 +156,7 @@ class SelectionProducer(object):
                                           + es.tripleelectron_selection
                                           if n not in ["met_selection", "blind_mask", "mtw_selection", "mll_selection"]],
             "SingleTau": baseline + es.baseline_selection + es.singletau_selection,
-            "SingleTauSB": baseline + es.baseline_selection + es.singletausb_selection,
-            "SingleTauSR": baseline + es.baseline_selection + es.singletausr_selection,
             "DoubleTau": baseline + es.baseline_selection + es.doubletau_selection,
-            "DoubleTauSB": baseline + es.baseline_selection + es.doubletausb_selection,
-            "DoubleTauSR": baseline + es.baseline_selection + es.doubletausr_selection,
         }
 
         # Create N-1 cutflows

@@ -2,15 +2,11 @@ import numpy as np
 from utils.Colours import colours_dict
 inf = np.infty
 
-categories = [("MET", "None"),
-              ("MET", "Monojet"), ("MET", "MonojetSB"), ("MET", "MonojetSR"),
-              ("MET", "MonojetQCD"), ("MET", "MonojetQCDSB"), ("MET", "MonojetQCDSR"),
-              ("MET", "SingleMuon"), ("MET", "SingleMuonSB"), ("MET", "SingleMuonSR"),
-              ("SingleMuon", "SingleMuon"), ("SingleMuon", "SingleMuonSB"), ("SingleMuon", "SingleMuonSR"),
-              ("MET", "DoubleMuon"), ("MET", "DoubleMuonSB"), ("MET", "DoubleMuonSR"),
-              ("SingleMuon", "DoubleMuon"),("SingleMuon", "DoubleMuonSB"), ("SingleMuon", "DoubleMuonSR"),
-              ("SingleElectron", "SingleElectron"), ("SingleElectron", "SingleElectronSB"), ("SingleElectron", "SingleElectronSR"),
-              ("SingleElectron", "DoubleElectron"), ("SingleElectron", "DoubleElectronSB"), ("SingleElectron", "DoubleElectronSR")]
+categories = [("MET", "None"), ("MET", "Monojet"), ("MET", "MonojetQCD"),
+              ("MET", "SingleMuon"), ("SingleMuon", "SingleMuon"),
+              ("MET", "DoubleMuon"), ("SingleMuon", "DoubleMuon"),
+              ("SingleElectron", "SingleElectron"),
+              ("SingleElectron", "DoubleElectron")]
 
 histogrammer_cfgs = [
     {
