@@ -5,24 +5,21 @@ inf = np.infty
 pi = np.pi+0.00001
 
 # dataset-cutflows split into regions
-monojet_categories = [("MET", "Monojet"), ("MET", "MonojetQCD"),
-                      ("MET", "Monojet_remove_muon_selection_fmt_0"),
-                      ("SingleMuon", "Monojet_remove_muon_selection_fmt_0")]
+monojet_categories = [("MET", "Monojet"), ("MET", "MonojetQCD")]
 
-muon_categories = [("MET", "SingleMuon"), ("SingleMuon", "SingleMuon")]
+muon_categories = [("MET", "SingleMuon"), ("SingleMuon", "SingleMuon"),
+                   ("MET", "SingleMuonQCD")]
 dimuon_categories = [("MET", "DoubleMuon"), ("SingleMuon", "DoubleMuon")]
 
-ele_categories = [("SingleElectron", "SingleElectron")]
+ele_categories = [("SingleElectron", "SingleElectron"),
+                  ("SingleElectron", "SingleElectronQCD")]
 diele_categories = [("SingleElectron", "DoubleElectron")]
 
-tau_categories = [("MET", "SingleTau")]
+tau_categories = [("MET", "SingleTau"), ("MET", "SingleTauQCD")]
 ditau_categories = [("MET", "DoubleTau")]
 
-categories = [("MET", "None")]\
-        + monojet_categories\
-        + muon_categories + dimuon_categories \
-        + ele_categories + diele_categories \
-        + tau_categories + ditau_categories
+categories = monojet_categories + muon_categories + dimuon_categories \
+        + ele_categories + diele_categories + tau_categories + ditau_categories
 
 histogrammer_cfgs = [
     {
@@ -259,6 +256,24 @@ histogrammer_cfgs = [
         "bins": [[-inf]+list(np.linspace(-pi, pi, 51))+[inf]],
         "weights": [("", "ev: ev.Weight_{dataset}")],
     }, {
+        "name": "NearestJetToMETnoX_pt",
+        "categories": categories,
+        "variables": ["ev: ev.NearestJetToMETnoX_pt"],
+        "bins": [[-inf]+list(np.linspace(0., 800., 41))+[inf]],
+        "weights": [("", "ev: ev.Weight_{dataset}")],
+    }, {
+        "name": "NearestJetToMETnoX_eta",
+        "categories": categories,
+        "variables": ["ev: ev.NearestJetToMETnoX_eta"],
+        "bins": [[-inf]+list(np.linspace(-5., 5., 51))+[inf]],
+        "weights": [("", "ev: ev.Weight_{dataset}")],
+    }, {
+        "name": "NearestJetToMETnoX_phi",
+        "categories": categories,
+        "variables": ["ev: ev.NearestJetToMETnoX_phi"],
+        "bins": [[-inf]+list(np.linspace(-pi, pi, 51))+[inf]],
+        "weights": [("", "ev: ev.Weight_{dataset}")],
+    }, {
         "name": "DPhiJ1J2",
         "categories": categories,
         "variables": ["ev: ev.DPhiJ1J2"],
@@ -451,105 +466,31 @@ histogrammer_cfgs = [
         "categories": categories,
         "variables": ["ev: ev.GenPartBoson_pt"],
         "bins": [[-inf]+list(np.linspace(0., 1000., 41))+[inf]],
-        "weights": [("", "ev: ev.Weight_{dataset}"),
-                    ("genWeight", "ev: ev.Weight_XsLumi"),
-                    ("nNLOEW", "ev: ev.Weight_XsLumi*ev.WeightQcdEwk")],
+        "weights": [("", "ev: ev.Weight_{dataset}")],
     }, {
         "name": "GenPartBoson_eta",
         "categories": categories,
         "variables": ["ev: ev.GenPartBoson_eta"],
         "bins": [[-inf]+list(np.linspace(-5., 5., 51))+[inf]],
-        "weights": [("", "ev: ev.Weight_{dataset}"),
-                    ("genWeight", "ev: ev.Weight_XsLumi"),
-                    ("nNLOEW", "ev: ev.Weight_XsLumi*ev.WeightQcdEwk")],
+        "weights": [("", "ev: ev.Weight_{dataset}")],
     }, {
         "name": "GenPartBoson_phi",
         "categories": categories,
         "variables": ["ev: ev.GenPartBoson_phi"],
         "bins": [[-inf]+list(np.linspace(-pi, pi, 51))+[inf]],
-        "weights": [("", "ev: ev.Weight_{dataset}"),
-                    ("genWeight", "ev: ev.Weight_XsLumi"),
-                    ("nNLOEW", "ev: ev.Weight_XsLumi*ev.WeightQcdEwk")],
+        "weights": [("", "ev: ev.Weight_{dataset}")],
     }, {
         "name": "GenPartBoson_mass",
         "categories": categories,
         "variables": ["ev: ev.GenPartBoson_mass"],
         "bins": [[-inf]+list(np.linspace(0., 500., 51))+[inf]],
-        "weights": [("", "ev: ev.Weight_{dataset}"),
-                    ("genWeight", "ev: ev.Weight_XsLumi"),
-                    ("nNLOEW", "ev: ev.Weight_XsLumi*ev.WeightQcdEwk")],
+        "weights": [("", "ev: ev.Weight_{dataset}")],
     }, {
         "name": "GenPartBoson_p3",
         "categories": categories,
         "variables": ["ev: ev.GenPartBoson_pt*np.cosh(ev.GenPartBoson_eta)"],
         "bins": [[-inf]+list(np.linspace(0., 2000., 41))+[inf]],
-        "weights": [("", "ev: ev.Weight_{dataset}"),
-                    ("genWeight", "ev: ev.Weight_XsLumi"),
-                    ("nNLOEW", "ev: ev.Weight_XsLumi*ev.WeightQcdEwk")],
-    }, {
-        "name": "LeadGenPartBosonDaughters_pt",
-        "categories": categories,
-        "variables": ["ev: ev.LeadGenPartBosonDaughters.pt"],
-        "bins": [[-inf]+list(np.linspace(0., 1000., 51))+[inf]],
-        "weights": [("", "ev: ev.Weight_{dataset}"),
-                    ("genWeight", "ev: ev.Weight_XsLumi"),
-                    ("nNLOEW", "ev: ev.Weight_XsLumi*ev.WeightQcdEwk")],
-    }, {
-        "name": "LeadGenPartBosonDaughters_eta",
-        "categories": categories,
-        "variables": ["ev: ev.LeadGenPartBosonDaughters.eta"],
-        "bins": [[-inf]+list(np.linspace(-5, 5., 51))+[inf]],
-        "weights": [("", "ev: ev.Weight_{dataset}"),
-                    ("genWeight", "ev: ev.Weight_XsLumi"),
-                    ("nNLOEW", "ev: ev.Weight_XsLumi*ev.WeightQcdEwk")],
-    }, {
-        "name": "LeadGenPartBosonDaughters_phi",
-        "categories": categories,
-        "variables": ["ev: ev.LeadGenPartBosonDaughters.phi"],
-        "bins": [[-inf]+list(np.linspace(-pi, pi, 51))+[inf]],
-        "weights": [("", "ev: ev.Weight_{dataset}"),
-                    ("genWeight", "ev: ev.Weight_XsLumi"),
-                    ("nNLOEW", "ev: ev.Weight_XsLumi*ev.WeightQcdEwk")],
-    }, {
-        "name": "LeadGenPartBosonDaughters_p3",
-        "categories": categories,
-        "variables": ["ev: ev.LeadGenPartBosonDaughters.pt*np.cosh(ev.LeadGenPartBosonDaughters_eta)"],
-        "bins": [[-inf]+list(np.linspace(0., 2000., 51))+[inf]],
-        "weights": [("", "ev: ev.Weight_{dataset}"),
-                    ("genWeight", "ev: ev.Weight_XsLumi"),
-                    ("nNLOEW", "ev: ev.Weight_XsLumi*ev.WeightQcdEwk")],
-    }, {
-        "name": "SecondGenPartBosonDaughters_pt",
-        "categories": categories,
-        "variables": ["ev: ev.SecondGenPartBosonDaughters.pt"],
-        "bins": [[-inf]+list(np.linspace(0., 1000., 51))+[inf]],
-        "weights": [("", "ev: ev.Weight_{dataset}"),
-                    ("genWeight", "ev: ev.Weight_XsLumi"),
-                    ("nNLOEW", "ev: ev.Weight_XsLumi*ev.WeightQcdEwk")],
-    }, {
-        "name": "SecondGenPartBosonDaughters_eta",
-        "categories": categories,
-        "variables": ["ev: ev.SecondGenPartBosonDaughters.eta"],
-        "bins": [[-inf]+list(np.linspace(-5, 5., 51))+[inf]],
-        "weights": [("", "ev: ev.Weight_{dataset}"),
-                    ("genWeight", "ev: ev.Weight_XsLumi"),
-                    ("nNLOEW", "ev: ev.Weight_XsLumi*ev.WeightQcdEwk")],
-    }, {
-        "name": "SecondGenPartBosonDaughters_phi",
-        "categories": categories,
-        "variables": ["ev: ev.SecondGenPartBosonDaughters.phi"],
-        "bins": [[-inf]+list(np.linspace(-pi, pi, 51))+[inf]],
-        "weights": [("", "ev: ev.Weight_{dataset}"),
-                    ("genWeight", "ev: ev.Weight_XsLumi"),
-                    ("nNLOEW", "ev: ev.Weight_XsLumi*ev.WeightQcdEwk")],
-    }, {
-        "name": "SecondGenPartBosonDaughters_p3",
-        "categories": categories,
-        "variables": ["ev: ev.SecondGenPartBosonDaughters.pt*np.cosh(ev.SecondGenPartBosonDaughters_eta)"],
-        "bins": [[-inf]+list(np.linspace(0., 2000., 51))+[inf]],
-        "weights": [("", "ev: ev.Weight_{dataset}"),
-                    ("genWeight", "ev: ev.Weight_XsLumi"),
-                    ("nNLOEW", "ev: ev.Weight_XsLumi*ev.WeightQcdEwk")],
+        "weights": [("", "ev: ev.Weight_{dataset}")],
     }, {
         "name": "Weight_MET",
         "categories": monojet_categories,

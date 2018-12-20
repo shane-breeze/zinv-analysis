@@ -156,6 +156,7 @@ class SelectionProducer(object):
                                           + es.tripleelectron_selection
                                           if n not in ["met_selection", "blind_mask", "mtw_selection", "mll_selection"]],
             "SingleTau": baseline + es.baseline_selection + es.singletau_selection,
+            "SingleTauQCD": baseline + es.baseline_selection + es.singletauqcd_selection,
             "DoubleTau": baseline + es.baseline_selection + es.doubletau_selection,
         }
 
