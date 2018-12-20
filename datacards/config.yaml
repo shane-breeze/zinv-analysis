@@ -7,17 +7,21 @@ dataset_regions:
 processes:
     - "znunu"
     - "zmumu"
+    - "gsmumu"
+    - "gsee"
     - "zee"
     - "wlnu"
     - "qcd"
     - "bkg"
 proc_id:
-    znunu: 0
-    zmumu: 1
-    zee: 2
-    wlnu: 3
-    qcd: 4
-    bkg: 5
+    znunu:  0
+    zmumu:  1
+    zee:    2
+    gsmumu: 3
+    gsee:   4
+    wlnu:   5
+    qcd:    6
+    bkg:    7
 parameters:
     tf_wlnu: ["rateParam", "*", "wlnu", "1", "[0,2]"]
     r_z:     ["rateParam", "*", "z*",   "1", "[0,2]"]
@@ -32,43 +36,149 @@ systematics:
     - "d3k_ew_w"
     - "d3k_ew_z"
     - "dk_mix"
-    - "metTrigSF"
+    - "lhePdf"
+    - "lheScale"
+    - "metTrigStat"
+    - "metTrigSyst"
     - "muonId"
     - "muonIso"
     - "muonTrack"
     - "pileup"
+    - "jesAbsoluteStat"
+    - "jesAbsoluteScale"
+    - "jesAbsoluteMPFBias"
+    - "jesFragmentation"
+    - "jesSinglePionECAL"
+    - "jesSinglePionHCAL"
+    - "jesFlavorQCD"
+    - "jesTimePtEta"
+    - "jesRelativeJEREC1"
+    - "jesRelativeJEREC2"
+    - "jesRelativeJERHF"
+    - "jesRelativePtBB"
+    - "jesRelativePtEC1"
+    - "jesRelativePtEC2"
+    - "jesRelativePtHF"
+    - "jesRelativeBal"
+    - "jesRelativeFSR"
+    - "jesRelativeStatFSR"
+    - "jesRelativeStatEC"
+    - "jesRelativeStatHF"
+    - "jesPileUpDataMC"
+    - "jesPileUpPtRef"
+    - "jesPileUpPtBB"
+    - "jesPileUpPtEC1"
+    - "jesPileUpPtEC2"
+    - "jesPileUpPtHF"
     - "jesTotal"
     - "jer"
     - "unclust"
+    - "gstar"
     - "eleIdIso"
     - "eleReco"
     - "eleTrig"
 dataset_conv:
-    MET: "MET"
-    SingleMuon: "SingleMuon"
+    MET:            "MET"
+    SingleMuon:     "SingleMuon"
     SingleElectron: "SingleElectron"
 region_conv:
-    Monojet: "monojet"
-    SingleMuon: "singlemu"
-    DoubleMuon: "doublemu"
+    Monojet:        "monojet"
+    SingleMuon:     "singlemu"
+    DoubleMuon:     "doublemu"
     SingleElectron: "singleele"
     DoubleElectron: "doubleele"
 process_conv:
-    ZJetsToNuNu: "znunu"
-    DYJetsToMuMu: "zmumu"
-    DYJetsToEE: "zee"
-    WJetsToENu: "wlnu"
-    WJetsToMuNu: "wlnu"
-    WJetsToTauNu: "wlnu"
-    QCD: "qcd"
-    TTJets: "bkg"
-    Diboson: "bkg"
-    DYJetsToTauTau: "bkg"
-    EWKV2Jets: "bkg"
-    SingleTop: "bkg"
-    G1Jet: "bkg"
-    VGamma: "bkg"
-    MET: "MET"
-    SingleMuon: "SingleMuon"
+    ZJetsToNuNu:    "znunu"
+    DYJetsToMuMu:   "dymumu"
+    DYJetsToEE:     "dyee"
+    ZJetsToMuMu:    "zmumu"
+    ZJetsToEE:      "zee"
+    GStarToMuMu:    "gsmumu"
+    GStarToEE:      "gsee"
+    WJetsToENu:     "wlnu"
+    WJetsToMuNu:    "wlnu"
+    WJetsToTauNu:   "wlnu"
+    QCD:            "qcd"
+    TTJets:         "bkg"
+    Diboson:        "bkg"
+    ZJetsToTauTau:  "bkg"
+    EWKV2Jets:      "bkg"
+    SingleTop:      "bkg"
+    G1Jet:          "bkg"
+    VGamma:         "bkg"
+    MET:            "MET"
+    SingleMuon:     "SingleMuon"
     SingleElectron: "SingleElectron"
-apply: {}
+apply:
+    GStarToMuMu:
+        levels: ["process"]
+        new_levels: ["GStarToMuMu"]
+        args:
+            - ["DYJetsToMuMu"]
+        formula: "dy: 0.00928*dy"
+    ZJetsToMuMu:
+        levels: ["process"]
+        new_levels: ["ZJetsToMuMu"]
+        args:
+            - ["DYJetsToMuMu"]
+        formula: "dy: (1-0.00928)*dy"
+    GStarToMuMuUncUp:
+        levels: ["process", "weight"]
+        new_levels: ["GStarToMuMu", "gstarUp"]
+        args:
+            - ["GStarToMuMu", "nominal"]
+        formula: "gs: gs*(1+0.00024/0.00928)"
+    GStarToMuMuUncDown:
+        levels: ["process", "weight"]
+        new_levels: ["GStarToMuMu", "gstarDown"]
+        args:
+            - ["GStarToMuMu", "nominal"]
+        formula: "gs: gs/(1+0.00024/0.00928)"
+    ZJetsToMuMuUncUp:
+        levels: ["process", "weight"]
+        new_levels: ["ZJetsToMuMu", "gstarUp"]
+        args:
+            - ["ZJetsToMuMu", "nominal"]
+        formula: "z: z*((1-0.00024-0.00928)/(1-0.00928))"
+    ZJetsToMuMuUncDown:
+        levels: ["process", "weight"]
+        new_levels: ["ZJetsToMuMu", "gstarDown"]
+        args:
+            - ["ZJetsToMuMu", "nominal"]
+        formula: "z: z/((1-0.00024-0.00928)/(1-0.00928))"
+    GStarToEE:
+        levels: ["process"]
+        new_levels: ["GStarToEE"]
+        args:
+            - ["DYJetsToEE"]
+        formula: "dy: 0.00928*dy"
+    ZJetsToEE:
+        levels: ["process"]
+        new_levels: ["ZJetsToEE"]
+        args:
+            - ["DYJetsToEE"]
+        formula: "dy: (1-0.00928)*dy"
+    GStarToEEUncUp:
+        levels: ["process", "weight"]
+        new_levels: ["GStarToEE", "gstarUp"]
+        args:
+            - ["GStarToEE", "nominal"]
+        formula: "gs: gs*(1+0.00024/0.00928)"
+    GStarToEEUncDown:
+        levels: ["process", "weight"]
+        new_levels: ["GStarToEE", "gstarDown"]
+        args:
+            - ["GStarToEE", "nominal"]
+        formula: "gs: gs/(1+0.00024/0.00928)"
+    ZJetsToEEUncUp:
+        levels: ["process", "weight"]
+        new_levels: ["ZJetsToEE", "gstarUp"]
+        args:
+            - ["ZJetsToEE", "nominal"]
+        formula: "z: z*((1-0.00024-0.00928)/(1-0.00928))"
+    ZJetsToEEUncDown:
+        levels: ["process", "weight"]
+        new_levels: ["ZJetsToEE", "gstarDown"]
+        args:
+            - ["ZJetsToEE", "nominal"]
+        formula: "z: z/((1-0.00024-0.00928)/(1-0.00928))"

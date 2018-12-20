@@ -68,10 +68,10 @@ ele_variations = monojet_variations + [
 
 jes_variation_names = [
     "jesTotal",
-    #"jesAbsoluteStat", "jesAbsoluteScale", "jesAbsoluteMPFBias", "jesFragmentation", "jesSinglePionECAL", "jesSinglePionHCAL",
-    #"jesFlavorQCD", "jesTimePtEta", "jesRelativeJEREC1", "jesRelativeJEREC2", "jesRelativeJERHF", "jesRelativePtBB",
-    #"jesRelativePtEC1", "jesRelativePtEC2", "jesRelativePtHF", "jesRelativeBal", "jesRelativeFSR", "jesRelativeStatFSR", "jesRelativeStatEC",
-    #"jesRelativeStatHF", "jesPileUpDataMC", "jesPileUpPtRef", "jesPileUpPtBB", "jesPileUpPtEC1", "jesPileUpPtEC2", "jesPileUpPtHF",
+    "jesAbsoluteStat", "jesAbsoluteScale", "jesAbsoluteMPFBias", "jesFragmentation", "jesSinglePionECAL", "jesSinglePionHCAL",
+    "jesFlavorQCD", "jesTimePtEta", "jesRelativeJEREC1", "jesRelativeJEREC2", "jesRelativeJERHF", "jesRelativePtBB",
+    "jesRelativePtEC1", "jesRelativePtEC2", "jesRelativePtHF", "jesRelativeBal", "jesRelativeFSR", "jesRelativeStatFSR", "jesRelativeStatEC",
+    "jesRelativeStatHF", "jesPileUpDataMC", "jesPileUpPtRef", "jesPileUpPtBB", "jesPileUpPtEC1", "jesPileUpPtEC2", "jesPileUpPtHF",
     "jer", "unclust",
 ]
 jes_variations = [var+"Up" for var in jes_variation_names]\

@@ -352,12 +352,12 @@ sequence = [
     (selection_producer, NullCollector()),
     # Add collectors (with accompanying readers) at the end so that all
     # event attributes are available to them
-    (hist_reader, hist_collector),
-    (hist2d_reader, hist2d_collector),
-    (gen_stitching_reader, gen_stitching_collector),
-    (met_response_resolution_reader, met_response_resolution_collector),
-    (qcd_ewk_corrections_reader, qcd_ewk_corrections_collector),
-    (systematics_reader, systematics_collector),
-    (trigger_efficiency_reader, trigger_efficiency_collector),
+    #(hist_reader, hist_collector),
+    #(hist2d_reader, hist2d_collector),
+    #(gen_stitching_reader, gen_stitching_collector),
+    #(met_response_resolution_reader, met_response_resolution_collector),
+    #(qcd_ewk_corrections_reader, qcd_ewk_corrections_collector),
+    #(systematics_reader, systematics_collector),
+    #(trigger_efficiency_reader, trigger_efficiency_collector),
     (qcd_estimation_reader, qcd_estimation_collector),
 ]

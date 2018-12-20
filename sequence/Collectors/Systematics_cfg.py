@@ -17,11 +17,13 @@ dimuon_mu_categories = [("SingleMuon", "DoubleMuon")]
 ele_categories = [("SingleElectron", "SingleElectron"), ("SingleElectron", "SingleElectronPlus"), ("SingleElectron", "SingleElectronMinus"),
                   ("SingleElectron", "SingleElectronQCD")]
 diele_categories = [("SingleElectron", "DoubleElectron")]
+tau_categories = [("MET", "SingleTau")]
 
 categories = monojet_categories\
         + muon_met_categories + muon_mu_categories\
         + dimuon_met_categories + dimuon_mu_categories\
         + ele_categories + diele_categories\
+        + tau_categories
 
 monojet_variations = [
     ("nominal",         "ev: ev.Weight_{dataset}"),
@@ -76,6 +78,8 @@ ele_variations = monojet_variations + [
     ("eleTrigDown", "ev: ev.Weight_{dataset}*ev.Weight_eleTrigDown"),
 ]
 
+tau_variations = monojet_variations
+
 jes_variation_names = [
     "jesTotal",
     "jesAbsoluteStat", "jesAbsoluteScale", "jesAbsoluteMPFBias", "jesFragmentation", "jesSinglePionECAL", "jesSinglePionHCAL",
@@ -88,12 +92,12 @@ jes_variations = [var+"Up" for var in jes_variation_names]\
         + [var+"Down" for var in jes_variation_names]
 
 pdf_variations = [
-    ("lhePdf{}".format(i), "ev: ev.Weight_{dataset}"+"*ev.LHEPdfWeightList[:,{0}] if {0} < ev.nLHEPdfWeight[0] and ev.config.dataset.parent not in [\"SingleTop\"] else np.full(ev.size, np.nan)".format(i))
-    for i in range(0,110)
+#    ("lhePdf{}".format(i), "ev: ev.Weight_{dataset}"+"*ev.LHEPdfWeightList[:,{0}] if {0} < ev.nLHEPdfWeight[0] and ev.config.dataset.parent not in [\"SingleTop\"] else np.full(ev.size, np.nan)".format(i))
+#    for i in range(0,110)
 ]
 scale_variations = [
-    ("lheScale{}".format(i), "ev: ev.Weight_{dataset}"+"*ev.LHEScaleWeightList[:,{0}] if {0} < ev.nLHEScaleWeight[0] and ev.config.dataset.parent not in [\"SingleTop\"] else np.full(ev.size, np.nan)".format(i))
-    for i in (0,1,3,5,7,8)
+#    ("lheScale{}".format(i), "ev: ev.Weight_{dataset}"+"*ev.LHEScaleWeightList[:,{0}] if {0} < ev.nLHEScaleWeight[0] and ev.config.dataset.parent not in [\"SingleTop\"] else np.full(ev.size, np.nan)".format(i))
+#    for i in (0,1,3,5,7,8)
 ]
 
 histogrammer_cfgs = [
@@ -121,6 +125,12 @@ histogrammer_cfgs = [
         "variables": ["ev: ev.METnoX_pt"],
         "bins": [[-inf]+list(np.linspace(0., 1000., 201))+[inf]],
         "weights": ele_variations+pdf_variations+scale_variations,
+    }, {
+        "name": "METnoX_pt",
+        "categories": tau_categories,
+        "variables": ["ev: ev.METnoX_pt"],
+        "bins": [[-inf]+list(np.linspace(0., 1000., 201))+[inf]],
+        "weights": tau_variations+pdf_variations+scale_variations,
     }
 ] + [
     {

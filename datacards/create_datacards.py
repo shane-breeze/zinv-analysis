@@ -3,7 +3,7 @@ from array import array
 import copy
 import numpy as np
 from tabulate import tabulate as tab
-import yaml
+import oyaml as yaml
 
 import ROOT
 ROOT.gROOT.SetBatch(True)
@@ -37,8 +37,30 @@ def parse_args():
 def open_df(cfg):
     path = cfg["input"]
     with open(path, 'r') as f:
-        df = pickle.load(f)[1]
+        _, df = pickle.load(f)
     df = df.reset_index("variable0", drop=True)
+    return df
+
+def process_syst(df, syst=None, how_up=lambda x: x.mean()+x.std(), how_down = lambda x: x.mean()-x.std()):
+    df_nominal = df[df.index.get_level_values("weight").isin(["nominal"])]
+    df_syst = df[df.index.get_level_values("weight").str.contains(syst)]
+    #df_syst = df_syst[df_syst["yield"]>=0.]
+    df_syst = df_syst.dropna()
+    df_syst = df_syst.reset_index("weight", drop=True)
+    all_indexes = df.index.names
+    indexes = [ind for ind in df.index.names if ind not in ["weight"]]
+    df_syst_up = df_syst.groupby(indexes).apply(how_up)
+    df_syst_down = df_syst.groupby(indexes).apply(how_down)
+
+    df_syst_up["weight"] = syst+"Up"
+    df_syst_down["weight"] = syst+"Down"
+    df_syst_up = df_syst_up.set_index("weight", append=True)\
+            .reorder_levels(all_indexes)
+    df_syst_down = df_syst_down.set_index("weight", append=True)\
+            .reorder_levels(all_indexes)
+
+    df = df[~df.index.get_level_values("weight").str.contains(syst)]
+    df = pd.concat([df, df_syst_up, df_syst_down], axis=0).sort_index()
     return df
 
 def reformat(df, cfg):
@@ -61,6 +83,9 @@ def reformat(df, cfg):
     binning = cfg["binning"]
     bins = [-np.infty]+list(binning)+[np.infty]
     df = rebin(df, bins)
+
+    df = process_syst(df, syst="lhePdf", how_up=lambda x: x.mean()+x.std(), how_down=lambda x: x.mean()*x.mean()/(x.mean()+x.std()))
+    df = process_syst(df, syst="lheScale", how_up=lambda x: x.max(), how_down=lambda x: x.min())
 
     if "dataset_region_process_conv" in cfg:
         levels = df.index.names
@@ -142,6 +167,7 @@ def create_counting_datacards(df, cfg):
         df_rate = df_rate.fillna(1e-10)
         df_rate[df_rate<0.] = np.nan
         df_rate[df_rate.groupby("region").apply(lambda x: x/x.sum())<0.001] = np.nan
+        df_rate = df_rate.dropna()
 
         # nuisances
         df_nominal = dfgroup[dfgroup.index.get_level_values("weight").isin(["nominal"])]
@@ -161,6 +187,7 @@ def create_counting_datacards(df, cfg):
 
         # Fix one-sided uncertainties (lack of stats in events which differ)
         nuisances = list(set(c[:-2] if c.endswith("Up") else c[:-4] for c in df_nuis.columns))
+        nuisances = [n for n in nuisances if "lhe" not in n]
         for n in nuisances:
             df_temp = df_nuis.loc[:, [n+"Up", n+"Down"]]
             df_temp.loc[((df_temp-1).prod(axis=1)>0) & (np.abs(df_temp[n+"Up"]-1)>=np.abs(df_temp[n+"Down"]-1)), n+"Down"] = 1.
@@ -318,7 +345,7 @@ def create_shape_datacards(df, cfg):
     )
     df_rate = df_rate.set_index("process", append=True)
     df_rate[df_rate["yield"]<0.] = np.nan
-    df_rate[df_rate.groupby("region").apply(lambda x: x/x.sum())["yield"]<0.001] = np.nan
+    df_rate[df_rate.groupby("region").apply(lambda x: x/x.sum())["yield"]<0.0001] = np.nan
     df_rate = df_rate.dropna()
 
     # df_nuis
