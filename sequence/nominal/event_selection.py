@@ -163,7 +163,6 @@ event_selection.monojetqcd_selection = [
 
 event_selection.singletau_selection = [
     ("dphi_jet_met_selection", dphi_jet_met_selection),
-    ("tau_selection_fmt_1", tau_selection.format(1)),
     ("muon_selection_fmt_0", muon_selection.format(0)),
     ("ele_selection_fmt_0", ele_selection.format(0)),
     ("tau_selection_fmt_1", tau_selection.format(1)),
@@ -171,7 +170,6 @@ event_selection.singletau_selection = [
 
 event_selection.singletauqcd_selection = [
     ("dphi_jet_met_inv_selection", dphi_jet_met_inv_selection),
-    ("tau_selection_fmt_1", tau_selection.format(1)),
     ("muon_selection_fmt_0", muon_selection.format(0)),
     ("ele_selection_fmt_0", ele_selection.format(0)),
     ("tau_selection_fmt_1", tau_selection.format(1)),
@@ -179,7 +177,6 @@ event_selection.singletauqcd_selection = [
 
 event_selection.doubletau_selection = [
     ("dphi_jet_met_selection", dphi_jet_met_selection),
-    ("tau_selection_fmt_1", tau_selection.format(1)),
     ("muon_selection_fmt_0", muon_selection.format(0)),
     ("ele_selection_fmt_0", ele_selection.format(0)),
     ("tau_selection_fmt_2", tau_selection.format(2)),
