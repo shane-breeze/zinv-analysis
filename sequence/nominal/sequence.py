@@ -225,7 +225,7 @@ weight_prefiring = Readers.WeightPreFiring(
     jet_selection = "j: (j.pt>20) & ((2<np.abs(j.eta)) & (np.abs(j.eta)<3))",
     photon_selection = "y: (y.pt>20) & ((2<np.abs(y.eta)) & (np.abs(y.eta)<3))",
     syst = 0.2,
-    apply = False,
+    apply = True,
 )
 
 selection_producer = Readers.SelectionProducer(

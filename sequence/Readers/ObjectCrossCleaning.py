@@ -11,6 +11,10 @@ class ObjectCrossCleaning(object):
         self.__dict__.update(kwargs)
 
     def event(self, event):
+        variations = event.variations
+        if self.variations == "none":
+            variations = [""]
+
         for collection_name in self.collections:
             collection = getattr(event, collection_name)
 
@@ -19,13 +23,12 @@ class ObjectCrossCleaning(object):
                 ref_collection = getattr(event, ref_collection_name)
                 selections = selections & comp(collection, ref_collection)
 
-            if self.variations == "all":
-                for variation in event.variations:
-                    for cat in ["Veto", "Selection"]:
-                        new_collection_name = collection_name + cat + variation
-                        old_selection = getattr(event, new_collection_name).selection
-                        new_selection = old_selection & selections
-                        getattr(event, new_collection_name).selection = new_selection
+            for variation in variations:
+                for cat in ["Veto", "Selection"]:
+                    new_collection_name = collection_name + cat + variation
+                    old_selection = getattr(event, new_collection_name).selection
+                    new_selection = old_selection & selections
+                    getattr(event, new_collection_name).selection = new_selection
 
 def comp(coll1, coll2):
     return comp_jit(coll1.eta.content, coll1.phi.content,

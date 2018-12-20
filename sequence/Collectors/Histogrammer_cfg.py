@@ -566,13 +566,13 @@ histogrammer_cfgs = [
         "name": "Weight_PreFiringUp",
         "categories": categories,
         "variables": ["ev: ev.Weight_PreFiringUp"],
-        "bins": [[-inf]+list(np.linspace(0., 1.1, 56))+[inf]],
+        "bins": [[-inf]+list(np.linspace(0.5, 2.0, 76))+[inf]],
         "weights": [("", "ev: ev.Weight_{dataset}")],
     }, {
         "name": "Weight_PreFiringDown",
         "categories": categories,
         "variables": ["ev: ev.Weight_PreFiringDown"],
-        "bins": [[-inf]+list(np.linspace(0., 1.1, 56))+[inf]],
+        "bins": [[-inf]+list(np.linspace(0.5, 2.0, 76))+[inf]],
         "weights": [("", "ev: ev.Weight_{dataset}")],
     },
 ]
