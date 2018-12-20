@@ -38,6 +38,10 @@ def parse_args():
                         help="Number of blocks per dataset")
     parser.add_argument("--nblocks-per-process", default=-1, type=int,
                         help="Number of blocks per process")
+    parser.add_argument("--nfiles-per-dataset", default=-1, type=int,
+                        help="Number of files per dataset")
+    parser.add_argument("--nfiles-per-process", default=1, type=int,
+                        help="Number of files per process")
     parser.add_argument("--blocksize", default=1000000, type=int,
                         help="Number of events per block")
     parser.add_argument("--quiet", default=False, action='store_true',
@@ -104,6 +108,8 @@ def run(sequence, datasets, options):
         quiet = options.quiet,
         max_blocks_per_dataset = options.nblocks_per_dataset,
         max_blocks_per_process = options.nblocks_per_process,
+        max_files_per_dataset = options.nfiles_per_dataset,
+        max_files_per_process = options.nfiles_per_process,
         nevents_per_block = options.blocksize,
         profile = options.profile,
         profile_out_path = "profile.txt",
