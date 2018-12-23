@@ -175,9 +175,16 @@ if __name__ == "__main__":
     sequence = build_sequence(options.sequence_cfg, options.outdir)
     datasets = get_datasets(options.dataset_cfg)
     if options.sample is not None:
-        samples = options.sample.split(",")
-        datasets = [d for d in datasets
-                    if d.name in samples or d.parent in samples]
+        if options.sample.lower() == "data":
+            datasets = [d for d in datasets
+                        if "run2016" in d.name.lower()]
+        elif options.sample.lower() == "mc":
+            datasets = [d for d in datasets
+                        if "run2016" not in d.name.lower()]
+        else:
+            samples = options.sample.split(",")
+            datasets = [d for d in datasets
+                        if d.name in samples or d.parent in samples]
 
     # Pass any other options through to the datasets
     for d in datasets:
