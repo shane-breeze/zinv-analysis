@@ -7,8 +7,7 @@ except ImportError: import pickle
 from Systematics import SystematicsReader, SystematicsCollector
 from drawing.dist_facet import dist_facet
 
-class QcdEstimationReader(SystematicsReader):
-    pass
+QcdEstimationReader = copy.deepcopy(SystematicsReader)
 
 class QcdEstimationCollector(SystematicsCollector):
     def draw(self, histograms):

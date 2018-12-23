@@ -69,6 +69,9 @@ class Histograms(object):
             df = self.generate_dataframe(event, config)
             dfs.append(df)
 
+        if len(dfs) == 0:
+            return self
+
         columns = [c for c in dfs[0].columns if c not in ["count", "yield", "variance"]]
         histograms = pd.concat(dfs).groupby(columns).sum()
         if self.histograms is None:

@@ -15,11 +15,23 @@ class SystematicsReader(HistReader):
         # Only run for variations defined in the event
         self.histograms.configs = [
             c for c in self.histograms.configs
-            if any(v in c["weight"][0] for v in event.variations)
+            if c["weightname"] in event.variations\
+            or not any(v in c["weightname"] for v in ["jes", "jer", "unclust"])
         ]
+        if "lhe" not in event.optsysts:
+            self.histograms.configs = [
+                c for c in self.histograms.configs
+                if not any(v in c["weightname"] for v in ["lhe"])
+            ]
+        else:
+            self.histograms.configs = [
+                c for c in self.histograms.configs
+                if any(v in c["weightname"] for v in ["lhe"])
+            ]
+        super(SystematicsReader, self).begin(event)
 
     def event(self, event):
-        if "lhe" in event.variations:
+        if "lhe" in event.optsysts and not event.config.dataset.isdata:
             event.LHEPdfWeightList = np.array(event.LHEPdfWeight.tolist())
             event.LHEScaleWeightList = np.array(event.LHEScaleWeight.tolist())
         super(SystematicsReader, self).event(event)

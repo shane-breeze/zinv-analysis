@@ -27,6 +27,8 @@ categories = monojet_categories\
 
 monojet_variations = [
     ("nominal",         "ev: ev.Weight_{dataset}"),
+    ("prefiringUp",     "ev: ev.Weight_{dataset}*ev.Weight_PreFiringUp"),
+    ("prefiringDown",   "ev: ev.Weight_{dataset}*ev.Weight_PreFiringDown"),
     ("pileupUp",        "ev: ev.Weight_{dataset}*ev.Weight_pileupUp"),
     ("pileupDown",      "ev: ev.Weight_{dataset}*ev.Weight_pileupDown"),
     ("metTrigStatUp",   "ev: ev.Weight_{dataset}*ev.Weight_metTrigStatUp"),
@@ -92,12 +94,12 @@ jes_variations = [var+"Up" for var in jes_variation_names]\
         + [var+"Down" for var in jes_variation_names]
 
 pdf_variations = [
-#    ("lhePdf{}".format(i), "ev: ev.Weight_{dataset}"+"*ev.LHEPdfWeightList[:,{0}] if {0} < ev.nLHEPdfWeight[0] and ev.config.dataset.parent not in [\"SingleTop\"] else np.full(ev.size, np.nan)".format(i))
-#    for i in range(0,110)
+    ("lhePdf{}".format(i), "ev: ev.Weight_{dataset}"+"*ev.LHEPdfWeightList[:,{0}] if {0} < ev.nLHEPdfWeight[0] and ev.config.dataset.parent not in [\"SingleTop\", \"QCD\"] else np.full(ev.size, np.nan)".format(i))
+    for i in range(0,110)
 ]
 scale_variations = [
-#    ("lheScale{}".format(i), "ev: ev.Weight_{dataset}"+"*ev.LHEScaleWeightList[:,{0}] if {0} < ev.nLHEScaleWeight[0] and ev.config.dataset.parent not in [\"SingleTop\"] else np.full(ev.size, np.nan)".format(i))
-#    for i in (0,1,3,5,7,8)
+    ("lheScale{}".format(i), "ev: ev.Weight_{dataset}"+"*ev.LHEScaleWeightList[:,{0}] if {0} < ev.nLHEScaleWeight[0] and ev.config.dataset.parent not in [\"SingleTop\", \"QCD\"] else np.full(ev.size, np.nan)".format(i))
+    for i in (0,1,3,5,7,8)
 ]
 
 histogrammer_cfgs = [

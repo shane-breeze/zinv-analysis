@@ -18,7 +18,7 @@ class JecVariations(object):
         self.isdata = event.config.dataset.isdata
 
         self.sources = list(set([
-            v.replace("Up", "").replace("Down", "") for v in event.variations
+            v[:-2] if v.endswith("Up") else v[:-4] if v.endswith("Down") else v for v in event.variations
             if "jes" in v
         ]))
 

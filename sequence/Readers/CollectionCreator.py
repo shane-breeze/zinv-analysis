@@ -93,6 +93,9 @@ class CollectionCreator(object):
         self.__dict__.update(kwargs)
 
     def begin(self, event):
+        self.optsysts = event.config.dataset.systs
+        setattr(event, "optsysts", event.config.dataset.systs)
+
         # setup variations
         if event.config.dataset.isdata:
             setattr(event, "variations", [""])
@@ -103,33 +106,33 @@ class CollectionCreator(object):
             variations = [
                 v for v in self.variations
                 if not any(attr in v for attr in [
-                    "lheScale", "lhePdf", "jesAbs", "jesFrag", "jesSinglePion",
-                    "jesFlavor", "jesTime", "jesRelative", "jesPileUp",
+                    "jesAbs", "jesFrag", "jesSinglePion", "jesFlavor",
+                    "jesTime", "jesRelative", "jesPileUp",
                 ])
             ]
         elif "jec1" in event.config.dataset.systs:
-            variations = [
+            variations = [""] + [
                 v for v in self.variations
                 if any(attr in v for attr in [
                     "jesAbs", "jesFrag", "jesSinglePion"
                 ])
             ]
         elif "jec2" in event.config.dataset.systs:
-            variations = [
+            variations = [""] + [
                 v for v in self.variations
                 if any(attr in v for attr in [
                     "jesFlavor", "jesTime", "jesRelativeJER", "jesRelativeBal"
                 ])
             ]
         elif "jec3" in event.config.dataset.systs:
-            variations = [
+            variations = [""] + [
                 v for v in self.variations
                 if any(attr in v for attr in [
                     "jesRelativePt", "jesRelativeStat",
                 ])
             ]
         elif "jec4" in event.config.dataset.systs:
-            variations = [
+            variations = [""] + [
                 v for v in self.variations
                 if any(attr in v for attr in [
                     "jesRelativeFSR", "jesPileUp",
@@ -138,14 +141,19 @@ class CollectionCreator(object):
         elif "lhe" in event.config.dataset.systs:
             variations = [
                 v for v in self.variations
-                if any(attr in v for attr in [
-                    "lheScale", "lhePdf",
+                if not any(attr in v for attr in [
+                    "jes", "jer", "unclust",
                 ])
             ]
+            if event.config.dataset.parent in ["SingleTop", "QCD"]:
+                variations = [""]
+                self.optsysts = "nominal"
+                event.optsysts = "nominal"
         setattr(event, "variations", variations)
         self.variations = variations
 
     def event(self, event):
+        setattr(event, "optsysts", self.optsysts)
         setattr(event, "variations", self.variations)
         for collection in self.collections:
             setattr(event, collection, Collection(collection, event))
