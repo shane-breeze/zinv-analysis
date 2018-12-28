@@ -47,6 +47,9 @@ class Collection(object):
     def stops(self):
         return self.pt.stops
 
+    def count(self):
+        return self.pt.count
+
     def create_branch(self, attr):
         ref_branch = getattr(getattr(self.event, self.ref_name), attr)
 

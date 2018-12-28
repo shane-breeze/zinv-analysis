@@ -18,10 +18,10 @@ dphi_jet_met_selection = "ev: ev.MinDPhiJ1234METnoX > 0.5"
 dphi_jet_met_inv_selection = "ev: ev.MinDPhiJ1234METnoX <= 0.5"
 dcalo_pfmet_selection = "ev: ev.MET.dCaloMET < 0.6"
 jet_selection = "ev: (ev.JetSelection.size > 0) & "\
-                    "(ev.JetSelection.size == ev.JetVeto.size) & "\
-                    "(ev.LeadJetSelection.pt > 200.) & "\
-                    "(ev.LeadJetSelection.chHEF > 0.1) & "\
-                    "(ev.LeadJetSelection.chHEF < 0.95)"
+                    "(ev.JetSelection.size == ev.JetVeto.size)"
+lead_jet_selection = "ev: (get_nth_object(ev.JetSelection.pt, 0, ev.size)>200.) & "\
+                         "(get_nth_object(ev.JetSelection.chHEF, 0, ev.size)>0.1) & "\
+                         "(get_nth_object(ev.JetSelection.chHEF, 0, ev.size)<0.95)"
 muon_selection = "ev: (ev.MuonSelection.size == ev.MuonVeto.size) & (ev.MuonVeto.size == {})"
 muon_total_charge = "ev: ev.MuonTotalCharge == {}"
 ele_total_charge = "ev: ev.ElectronTotalCharge == {}"
@@ -52,6 +52,7 @@ event_selection.baseline_selection = [
     ("met_selection", met_selection),
     ("dcalo_pfmet_selection", dcalo_pfmet_selection),
     ("jet_selection", jet_selection),
+    ("lead_jet_selection", lead_jet_selection),
     ("pho_veto", pho_veto),
     ("nbjet_veto", nbjet_veto),
 ]

@@ -30,12 +30,6 @@ class SystematicsReader(HistReader):
             ]
         super(SystematicsReader, self).begin(event)
 
-    def event(self, event):
-        if "lhe" in event.optsysts and not event.config.dataset.isdata:
-            event.LHEPdfWeightList = np.array(event.LHEPdfWeight.tolist())
-            event.LHEScaleWeightList = np.array(event.LHEScaleWeight.tolist())
-        super(SystematicsReader, self).event(event)
-
 class SystematicsCollector(HistCollector):
     def save(self, histograms):
         df = histograms.histograms

@@ -28,10 +28,6 @@ class EventSumsProducer(object):
         self.isdata = event.config.dataset.isdata
         for variation in event.variations:
             # Create lead jet selection collection
-            setattr(event, "LeadJetSelection{}".format(variation),
-                    Collection("LeadJetSelection{}".format(variation), event))
-            setattr(event, "SecondJetSelection{}".format(variation),
-                    Collection("SecondJetSelection{}".format(variation), event))
             setattr(event, "NearestJetToMETnoX{}".format(variation),
                     Collection("NearestJetToMETnoX{}".format(variation), event))
 
@@ -70,12 +66,13 @@ class EventSumsProducer(object):
             setattr(event, "METnoX_diElectronPerpProjPt_Plus_DiElectron_pt_Div_DiElectron_pt{}".format(variation), (metnox_perp+diele_pt)/diele_pt)
 
             # MHT
-            ht, mht, mhphi = create_mht(event.JetSelection, variation)
+            jet_coll = getattr(event, "JetSelection{}".format(variation))
+            ht, mht, mhphi = create_mht(jet_coll, variation)
             setattr(event, "HT40{}".format(variation), ht)
             setattr(event, "MHT40_pt{}".format(variation), mht)
             setattr(event, "MHT40_phi{}".format(variation), mhphi)
 
-            hmiss_pt, hmiss_eta, hmiss_phi = create_hmiss(event.JetSelection, variation)
+            hmiss_pt, hmiss_eta, hmiss_phi = create_hmiss(jet_coll, variation)
             setattr(event, "HMiss_pt{}".format(variation), hmiss_pt)
             setattr(event, "HMiss_eta{}".format(variation), hmiss_eta)
             setattr(event, "HMiss_phi{}".format(variation), hmiss_phi)
@@ -85,7 +82,7 @@ class EventSumsProducer(object):
             setattr(event, "Jet_dPhiMETnoX{}".format(variation), dphi_j_metnox)
             setattr(
                 event, "MinDPhiJ1234METnoX{}".format(variation),
-                create_minDPhiJ1234METnoX(event.JetSelection, variation),
+                create_minDPhiJ1234METnoX(jet_coll, variation),
             )
 
             # Nearest(J, METnoX)
@@ -115,49 +112,6 @@ class EventSumsProducer(object):
                     0.8484,
                 ),
             )
-
-            # Create Lead and Second Jet collections
-            for collection in ["LeadJetSelection{}".format(variation),
-                               "SecondJetSelection{}".format(variation)]:
-                for attr in ["pt", "eta", "phi", "chEmEF", "chHEF", "neEmEF", "neHEF"]:
-                    attr_name = attr+variation
-                    if attr!="pt" and variation!="":
-                        attr_name = attr
-                    ref_collection = collection.replace("Lead", "").replace("Second", "")
-                    pos = 0 if "Lead" in collection else 1
-                    setattr(
-                        event,
-                        collection+"_"+attr_name,
-                        create_lead_object(
-                            getattr(getattr(event, ref_collection), attr_name).content,
-                            getattr(event, ref_collection).starts,
-                            getattr(event, ref_collection).stops,
-                            pos = pos,
-                        ),
-                    )
-
-            # DPhi(J1,J2)
-            setattr(event, "DPhiJ1J2{}".format(variation),
-                    BoundPhi(event.LeadJetSelection.phi-event.SecondJetSelection.phi))
-
-        # Create Lead and Second Lepton collections
-        for collection in ["LeadMuonSelection", "SecondMuonSelection",
-                           "LeadElectronSelection", "SecondElectronSelection",
-                           "LeadTauSelection", "SecondTauSelection"]:
-            for attr in ["pt", "eta", "phi"]:
-                ref_collection = collection.replace("Lead", "").replace("Second", "")
-                pos = 0 if "Lead" in collection else 1
-                setattr(
-                    event,
-                    collection+"_"+attr,
-                    create_lead_object(
-                        getattr(getattr(event, ref_collection), attr).content,
-                        getattr(event, ref_collection).starts,
-                        getattr(event, ref_collection).stops,
-                        pos = pos,
-                    ),
-                )
-
 
 @njit
 def create_lead_object(collection, starts, stops, pos=0):

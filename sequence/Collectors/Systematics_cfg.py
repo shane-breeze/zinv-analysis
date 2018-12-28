@@ -93,12 +93,14 @@ jes_variation_names = [
 jes_variations = [var+"Up" for var in jes_variation_names]\
         + [var+"Down" for var in jes_variation_names]
 
+
 pdf_variations = [
-    ("lhePdf{}".format(i), "ev: ev.Weight_{dataset}"+"*ev.LHEPdfWeightList[:,{0}] if {0} < ev.nLHEPdfWeight[0] and ev.config.dataset.parent not in [\"SingleTop\", \"QCD\"] else np.full(ev.size, np.nan)".format(i))
+    ("lhePdf{}".format(i), "ev: ev.Weight_{dataset}"+"*ev.LHEPdfWeight[:,{0}] if {0} < ev.nLHEPdfWeight[0] and ev.config.dataset.parent not in ['SingleTop', 'QCD'] else np.full(ev.size, np.nan)".format(i))
     for i in range(0,110)
 ]
+
 scale_variations = [
-    ("lheScale{}".format(i), "ev: ev.Weight_{dataset}"+"*ev.LHEScaleWeightList[:,{0}] if {0} < ev.nLHEScaleWeight[0] and ev.config.dataset.parent not in [\"SingleTop\", \"QCD\"] else np.full(ev.size, np.nan)".format(i))
+    ("lheScale{}".format(i), "ev: ev.Weight_{dataset}"+"*ev.LHEScaleWeight[:,{0}] if {0} < ev.nLHEScaleWeight[0] and ev.config.dataset.parent not in ['SingleTop', 'QCD'] else np.full(ev.size, np.nan)".format(i))
     for i in (0,1,3,5,7,8)
 ]
 
