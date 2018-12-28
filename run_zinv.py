@@ -53,6 +53,8 @@ def parse_args():
     parser.add_argument("--redraw", default=False, action='store_true',
                         help="Overrides most options. Runs over collectors "
                              "only to rerun the draw function on outdir")
+    parser.add_argument("--nodraw", default=False, action='store_true',
+                        help="Don't run drawing processes")
     parser.add_argument("--systs", default="nominal", type=str,
                         help="If any, which systematics to run over "
                              "(\"nominal\", \"jec1\", \"jec2\", \"jec3\", "
@@ -69,9 +71,9 @@ vmem_dict = {
     "DYJetsToLL_Pt-50To100": 16,
     "DYJetsToLL_Pt-50To100_ext1": 16,
     "DYJetsToLL_Pt-100To250_ext3": 20,
-    "DYJetsToLL_Pt-250To400_ext3": 20,
+    "DYJetsToLL_Pt-250To400_ext3": 24,
     "G1Jet_Pt-250To400_ext2": 16,
-    "SingleTop_t-channel_antitop_InclusiveDecays": 16,
+    "SingleTop_t-channel_antitop_InclusiveDecays": 20,
     "SingleTop_t-channel_top_InclusiveDecays": 20,
     "SingleTop_tW_antitop_InclusiveDecays": 20,
     "SingleTop_tW_top_InclusiveDecays": 20,
@@ -79,12 +81,13 @@ vmem_dict = {
     "QCD_Pt-170To300_ext1": 16,
     "QCD_Pt-300To470": 16,
     "QCD_Pt-300To470_ext1": 20,
-    "QCD_Pt-470To600": 16,
-    "QCD_Pt-600To800": 16,
+    "QCD_Pt-470To600": 24,
+    "QCD_Pt-600To800": 20,
     "QCD_Pt-600To800_ext1": 20,
-    "QCD_Pt-800To1000": 16,
+    "QCD_Pt-800To1000": 20,
     "QCD_Pt-800To1000_ext1": 20,
-    "QCD_Pt-1000To1400_ext1": 20,
+    "QCD_Pt-1000To1400": 16,
+    "QCD_Pt-1000To1400_ext1": 24,
     "TTJets_Inclusive": 24,
     "WJetsToLNu_Pt-50To100": 16,
     "WJetsToLNu_Pt-100To250": 16,
@@ -99,7 +102,7 @@ vmem_dict = {
     "WZTo3L1Nu": 16,
     "ZJetsToNuNu_Pt-250To400_ext2": 16,
     "ZZTo2L2Nu": 16,
-    "ZZTo2L2Q": 16,
+    "ZZTo2L2Q": 20,
     "ZZTo4Q": 16,
 }
 def run(sequence, datasets, options):
@@ -122,7 +125,7 @@ def run(sequence, datasets, options):
         quiet = options.quiet,
         processes = options.ncores,
         dispatcher_options = {
-            "vmem": 16,
+            "vmem": 12,
             "walltime": 10800,
             "vmem_dict": vmem_dict,
             "walltime_dict": {},
@@ -199,4 +202,5 @@ if __name__ == "__main__":
                 for ssjobs in sjobs
                 if not ssjobs is None
             ]) for sjobs in jobs]
-    parallel_draw(jobs, options)
+    if not options.nodraw:
+        parallel_draw(jobs, options)
