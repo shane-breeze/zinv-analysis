@@ -88,6 +88,7 @@ vmem_dict = {
     "QCD_Pt-800To1000_ext1": 20,
     "QCD_Pt-1000To1400": 16,
     "QCD_Pt-1000To1400_ext1": 24,
+    "QCD_Pt-1400To1800_ext1": 16,
     "TTJets_Inclusive": 24,
     "WJetsToLNu_Pt-50To100": 16,
     "WJetsToLNu_Pt-100To250": 16,
@@ -96,14 +97,20 @@ vmem_dict = {
     "WJetsToLNu_Pt-250To400_ext2": 20,
     "WWTo4Q": 16,
     "WWTo1L1Nu2Q": 16,
+    "WZTo2Q2Nu": 20,
     "WZTo1L1Nu2Q": 16,
     "WZTo1L3Nu_ext1": 16,
     "WZTo2L2Q": 16,
     "WZTo3L1Nu": 16,
+    "ZJetsToNuNu_Pt-100To250_ext2": 20,
     "ZJetsToNuNu_Pt-250To400_ext2": 16,
+    "ZZTo2Q2Nu": 16,
     "ZZTo2L2Nu": 16,
+    "ZZTo2L2Nu_ext1": 16,
     "ZZTo2L2Q": 20,
+    "ZZTo4L": 16,
     "ZZTo4Q": 16,
+    "ZGToLLG": 16,
 }
 def run(sequence, datasets, options):
     process = AtUproot(

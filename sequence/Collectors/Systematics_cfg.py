@@ -80,7 +80,10 @@ ele_variations = monojet_variations + [
     ("eleTrigDown", "ev: ev.Weight_{dataset}*ev.Weight_eleTrigDown"),
 ]
 
-tau_variations = monojet_variations
+tau_variations = monojet_variations + [
+    ("tauIdUp", "ev: ev.Weight_{dataset}*ev.Weight_tauIdUp"),
+    ("tauIdDown", "ev: ev.Weight_{dataset}*ev.Weight_tauIdDown"),
+]
 
 jes_variation_names = [
     "jesTotal",

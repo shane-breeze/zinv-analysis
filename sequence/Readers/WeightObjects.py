@@ -28,9 +28,12 @@ class WeightObjects(object):
                 df["weight"] = w
                 dfs.append(df)
             corrector["df"] = pd.concat(dfs)
+            if "add_syst" not in corrector:
+                corrector["add_syst"] = "x: 0."
 
     def begin(self, event):
         funcs = [corrector["binning_variables"] for corrector in self.correctors]
+        funcs.extend([(corrector["add_syst"],) for corrector in self.correctors])
         self.string_to_func = {func: Lambda(func) for func in [f for fs in funcs for f in fs]}
 
     def end(self):
@@ -47,7 +50,6 @@ class WeightObjects(object):
             collection = getattr(event, corrector["collection"])
             vars = corrector["binning_variables"]
             any_pass = corrector["any_pass"] if "any_pass" in corrector else False
-            add_syst = corrector["add_syst"] if "add_syst" in corrector else 0.
             event_vars = [self.string_to_func[v](collection) for v in vars]
 
             # Select bin from reference table
@@ -89,7 +91,7 @@ class WeightObjects(object):
             dfw = dfw.divide(dfw["weight"], axis=0)
 
             # Calculate event uncertainties
-            dfw["add_syst"] = add_syst
+            dfw["add_syst"] = self.string_to_func[corrector["add_syst"]](collection)
             dfsf = pd.concat([
                 np.sqrt(dfw.eval("w_up**2 + (w_corr*add_syst)**2").groupby("evidx").sum()),
                 np.sqrt(dfw.eval("w_down**2 + (w_corr*add_syst)**2").groupby("evidx").sum()),

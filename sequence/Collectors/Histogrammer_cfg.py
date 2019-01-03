@@ -157,7 +157,8 @@ histogrammer_cfgs = [
         "weights": [("", "ev: ev.Weight_{dataset}")],
     }, {
         "name": "MET_dCaloMET",
-        "categories": categories,
+        "categories": categories + [(d, "{}_remove_dcalo_pfmet_selection".format(c))
+                                    for d, c in categories if c != "None" and "remove" not in c],
         "variables": ["ev: ev.MET_dCaloMET"],
         "bins": [[-inf]+list(np.linspace(0., 1., 51))+[inf]],
         "weights": [("", "ev: ev.Weight_{dataset}")],

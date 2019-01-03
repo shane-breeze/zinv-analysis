@@ -112,7 +112,7 @@ event_selection.quadmuon_selection = [
 ]
 
 event_selection.singleelectron_selection = [
-    ("trigger_ele_selection", trigger_selection.format("SingleElectron")),
+    #("trigger_ele_selection", trigger_selection.format("SingleElectron")),
     ("met_pf_selection", met_pf_selection),
     ("dphi_jet_met_selection", dphi_jet_met_selection),
     ("muon_selection_fmt_0", muon_selection.format(0)),
@@ -121,7 +121,7 @@ event_selection.singleelectron_selection = [
     ("mtw_selection", mtw_selection),
 ]
 event_selection.singleelectronqcd_selection = [
-    ("trigger_ele_selection", trigger_selection.format("SingleElectron")),
+    #("trigger_ele_selection", trigger_selection.format("SingleElectron")),
     ("met_pf_selection", met_pf_selection),
     ("dphi_jet_met_inv_selection", dphi_jet_met_inv_selection),
     ("muon_selection_fmt_0", muon_selection.format(0)),
@@ -138,7 +138,7 @@ event_selection.singleelectronminus_selection = [
 
 event_selection.doubleelectron_selection = [
     ("blind_mask", blind_mask),
-    ("trigger_ele_selection", trigger_selection.format("SingleElectron")),
+    #("trigger_ele_selection", trigger_selection.format("SingleElectron")),
     ("dphi_jet_met_selection", dphi_jet_met_selection),
     ("muon_selection_fmt_0", muon_selection.format(0)),
     ("ele_selection_fmt_2", ele_selection.format(2)),
@@ -147,7 +147,7 @@ event_selection.doubleelectron_selection = [
 ]
 
 event_selection.tripleelectron_selection = [
-    ("trigger_ele_selection", trigger_selection.format("SingleElectron")),
+    #("trigger_ele_selection", trigger_selection.format("SingleElectron")),
     ("dphi_jet_met_selection", dphi_jet_met_selection),
     ("muon_selection_fmt_0", muon_selection.format(0)),
     ("ele_selection_fmt_3", ele_selection.format(3)),
