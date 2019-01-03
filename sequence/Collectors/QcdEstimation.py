@@ -24,15 +24,16 @@ class QcdEstimationCollector(SystematicsCollector):
             return df
 
         df = rename_level_values(df, "process", {
-            "ZJetsToNuNu":    "znunu",          "DYJetsToMuMu":   "zmumu",
-            "DYJetsToEE":     "zee",            "WJetsToENu":     "wlnu",
-            "WJetsToMuNu":    "wlnu",           "WJetsToTauNu":   "wlnu",
-            "QCD":            "qcd",            "TTJets":         "bkg",
-            "Diboson":        "bkg",            "DYJetsToTauTau": "bkg",
-            "EWKV2Jets":      "bkg",            "SingleTop":      "bkg",
-            "G1Jet":          "bkg",            "VGamma":         "bkg",
-            "MET":            "MET",            "SingleMuon":     "SingleMuon",
-            "SingleElectron": "SingleElectron",
+            "ZJetsToNuNu":      "znunu",      "DYJetsToMuMu":     "zmumu",
+            "DYJetsToEE":       "zee",        "WJetsToENu":       "wlnu",
+            "WJetsToMuNu":      "wlnu",       "WJetsToTauLNu":    "wlnu",
+            "WJetsToTauHNu":    "wlnu",       "QCD":              "qcd",
+            "TTJets":           "bkg",        "Diboson":          "bkg",
+            "DYJetsToTauLTauL": "bkg",        "DYJetsToTauLTauH": "bkg",
+            "DYJetsToTauHTauH": "bkg",        "EWKV2Jets":        "bkg",
+            "SingleTop":        "bkg",        "G1Jet":            "bkg",
+            "VGamma":           "bkg",        "MET":              "MET",
+            "SingleMuon":       "SingleMuon", "SingleElectron":   "SingleElectron",
         })
         df = df.groupby(df.index.names).sum()
 

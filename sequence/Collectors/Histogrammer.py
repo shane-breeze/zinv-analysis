@@ -19,12 +19,15 @@ class HistReader(object):
         "DYJetsToLL": {
             "DYJetsToEE": ["ev: ev.LeptonIsElectron"],
             "DYJetsToMuMu": ["ev: ev.LeptonIsMuon"],
-            "DYJetsToTauTau": ["ev: ev.LeptonIsTau"],
+            "DYJetsToTauLTauL": ["ev: ev.LeptonIsTau & (ev.nGenTauL==2)"],
+            "DYJetsToTauLTauH": ["ev: ev.LeptonIsTau & (ev.nGenTauL==1)"],
+            "DYJetsToTauHTauH": ["ev: ev.LeptonIsTau & (ev.nGenTauL==0)"],
         },
         "WJetsToLNu": {
             "WJetsToENu": ["ev: ev.LeptonIsElectron"],
             "WJetsToMuNu": ["ev: ev.LeptonIsMuon"],
-            "WJetsToTauNu": ["ev: ev.LeptonIsTau"],
+            "WJetsToTauLNu": ["ev: ev.LeptonIsTau & (ev.nGenTauL==1)"],
+            "WJetsToTauHNu": ["ev: ev.LeptonIsTau & (ev.nGenTauL==0)"],
         },
     }
     def __init__(self, **kwargs):

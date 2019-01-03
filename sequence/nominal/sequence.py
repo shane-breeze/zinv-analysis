@@ -92,6 +92,10 @@ lhe_part_assigner = Readers.LHEPartAssigner(
     name = "lhe_part_assigner",
     data = False,
 )
+gen_part_assigner = Readers.GenPartAssigner(
+    name = "gen_part_assigner",
+    data = False,
+)
 
 weight_creator = Readers.WeightCreator(
     name = "weight_creator",
@@ -342,6 +346,7 @@ sequence = [
     # this with all other branches
     (gen_boson_producer, NullCollector()),
     (lhe_part_assigner, NullCollector()),
+    (gen_part_assigner, NullCollector()),
     (jec_variations, NullCollector()),
     (skim_collections, NullCollector()),
     # Cross cleaning must be placed after the veto and selection collections

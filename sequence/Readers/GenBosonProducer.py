@@ -30,14 +30,10 @@ class GenBosonProducer(object):
         gpbd = event.GenPartBosonDaughters
 
         # Finished with GenPart branches
-        event.delete_branches(["GenPart_pdgId",
-                               "GenPart_status",
-                               "GenPart_statusFlags",
-                               "GenPart_pt",
-                               "GenPart_eta",
-                               "GenPart_phi",
-                               "GenPart_mass",
-                               "GenPart_genPartIdxMother"])
+        event.delete_branches([
+            "GenPart_status", "GenPart_pt", "GenPart_eta", "GenPart_phi",
+            "GenPart_mass", "GenPart_genPartIdxMother",
+        ])
 
         genpart_dressedlepidx = genpart_matched_dressedlepton(
             gpbd, event.GenDressedLepton,
@@ -96,18 +92,16 @@ class GenBosonProducer(object):
         setattr(event, "SecondGenPartBosonDaughters_eta", eta)
         setattr(event, "SecondGenPartBosonDaughters_phi", phi)
 
-        event.delete_branches(["GenPartBosonDaughters_pdgId",
-                               "GenPartBosonDaughters_pt",
-                               "GenPartBosonDaughters_eta",
-                               "GenPartBosonDaughters_phi",
-                               "GenPartBosonDaughters_mass",
-                               "GenPartBosonDaughters_genDressedLeptonIdx",
-                               "GenPartBosonDaughters",
-                               "GenDressedLepton_pdgId",
-                               "GenDressedLepton_pt",
-                               "GenDressedLepton_eta",
-                               "GenDressedLepton_phi",
-                               "GenDressedLepton_mass"])
+        event.delete_branches([
+            "GenPartBosonDaughters_pdgId", "GenPartBosonDaughters_pt",
+            "GenPartBosonDaughters_eta", "GenPartBosonDaughters_phi",
+            "GenPartBosonDaughters_mass",
+            "GenPartBosonDaughters_genDressedLeptonIdx",
+            "GenPartBosonDaughters",
+            "GenDressedLepton_pdgId", "GenDressedLepton_pt",
+            "GenDressedLepton_eta", "GenDressedLepton_phi",
+            "GenDressedLepton_mass",
+        ])
 
 
 def create_genpart_boson(genpart, gendressedlep):

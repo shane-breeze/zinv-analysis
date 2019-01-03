@@ -10,7 +10,7 @@ from .EventSumsProducer import EventSumsProducer
 from .SignalRegionBlinder import SignalRegionBlinder
 from .InvMassProducer import InvMassProducer
 from .GenBosonProducer import GenBosonProducer
-from .LHEPartAssigner import LHEPartAssigner
+from .LHEPartAssigner import LHEPartAssigner, GenPartAssigner
 
 from .WeightCreator import WeightCreator
 from .WeightXsLumi import WeightXsLumi
