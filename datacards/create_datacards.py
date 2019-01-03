@@ -29,6 +29,8 @@ def parse_args():
     parser.add_argument("config", type=str, help="Yaml config file")
     parser.add_argument("--binning", type=str, default="[200.]",
                         help="Binning to use")
+    parser.add_argument("--selection", type=str, default=None,
+                        help="Additional selection to apply to all regions")
     parser.add_argument("--shape", default=False, action='store_true',
                         help="Create shape datacards")
 
@@ -64,6 +66,17 @@ def process_syst(df, syst=None, how_up=lambda x: x.mean()+x.std(), how_down = la
     return df
 
 def reformat(df, cfg):
+    # apply selection
+    if cfg["selection"] is not None:
+        df["selection"] = df.eval(cfg["selection"])
+        df = df[df["selection"]==True]
+        if "bin0" in cfg["selection"]:
+            df = df.reset_index(["bin0_low", "bin0_upp"], drop=True)
+            df = df.groupby(list(df.index.names)).sum()
+        if "bin1" in cfg["selection"]:
+            df = df.reset_index(["bin1_low", "bin1_upp"], drop=True)
+            df = df.groupby(list(df.index.names)).sum()
+
     # Rebin
     def rebin(df, bins):
         df = df.reset_index(["bin0_low", "bin0_upp"])
@@ -465,6 +478,7 @@ def main():
         config = yaml.load(f)
     config["input"] = options.input
     config["binning"] = eval(options.binning)
+    config["selection"] = options.selection
     config["shape"] = options.shape
     df = open_df(config)
     df = reformat(df, config)
