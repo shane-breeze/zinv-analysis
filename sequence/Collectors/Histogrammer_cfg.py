@@ -102,7 +102,8 @@ histogrammer_cfgs = [
         "weights": [("", "ev: ev.Weight_{dataset}")],
     }, {
         "name": "MET_pt",
-        "categories": categories,
+        "categories": categories + [(d, "{}_remove_met_pf_selection".format(c))
+                                    for d, c in categories if "SingleElectron" in c and "remove" not in c],
         "variables": ["ev: ev.MET_pt"],
         "bins": [[-inf]+list(np.linspace(0., 1000., 41))+[inf]],
         "weights": [("", "ev: ev.Weight_{dataset}")],
