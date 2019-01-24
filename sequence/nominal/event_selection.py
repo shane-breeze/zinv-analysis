@@ -100,7 +100,6 @@ event_selection.triplemuon_selection = [
     ("muon_selection_fmt_3", muon_selection.format(3)),
     ("ele_selection_fmt_0", ele_selection.format(0)),
     ("tau_selection_fmt_0", tau_selection.format(0)),
-    ("mll_selection", mll_selection),
 ]
 
 event_selection.quadmuon_selection = [
@@ -108,7 +107,6 @@ event_selection.quadmuon_selection = [
     ("muon_selection_fmt_4", muon_selection.format(4)),
     ("ele_selection_fmt_0", ele_selection.format(0)),
     ("tau_selection_fmt_0", tau_selection.format(0)),
-    ("mll_selection", mll_selection),
 ]
 
 event_selection.singleelectron_selection = [
@@ -152,7 +150,6 @@ event_selection.tripleelectron_selection = [
     ("muon_selection_fmt_0", muon_selection.format(0)),
     ("ele_selection_fmt_3", ele_selection.format(3)),
     ("tau_selection_fmt_0", tau_selection.format(0)),
-    ("mll_selection", mll_selection),
 ]
 
 event_selection.monojetqcd_selection = [
@@ -181,4 +178,15 @@ event_selection.doubletau_selection = [
     ("muon_selection_fmt_0", muon_selection.format(0)),
     ("ele_selection_fmt_0", ele_selection.format(0)),
     ("tau_selection_fmt_2", tau_selection.format(2)),
+]
+
+event_selection.met_trigger_selection = [
+    ("met_trigger_selection", trigger_selection.format("MET")),
+]
+
+event_selection.doubleelectron_alt_selection = [
+    ("filter_selection", filter_selection),
+    ("met_low_selection", "ev: ev.METnoX.pt <= 200."),
+    ("jet_selection", jet_selection),
+    ("ele_selection_fmt_2", ele_selection.format(2)),
 ]
