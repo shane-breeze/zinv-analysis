@@ -14,3 +14,5 @@ from .TriggerEfficiency import TriggerEfficiencyReader, TriggerEfficiencyCollect
 import TriggerEfficiency_cfg
 from .QcdEstimation import QcdEstimationReader, QcdEstimationCollector
 import QcdEstimation_cfg
+from .GStarCorrection import GStarCorrectionReader, GStarCorrectionCollector
+import GStarCorrection_cfg

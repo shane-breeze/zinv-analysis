@@ -38,7 +38,7 @@ class WeightQcdEwk(object):
         input_df["bin_max"] = global_bin_max
         input_df = input_df.set_index(["bin_min", "bin_max"])
 
-        input_df["isz"] = self.parent in ["ZJetsToNuNu", "DYJetsToLL"]
+        input_df["isz"] = self.parent in ["ZJetsToNuNu", "DYJetsToLL", "ZJetsToLL", "GStarJetsToLL"]
         input_df["isw"] = self.parent in ["WJetsToLNu"]
 
         # nominal

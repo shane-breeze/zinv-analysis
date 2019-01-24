@@ -2,7 +2,7 @@ import numpy as np
 from numba import njit, int32
 
 class LHEPartAssigner(object):
-    old_parents = ["WJetsToLNu", "DYJetsToLL"]
+    old_parents = ["WJetsToLNu", "DYJetsToLL", "ZJetsToLL", "GStarJetsToLL"]
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
@@ -29,7 +29,7 @@ def get_lepton_id(pdgs, starts, stops):
     return lepton_id
 
 class GenPartAssigner(object):
-    old_parents = ["WJetsToLNu", "DYJetsToLL"]
+    old_parents = ["WJetsToLNu", "DYJetsToLL", "ZJetsToLL", "GStarJetsToLL"]
     def __init__(self, **kwargs):
         self.__dict__.update(**kwargs)
 
