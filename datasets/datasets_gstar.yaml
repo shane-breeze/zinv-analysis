@@ -1,0 +1,8 @@
+path: /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/{}/info.yaml
+default:
+    lumi: 35860
+    energy: 13000
+datasets:
+    - DYJetsToLL
+    - GStarJetsToLL
+    - ZJetsToLL
