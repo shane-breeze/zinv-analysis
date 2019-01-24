@@ -102,6 +102,7 @@ vmem_dict = {
     "WZTo1L3Nu_ext1": 16,
     "WZTo2L2Q": 16,
     "WZTo3L1Nu": 16,
+    "ZJetsToNuNu_Pt-100To250_ext1": 16,
     "ZJetsToNuNu_Pt-100To250_ext2": 20,
     "ZJetsToNuNu_Pt-250To400_ext2": 16,
     "ZZTo2Q2Nu": 16,
@@ -131,6 +132,7 @@ def run(sequence, datasets, options):
         options.mode,
         quiet = options.quiet,
         processes = options.ncores,
+        #user_modules = ('sequence', 'drawing', 'utils'),
         dispatcher_options = {
             "vmem": 12,
             "walltime": 10800,
