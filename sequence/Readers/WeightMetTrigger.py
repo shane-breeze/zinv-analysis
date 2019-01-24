@@ -87,7 +87,7 @@ def read_file(path):
                  for l in f.read().splitlines()
                  if l.strip()[0]!="#"][1:]
 
-    bins = np.array([map(float, l[1:3]) for l in lines])
+    bins = np.array([list(map(float, l[1:3])) for l in lines])
     corr = np.array([float(l[3]) for l in lines])
     stat_up = corr + np.array([float(l[5]) for l in lines])
     stat_down = corr - np.array([float(l[4]) for l in lines])

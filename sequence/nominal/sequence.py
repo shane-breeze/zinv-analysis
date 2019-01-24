@@ -2,8 +2,8 @@ import sys
 import os
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
-import Readers
-import Collectors
+import sequence.Readers as Readers
+import sequence.Collectors as Collectors
 from event_selection import event_selection
 from physics_object_selection import physics_object_selection
 from alphatwirl.loop import NullCollector

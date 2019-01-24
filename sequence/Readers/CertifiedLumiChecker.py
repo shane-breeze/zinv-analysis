@@ -40,6 +40,6 @@ def is_certified_lumi(runs, lumis, cert_runs, cert_lumis):
 def read_json(path):
     with open(path, 'r') as f:
         data = json.load(f)
-    runs = np.array(sorted(map(int, data.keys())))
+        runs = np.array(sorted(list(map(int, data.keys()))))
     lumis = [np.array(data[str(r)], dtype=int) for r in runs]
     return runs, lumis

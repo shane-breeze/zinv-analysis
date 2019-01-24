@@ -4,7 +4,7 @@ import copy
 try: import cPickle as pickle
 except ImportError: import pickle
 
-from Systematics import SystematicsReader, SystematicsCollector
+from .Systematics import SystematicsReader, SystematicsCollector
 from drawing.dist_facet import dist_facet
 
 QcdEstimationReader = copy.deepcopy(SystematicsReader)

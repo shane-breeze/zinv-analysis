@@ -1,18 +1,18 @@
 from .Histogrammer import HistReader, HistCollector
-import Histogrammer_cfg
+from . import Histogrammer_cfg
 from .Histogrammer2D import Hist2DReader, Hist2DCollector
-import Histogrammer2D_cfg
+from . import Histogrammer2D_cfg
 from .GenStitching import GenStitchingReader, GenStitchingCollector
-import GenStitching_cfg
+from . import GenStitching_cfg
 from .MetResponseResolution import MetResponseResolutionReader, MetResponseResolutionCollector
-import MetResponseResolution_cfg
+from . import MetResponseResolution_cfg
 from .QcdEwkCorrections import QcdEwkCorrectionsReader, QcdEwkCorrectionsCollector
-import QcdEwkCorrections_cfg
+from . import QcdEwkCorrections_cfg
 from .Systematics import SystematicsReader, SystematicsCollector
-import Systematics_cfg
+from . import Systematics_cfg
 from .TriggerEfficiency import TriggerEfficiencyReader, TriggerEfficiencyCollector
-import TriggerEfficiency_cfg
+from . import TriggerEfficiency_cfg
 from .QcdEstimation import QcdEstimationReader, QcdEstimationCollector
-import QcdEstimation_cfg
+from . import QcdEstimation_cfg
 from .GStarCorrection import GStarCorrectionReader, GStarCorrectionCollector
-import GStarCorrection_cfg
+from . import GStarCorrection_cfg

@@ -164,7 +164,7 @@ def reformat(df, cfg):
     return df
 
 def create_counting_datacards(df, cfg):
-    allowed_datasets = cfg["dataset_conv"].values()
+    allowed_datasets = list(cfg["dataset_conv"].values())
     for category, dfgroup in df.groupby(["bin0_low", "bin0_upp"]):
         if np.isinf(category[0]):
             continue
@@ -264,7 +264,7 @@ def create_counting_datacard(df_obs, df_rate, df_nuis, params, filename):
     dc += tab([
         ["bin"] + list(df_rate["region"]),
         ["process"] + list(df_rate["process"]),
-        ["process"] + map(int, list(df_rate["proc"])),
+        ["process"] + list(map(int, list(df_rate["proc"]))),
         ["rate"] + list(df_rate["yield"]),
     ], [], tablefmt="plain") + "\n" + "-"*80 + "\n"
 
@@ -345,7 +345,7 @@ def create_shape_datacards(df, cfg):
     logger.info("Created {}".format("Zinv_METnoX-ShapeTemplates.root"))
 
     # df_obs
-    allowed_datasets = cfg["dataset_conv"].keys()
+    allowed_datasets = list(cfg["dataset_conv"].keys())
     df_obs = df[df.index.get_level_values("process").isin(allowed_datasets)]["yield"]
     df_obs = df_obs.groupby(df_obs.index.names).sum()
 
@@ -426,7 +426,7 @@ def create_shape_datacard(df_obs, df_rate, df_nuis, params, filename):
     dc += tab([
         ["bin"] + list(df_rate["region"]),
         ["process"] + list(df_rate["process"]),
-        ["process"] + map(int, list(df_rate["proc"])),
+        ["process"] + list(map(int, list(df_rate["proc"]))),
         ["rate"] + [-1]*df_rate.shape[0],
     ], [], tablefmt="plain") + "\n" + "-"*80 + "\n"
 

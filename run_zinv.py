@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os
 import sys
+import functools
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -207,7 +208,7 @@ if __name__ == "__main__":
     else:
         jobs = run(sequence, datasets, options)
         if len(jobs)!=0:
-            jobs = [reduce(lambda x, y: x + y, [ssjobs
+            jobs = [functools.reduce(lambda x, y: x + y, [ssjobs
                 for ssjobs in sjobs
                 if not ssjobs is None
             ]) for sjobs in jobs]

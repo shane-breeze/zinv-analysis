@@ -1,7 +1,11 @@
 import os
 import operator
 import pandas as pd
-import cPickle as pickle
+
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 
 from drawing.dist_ratio import dist_ratio
 from utils.Histogramming import Histograms

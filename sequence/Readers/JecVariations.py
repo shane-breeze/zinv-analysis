@@ -337,15 +337,15 @@ def read_jesunc_file(filename, sources, overflow=True):
 
     sources_lines = {}
     for source in sources:
-        sidx = source_idx.values().index(source_idx[source.replace("jes", "")])
-        sidx_start = source_idx.values()[sidx]+1
+        sidx = list(source_idx.values()).index(source_idx[source.replace("jes", "")])
+        sidx_start = list(source_idx.values())[sidx]+1
         if sidx < len(source_idx):
-            sidx_stop = source_idx.values()[sidx+1]
+            sidx_stop = list(source_idx.values())[sidx+1]
         else:
             sidx_stop = len(lines)+1
         source_lines = [l.split() for l in lines[sidx_start:sidx_stop]]
 
-        bins = np.array([map(float, l[:2]) for l in source_lines])
+        bins = np.array([list(map(float, l[:2])) for l in source_lines])
         xvals = np.array([[float(l[3*(1+idx)]) for idx in range(50)] for l in source_lines])
         yvals_up = np.array([[float(l[3*(1+idx)+1]) for idx in range(50)] for l in source_lines])
         yvals_down = np.array([[float(l[3*(1+idx)+2]) for idx in range(50)] for l in source_lines])
@@ -366,7 +366,7 @@ def read_jersf_file(filename, overflow=True):
     with open(filename, 'r') as f:
         lines = [l.strip().split() for l in f.read().splitlines()][1:]
 
-    bins = np.array([map(float, l[:2]) for l in lines])
+    bins = np.array([list(map(float, l[:2])) for l in lines])
     corrs = np.array([float(l[3]) for l in lines])
     corrs_up = np.array([float(l[5]) for l in lines])
     corrs_down = np.array([float(l[4]) for l in lines])
@@ -386,9 +386,9 @@ def read_jer_file(filename, overflow=True):
     with open(filename, 'r') as f:
         lines = [l.strip().split() for l in f.read().splitlines()][1:]
 
-    bins = np.array([map(float, l[:4]) for l in lines])
-    var_range = np.array([map(float, l[5:7]) for l in lines])
-    params = np.array([map(float, l[7:11]) for l in lines])
+    bins = np.array([list(map(float, l[:4])) for l in lines])
+    var_range = np.array([list(map(float, l[5:7])) for l in lines])
+    params = np.array([list(map(float, l[7:11])) for l in lines])
 
     if overflow:
         bins[:,0][np.where(bins[:,0] == bins[:,0].min())] = -np.infty

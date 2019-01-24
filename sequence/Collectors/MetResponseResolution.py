@@ -8,7 +8,11 @@ import copy
 import re
 import numpy as np
 import pandas as pd
-import cPickle as pickle
+
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 
 from scipy.special import wofz
 from uncertainties import ufloat
@@ -17,7 +21,7 @@ from drawing.dist_ratio import dist_ratio
 from drawing.dist_scatter_pull import dist_scatter_pull
 
 # Take the cfg module and drop unpicklables
-from Histogrammer import HistReader, HistCollector
+from .Histogrammer import HistReader, HistCollector
 
 latex_eq_regex = re.compile("\$(.*)\$")
 

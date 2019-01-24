@@ -6,7 +6,7 @@ try: import cPickle as pickle
 except ImportError: import pickle
 
 from utils.Histogramming import Histograms
-from Histogrammer import Config, HistReader, HistCollector
+from .Histogrammer import Config, HistReader, HistCollector
 from drawing.dist_multicomp import dist_multicomp
 from drawing.dist_facet import dist_facet
 

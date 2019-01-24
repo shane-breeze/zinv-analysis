@@ -86,14 +86,10 @@ class TriggerChecker(object):
             return
 
         for dataset, trigger_list in self.trigger_dict.items():
-            setattr(
-                event,
-                "Is{}Triggered".format(dataset),
-                reduce(
-                    lambda x,y: x|y,
-                    [getattr(event, trigger)
-                     for trigger in trigger_list
-                     if event.hasbranch(trigger)],
-                ),
-            )
+            triggered = np.ones(event.size)
+            for trigger in trigger_list:
+                if event.hasbranch(trigger):
+                    triggered = triggered | getattr(event, trigger)
+            setattr(event, "Is{}Triggered".format(dataset), triggered)
+
         event.IsTriggered = getattr(event, "Is{}Triggered".format(self.dataset))

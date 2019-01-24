@@ -191,10 +191,10 @@ class SelectionProducer(object):
 
     def event(self, event):
         for cutflow, selection in self.selections_lambda.items():
+            cuts = np.ones(event.size, dtype=bool)
             if len(selection) > 0:
-                cuts = reduce(lambda x, y: x & y, [cut(event) for cut in selection])
-            else:
-                cuts = np.ones(event.size, dtype=bool)
+                for cut in selection:
+                    cuts = cuts & cut(event)
             setattr(event, "Cutflow_{}".format(cutflow), cuts)
 
     def end(self):

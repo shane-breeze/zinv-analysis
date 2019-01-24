@@ -3,7 +3,7 @@ import numpy as np
 inf = np.infty
 pi = np.pi+0.00001
 
-from Histogrammer_cfg import categories, sample_colours, sample_names, axis_label
+from .Histogrammer_cfg import categories, sample_colours, sample_names, axis_label
 
 histogrammer_cfgs = [
     {

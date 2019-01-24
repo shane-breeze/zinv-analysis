@@ -128,7 +128,7 @@ class WeightObjects(object):
 def read_file(path, form):
     with open(path, 'r') as f:
         try:
-            lines = [map(float, l.strip().split())
+            lines = [list(map(float, l.strip().split()))
                      for l in f.read().splitlines()
                      if l.strip()[0]!="#"]
         except ValueError as e:

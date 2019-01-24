@@ -1,8 +1,12 @@
 import os
 import copy
-import cPickle as pickle
 
-from Histogrammer import Config, HistReader, HistCollector
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
+
+from .Histogrammer import Config, HistReader, HistCollector
 from drawing.dist_2d import dist_2d
 
 Hist2DReader = HistReader

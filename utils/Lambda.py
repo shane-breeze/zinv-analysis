@@ -1,7 +1,7 @@
 import numpy as np
 np.warnings.filterwarnings('ignore')
 
-from AwkwardOps import get_nth_object
+from .AwkwardOps import get_nth_object
 
 class Lambda(object):
     def __init__(self, function):

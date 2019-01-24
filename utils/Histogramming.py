@@ -3,8 +3,14 @@ import numpy as np
 np.random.seed(123456)
 import pandas as pd
 import os
-import cPickle as pickle
-from Lambda import Lambda
+import functools
+
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
+
+from .Lambda import Lambda
 import itertools
 
 class Histograms(object):
@@ -83,10 +89,10 @@ class Histograms(object):
         return self
 
     def generate_dataframe(self, event, config):
-        selection = reduce(lambda x,y: x & y, [
+        selection = functools.reduce(lambda x,y: x & y, [
             self.string_to_func[s](event)
             for s in config["selection"]
-        ]) if len(config["selection"])>0 else np.array([True]*event.size)
+        ]) if len(config["selection"])>0 else np.ones(event.size, dtype=bool)
 
         weight = self.string_to_func[config["weight"]](event)[selection]
 
@@ -114,7 +120,7 @@ class Histograms(object):
         )
         bin_names = [["bin{}_low".format(idx), "bin{}_upp".format(idx)]
                      for idx in reversed(list(range(len(hist_bins))))]
-        bin_names = reduce(lambda x,y: x+y, bin_names)
+        bin_names = functools.reduce(lambda x,y: x+y, bin_names)
         df = pd.DataFrame(
             data,
             columns = bin_names+["count", "yield", "variance"],
@@ -149,7 +155,7 @@ class Histograms(object):
         tbins = bins[::-1]
         bin_idxs = itertools.product(*[range(len(bin)-1) for bin in tbins])
         bins_1d = np.array([
-            reduce(lambda x,y: x+y, [
+            functools.reduce(lambda x,y: x+y, [
                 [tbins[dim][sub_bin_idx], tbins[dim][sub_bin_idx+1]]
                 for dim, sub_bin_idx in enumerate(bin_idx)
             ])

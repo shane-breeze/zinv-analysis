@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import functools
 
 def dist_comp(df, bins, filepath, cfg):
     # Define columns
@@ -74,8 +75,8 @@ def dist_comp(df, bins, filepath, cfg):
     handles_corr = handles_corr[len(handles):]
     labels_corr = labels_corr[len(labels):]
     labels_corr = [l+" corr." for l in labels_corr]
-    labels = reduce(lambda x,y: x+y, list(zip(labels, labels_corr)))
-    handles = reduce(lambda x,y: x+y, list(zip(handles, handles_corr)))
+    labels = functools.reduce(lambda x,y: x+y, list(zip(labels, labels_corr)))
+    handles = functools.reduce(lambda x,y: x+y, list(zip(handles, handles_corr)))
 
     axtop.set_xlim(bins[0], bins[-1])
 
