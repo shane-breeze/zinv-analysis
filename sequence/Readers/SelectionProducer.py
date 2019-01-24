@@ -51,7 +51,7 @@ class SelectionProducer(object):
                                      if n not in ["met_selection", "blind_mask"]],
             "Monojet_METTrigger": [(n, s)
                                    for (n, s) in baseline \
-                                   + [("met_trigger_selection", "ev: ev.IsMETTriggered")] \
+                                   + es.met_trigger_selection \
                                    + es.baseline_selection \
                                    + es.monojet_selection
                                    if n not in ["met_selection", "blind_mask"]],
@@ -74,7 +74,7 @@ class SelectionProducer(object):
                                         if n not in ["met_selection", "blind_mask", "mtw_selection", "mll_selection"]],
             "SingleMuon_METTrigger": [(n, s)
                                       for (n, s) in baseline\
-                                      + [("met_trigger_selection", "ev: ev.IsMETTriggered")]\
+                                      + es.met_trigger_selection\
                                       + es.baseline_selection\
                                       + es.singlemuon_selection
                                       if n not in ["met_selection", "blind_mask", "mtw_selection", "mll_selection"]],
@@ -89,7 +89,7 @@ class SelectionProducer(object):
                                         if n not in ["met_selection", "blind_mask", "mtw_selection", "mll_selection"]],
             "DoubleMuon_METTrigger": [(n, s)
                                       for (n, s) in baseline\
-                                      + [("met_trigger_selection", "ev: ev.IsMETTriggered")]\
+                                      + es.met_trigger_selection\
                                       + es.baseline_selection\
                                       + es.doublemuon_selection
                                       if n not in ["met_selection", "blind_mask", "mtw_selection", "mll_selection"]],
@@ -105,7 +105,7 @@ class SelectionProducer(object):
                                         if n not in ["met_selection", "blind_mask", "mtw_selection", "mll_selection"]],
             "TripleMuon_METTrigger": [(n, s)
                                       for (n, s) in baseline\
-                                      + [("met_trigger_selection", "ev: ev.IsMETTriggered")]\
+                                      + es.met_trigger_selection\
                                       + es.baseline_selection\
                                       + es.triplemuon_selection
                                       if n not in ["met_selection", "blind_mask", "mtw_selection", "mll_selection"]],
@@ -117,7 +117,7 @@ class SelectionProducer(object):
                                             if n not in ["met_selection", "blind_mask", "mtw_selection", "mll_selection"]],
             "SingleElectron_METTrigger": [(n, s)
                                           for (n, s) in baseline\
-                                          + [("met_trigger_selection", "ev: ev.IsMETTriggered")]\
+                                          + es.met_trigger_selection\
                                           + es.baseline_selection\
                                           + es.singleelectron_selection
                                           if n not in ["met_selection", "blind_mask", "mtw_selection", "mll_selection"]],
@@ -132,7 +132,7 @@ class SelectionProducer(object):
                                             if n not in ["met_selection", "blind_mask", "mtw_selection", "mll_selection"]],
             "DoubleElectron_METTrigger": [(n, s)
                                           for (n, s) in baseline\
-                                          + [("met_trigger_selection", "ev: ev.IsMETTriggered")]\
+                                          + es.met_trigger_selection\
                                           + es.baseline_selection\
                                           + es.doubleelectron_selection
                                           if n not in ["met_selection", "blind_mask", "mtw_selection", "mll_selection"]],
@@ -141,6 +141,7 @@ class SelectionProducer(object):
                                        + es.baseline_selection \
                                        + es.doubleelectron_selection
                                        if n not in ["met_selection", "blind_mask"]],
+            "DoubleElectronAlt": baseline + es.doubleelectron_alt_selection,
             "TripleElectron_noMETTrigger": [(n, s)
                                             for (n, s) in baseline\
                                             + es.baseline_selection\
@@ -148,7 +149,7 @@ class SelectionProducer(object):
                                             if n not in ["met_selection", "blind_mask", "mtw_selection", "mll_selection"]],
             "TripleElectron_METTrigger": [(n, s)
                                           for (n, s) in baseline\
-                                          + [("met_trigger_selection", "ev: ev.IsMETTriggered")]\
+                                          + es.met_trigger_selection\
                                           + es.baseline_selection\
                                           + es.tripleelectron_selection
                                           if n not in ["met_selection", "blind_mask", "mtw_selection", "mll_selection"]],

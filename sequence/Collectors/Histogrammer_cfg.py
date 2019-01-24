@@ -15,11 +15,14 @@ ele_categories = [("SingleElectron", "SingleElectron"),
                   ("SingleElectron", "SingleElectronQCD")]
 diele_categories = [("SingleElectron", "DoubleElectron")]
 
+dielealt_categories = [("SingleElectron", "DoubleElectronAlt")]
+
 tau_categories = [("MET", "SingleTau"), ("MET", "SingleTauQCD")]
 ditau_categories = [("MET", "DoubleTau")]
 
 categories = monojet_categories + muon_categories + dimuon_categories \
-        + ele_categories + diele_categories + tau_categories + ditau_categories
+        + ele_categories + diele_categories + dielealt_categories \
+        + tau_categories + ditau_categories
 
 histogrammer_cfgs = [
     {
@@ -72,13 +75,13 @@ histogrammer_cfgs = [
         "weights": [("", "ev: ev.Weight_{dataset}")],
     }, {
         "name": "DiElectron_pt",
-        "categories": diele_categories,
+        "categories": diele_categories + dielealt_categories,
         "variables": ["ev: ev.DiElectron_pt"],
         "bins": [[-inf]+list(np.linspace(0., 1000., 41))+[inf]],
         "weights": [("", "ev: ev.Weight_{dataset}")],
     }, {
         "name": "DiElectron_phi",
-        "categories": diele_categories,
+        "categories": diele_categories + dielealt_categories,
         "variables": ["ev: ev.DiElectron_phi"],
         "bins": [[-inf]+list(np.linspace(-pi, pi, 51))+[inf]],
         "weights": [("", "ev: ev.Weight_{dataset}")],
@@ -103,7 +106,7 @@ histogrammer_cfgs = [
     }, {
         "name": "MET_pt",
         "categories": categories + [(d, "{}_remove_met_pf_selection".format(c))
-                                    for d, c in categories if "SingleElectron" in c and "remove" not in c],
+                                    for d, c in categories if "SingleElectron" in c and "remove" not in c and "Alt" not in c],
         "variables": ["ev: ev.MET_pt"],
         "bins": [[-inf]+list(np.linspace(0., 1000., 41))+[inf]],
         "weights": [("", "ev: ev.Weight_{dataset}")],
@@ -152,14 +155,14 @@ histogrammer_cfgs = [
     }, {
         "name": "MinDPhiJ1234METnoX",
         "categories": categories + [(d, "{}_remove_dphi_jet_met_selection".format(c))
-                                    for d, c in categories if "QCD" not in c and c!="None" and "remove" not in c],
+                                    for d, c in categories if "QCD" not in c and c!="None" and "remove" not in c and "Alt" not in c],
         "variables": ["ev: ev.MinDPhiJ1234METnoX"],
         "bins": [[-inf]+list(np.linspace(0., pi, 51))+[inf]],
         "weights": [("", "ev: ev.Weight_{dataset}")],
     }, {
         "name": "MET_dCaloMET",
         "categories": categories + [(d, "{}_remove_dcalo_pfmet_selection".format(c))
-                                    for d, c in categories if c != "None" and "remove" not in c],
+                                    for d, c in categories if c != "None" and "remove" not in c and "Alt" not in c],
         "variables": ["ev: ev.MET_dCaloMET"],
         "bins": [[-inf]+list(np.linspace(0., 1., 51))+[inf]],
         "weights": [("", "ev: ev.Weight_{dataset}")],
@@ -173,15 +176,15 @@ histogrammer_cfgs = [
         "weights": [("", "ev: ev.Weight_{dataset}")],
     }, {
         "name": "MLL",
-        "categories": dimuon_categories + diele_categories,
+        "categories": dimuon_categories + diele_categories + dielealt_categories,
         "variables": ["ev: ev.MLL"],
         "bins": [[-inf]+list(np.linspace(65., 115., 51))+[inf]],
         "weights": [("", "ev: ev.Weight_{dataset}")],
     }, {
         "name": "MLL_wide",
-        "categories": dimuon_categories + diele_categories\
+        "categories": dimuon_categories + diele_categories + dielealt_categories\
                       + [(d, "{}_remove_mll_selection".format(c))
-                         for d, c in dimuon_categories+diele_categories if "DoubleMuon" in c or "DoubleElectron" in c and c!="None" and "remove" not in c],
+                         for d, c in dimuon_categories+diele_categories if "DoubleMuon" in c or "DoubleElectron" in c and c!="None" and "remove" not in c and "Alt" not in c],
         "variables": ["ev: ev.MLL"],
         "bins": [[-inf]+list(np.linspace(0., 200., 51))+[inf]],
         "weights": [("", "ev: ev.Weight_{dataset}")],
@@ -320,7 +323,7 @@ histogrammer_cfgs = [
     }, {
         "name": "nPhotonVeto",
         "categories": categories + [(d, "{}_remove_pho_veto".format(c))
-                                    for d, c in categories if c!="None" and "remove" not in c],
+                                    for d, c in categories if c!="None" and "remove" not in c and "Alt" not in c],
         "variables": ["ev: ev.PhotonVeto.size"],
         "bins": [[-inf]+list(np.linspace(0., 5., 6))+[inf]],
         "weights": [("", "ev: ev.Weight_{dataset}")],
@@ -345,7 +348,7 @@ histogrammer_cfgs = [
     }, {
         "name": "nBJetSelectionMedium",
         "categories": categories + [(d, "{}_remove_nbjet_veto".format(c))
-                                    for d, c in categories if c!="None" and "remove" not in c],
+                                    for d, c in categories if c!="None" and "remove" not in c and "Alt" not in c],
         "variables": ["ev: ev.nBJetSelectionMedium"],
         "bins": [[-inf]+list(np.linspace(0., 5., 6))+[inf]],
         "weights": [("", "ev: ev.Weight_{dataset}")],
@@ -388,37 +391,37 @@ histogrammer_cfgs = [
         "weights": [("", "ev: ev.Weight_{dataset}")],
     }, {
         "name": "LeadElectronSelection_pt",
-        "categories": ele_categories + diele_categories,
+        "categories": ele_categories + diele_categories + dielealt_categories,
         "variables": ["ev: get_nth_object(ev.ElectronSelection_pt, 0, ev.size)"],
         "bins": [[-inf]+list(np.linspace(0., 500., 51))+[inf]],
         "weights": [("", "ev: ev.Weight_{dataset}")],
     }, {
         "name": "LeadElectronSelection_eta",
-        "categories": ele_categories + diele_categories,
+        "categories": ele_categories + diele_categories + dielealt_categories,
         "variables": ["ev: get_nth_object(ev.ElectronSelection_eta, 0, ev.size)"],
         "bins": [[-inf]+list(np.linspace(-5., 5., 51))+[inf]],
         "weights": [("", "ev: ev.Weight_{dataset}")],
     }, {
         "name": "LeadElectronSelection_phi",
-        "categories": ele_categories + diele_categories,
+        "categories": ele_categories + diele_categories + dielealt_categories,
         "variables": ["ev: get_nth_object(ev.ElectronSelection_phi, 0, ev.size)"],
         "bins": [[-inf]+list(np.linspace(-pi, pi, 51))+[inf]],
         "weights": [("", "ev: ev.Weight_{dataset}")],
     }, {
         "name": "SecondElectronSelection_pt",
-        "categories": diele_categories,
+        "categories": diele_categories + dielealt_categories,
         "variables": ["ev: get_nth_object(ev.ElectronSelection_pt, 1, ev.size)"],
         "bins": [[-inf]+list(np.linspace(0., 500., 51))+[inf]],
         "weights": [("", "ev: ev.Weight_{dataset}")],
     }, {
         "name": "SecondElectronSelection_eta",
-        "categories": diele_categories,
+        "categories": diele_categories + dielealt_categories,
         "variables": ["ev: get_nth_object(ev.ElectronSelection_eta, 1, ev.size)"],
         "bins": [[-inf]+list(np.linspace(-5., 5., 51))+[inf]],
         "weights": [("", "ev: ev.Weight_{dataset}")],
     }, {
         "name": "SecondElectronSelection_phi",
-        "categories": diele_categories,
+        "categories": diele_categories + dielealt_categories,
         "variables": ["ev: get_nth_object(ev.ElectronSelection_phi, 1, ev.size)"],
         "bins": [[-inf]+list(np.linspace(-pi, pi, 51))+[inf]],
         "weights": [("", "ev: ev.Weight_{dataset}")],
@@ -662,7 +665,7 @@ axis_label = {
     "SecondTauSelection_eta": r'$\eta(\tau_{1})$',
     "SecondTauSelection_phi": r'$\phi(\tau_{1})$',
     "PV_npvsGood": r'No. of good PVs',
-    "LeptonDevay": r'Lepton decay pdg ID',
+    "LeptonDecay": r'Lepton decay pdg ID',
     "nGenBosons": r'No. of gen. bosons',
     "GenPartBoson_pt": r'Gen. $p_{\rm{T}}(V)$ (GeV)',
     "GenPartBoson_eta": r'Gen. $\eta(V)$',
