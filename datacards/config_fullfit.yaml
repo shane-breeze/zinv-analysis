@@ -1,0 +1,203 @@
+variable: "variable0"
+binning: "bin0=[200,220,250,280,310,340,370,400,430,470,510,550,590,640,690,740,790,840,900,960,1020]"
+selections:
+    met_shape: "True"
+shape: True
+regions:
+    - "monojet"
+    - "singlemu"
+    - "doublemu"
+    - "singlee"
+    - "doublee"
+processes:
+    znunu:     0
+    dymumu:    1
+    zmumu:     2
+    gmumu:     3
+    dyee:      4
+    zee:       5
+    gee:       6
+    wlnu:      7
+    qcd:       8
+    bkg:       9
+conversions:
+    data_sr:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "Monojet", "MET"]]
+        new_labels: [["MET", "monojet", "data_obs"]]
+    znunu_sr:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "Monojet", "ZJetsToNuNu"]]
+        new_labels: [["MET", "monojet", "znunu"]]
+    wlnu_sr:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "Monojet", "WJetsToENu"],
+                     ["MET", "Monojet", "WJetsToMuNu"],
+                     ["MET", "Monojet", "WJetsToTauNu"]]
+        new_labels: [["MET", "monojet", "wlnu"]]
+    qcd_sr:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "Monojet", "QCD"]]
+        new_labels: [["MET", "monojet", "qcd"]]
+    bkg_sr:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "Monojet", "TTJets"],
+                     ["MET", "Monojet", "Diboson"],
+                     ["MET", "Monojet", "EWKV2Jets"],
+                     ["MET", "Monojet", "SingleTop"],
+                     ["MET", "Monojet", "G1Jet"],
+                     ["MET", "Monojet", "VGamma"],
+                     ["MET", "Monojet", "DYJetsToTauTau"]]
+        new_labels: [["MET", "monojet", "bkg"]]
+    data_mu:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "SingleMuon", "MET"]]
+        new_labels: [["MET", "singlemu", "data_obs"]]
+    wlnu_mu:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "SingleMuon", "WJetsToENu"],
+                     ["MET", "SingleMuon", "WJetsToMuNu"],
+                     ["MET", "SingleMuon", "WJetsToTauNu"]]
+        new_labels: [["MET", "singlemu", "wlnu"]]
+    qcd_mu:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "SingleMuon", "QCD"]]
+        new_labels: [["MET", "singlemu", "qcd"]]
+    bkg_mu:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "SingleMuon", "TTJets"],
+                     ["MET", "SingleMuon", "Diboson"],
+                     ["MET", "SingleMuon", "EWKV2Jets"],
+                     ["MET", "SingleMuon", "SingleTop"],
+                     ["MET", "SingleMuon", "G1Jet"],
+                     ["MET", "SingleMuon", "VGamma"],
+                     ["MET", "SingleMuon", "DYJetsToTauTau"]]
+        new_labels: [["MET", "singlemu", "bkg"]]
+    data_mumu:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "DoubleMuon", "MET"]]
+        new_labels: [["MET", "doublemu", "data_obs"]]
+    zmumu_mumu:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "DoubleMuon", "DYJetsToMuMu"]]
+        new_labels: [["MET", "doublemu", "zmumu"],
+                     ["MET", "doublemu", "gmumu"],
+                     ["MET", "doublemu", "dymumu"]]
+    bkg_mumu:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "DoubleMuon", "TTJets"],
+                     ["MET", "DoubleMuon", "Diboson"],
+                     ["MET", "DoubleMuon", "EWKV2Jets"],
+                     ["MET", "DoubleMuon", "SingleTop"],
+                     ["MET", "DoubleMuon", "G1Jet"],
+                     ["MET", "DoubleMuon", "VGamma"],
+                     ["MET", "DoubleMuon", "DYJetsToTauTau"]]
+        new_labels: [["MET", "doublemu", "bkg"]]
+    data_e:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["SingleElectron", "SingleElectron", "SingleElectron"]]
+        new_labels: [["SingleElectron", "singlee", "data_obs"]]
+    wlnu_e:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["SingleElectron", "SingleElectron", "WJetsToENu"],
+                     ["SingleElectron", "SingleElectron", "WJetsToMuNu"],
+                     ["SingleElectron", "SingleElectron", "WJetsToTauNu"]]
+        new_labels: [["SingleElectron", "singlee", "wlnu"]]
+    qcd_e:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["SingleElectron", "SingleElectron", "QCD"]]
+        new_labels: [["SingleElectron", "singlee", "qcd"]]
+    bkg_e:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["SingleElectron", "SingleElectron", "TTJets"],
+                     ["SingleElectron", "SingleElectron", "Diboson"],
+                     ["SingleElectron", "SingleElectron", "EWKV2Jets"],
+                     ["SingleElectron", "SingleElectron", "SingleTop"],
+                     ["SingleElectron", "SingleElectron", "G1Jet"],
+                     ["SingleElectron", "SingleElectron", "VGamma"],
+                     ["SingleElectron", "SingleElectron", "DYJetsToTauTau"]]
+        new_labels: [["SingleElectron", "singlee", "bkg"]]
+    data_ee:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["SingleElectron", "DoubleElectron", "SingleElectron"]]
+        new_labels: [["SingleElectron", "doublee", "data_obs"]]
+    zee_ee:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["SingleElectron", "DoubleElectron", "DYJetsToEE"]]
+        new_labels: [["SingleElectron", "doublee", "zee"],
+                     ["SingleElectron", "doublee", "gee"],
+                     ["SingleElectron", "doublee", "dyee"]]
+    bkg_ee:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["SingleElectron", "DoubleElectron", "TTJets"],
+                     ["SingleElectron", "DoubleElectron", "Diboson"],
+                     ["SingleElectron", "DoubleElectron", "EWKV2Jets"],
+                     ["SingleElectron", "DoubleElectron", "SingleTop"],
+                     ["SingleElectron", "DoubleElectron", "G1Jet"],
+                     ["SingleElectron", "DoubleElectron", "VGamma"],
+                     ["SingleElectron", "DoubleElectron", "DYJetsToTauTau"]]
+        new_labels: [["SingleElectron", "doublee", "bkg"]]
+parameters:
+    - ["kzll_mcstat", "param", "0", "1"]
+    - ["kgll_mcstat", "param", "0", "1"]
+    - ["kzmumu", "rateParam", "*", "zmumu", "1.0164589*(1+0.025340129*(@0<0)-0.005476561*(@0>=0))**(@0)*(1+0.001696478*(@1<0)-0.000764713*(@1>=0))**(@1)*(1+0.00081649300)**(@2)",  "lhePdf,lheScale,kzll_mcstat"]
+    - ["kzee",   "rateParam", "*", "zee",   "1.0164589*(1+0.025340129*(@0<0)-0.005476561*(@0>=0))**(@0)*(1+0.001696478*(@1<0)-0.000764713*(@1>=0))**(@1)*(1+0.00081649300)**(@2)",  "lhePdf,lheScale,kzll_mcstat"]
+    - ["kgll",   "rateParam", "*", "g*",    "0.015040019*(1+0.009749389*(@0<0)-0.005555179*(@0>=0))**(@0)*(1-0.001761234*(@1<0)+0.001456315*(@1>=0))**(@1)*(1+0.0014868245)**(@2)", "lhePdf,lheScale,kgll_mcstat"]
+    - ["tf_wlnu",  "rateParam", "*", "wlnu",  "1",             "[0.1,2.0]"]
+    - ["rz",       "rateParam", "*", "znunu", "1",             "[0.1,2.0]"]
+    - ["rz_dy",    "rateParam", "*", "dy*",   "sqrt(@0)",      "rz"]
+    - ["rz_zmumu", "rateParam", "*", "zmumu", "(@0-sqrt(@0))", "rz"]
+    - ["rz_zee",   "rateParam", "*", "zee",   "(@0-sqrt(@0))", "rz"]
+    - ["rz_gstar", "rateParam", "*", "g*",    "(1-sqrt(@0))",  "rz"]
+    - ["*", "autoMCStats", "10", "1"]
+systematics:
+    - "lumi"
+    - "d1k_qcd"
+    - "d2k_qcd"
+    - "d3k_qcd"
+    - "d1k_ew"
+    - "d2k_ew_w"
+    - "d2k_ew_z"
+    - "d3k_ew_w"
+    - "d3k_ew_z"
+    - "dk_mix"
+    - "lhePdf"
+    - "lheScale"
+    - "metTrigStat"
+    - "metTrigSyst"
+    - "muonId"
+    - "muonIso"
+    - "muonTrack"
+    - "pileup"
+    - "jesAbsoluteStat"
+    - "jesAbsoluteScale"
+    - "jesAbsoluteMPFBias"
+    - "jesFragmentation"
+    - "jesSinglePionECAL"
+    - "jesSinglePionHCAL"
+    - "jesFlavorQCD"
+    - "jesTimePtEta"
+    - "jesRelativeJEREC1"
+    - "jesRelativeJEREC2"
+    - "jesRelativeJERHF"
+    - "jesRelativePtBB"
+    - "jesRelativePtEC1"
+    - "jesRelativePtEC2"
+    - "jesRelativePtHF"
+    - "jesRelativeBal"
+    - "jesRelativeFSR"
+    - "jesRelativeStatFSR"
+    - "jesRelativeStatEC"
+    - "jesRelativeStatHF"
+    - "jesPileUpDataMC"
+    - "jesPileUpPtRef"
+    - "jesPileUpPtBB"
+    - "jesPileUpPtEC1"
+    - "jesPileUpPtEC2"
+    - "jesPileUpPtHF"
+    - "jesTotal"
+    - "jer"
+    - "unclust"
+    - "eleIdIso"
+    - "eleReco"
+    - "eleTrig"

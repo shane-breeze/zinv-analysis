@@ -1,0 +1,122 @@
+variable: "variable1"
+binning: "bin1=[40,60,80,100,150,200,250,300,400,500,750,1000]"
+selections:
+    met_200: "(200<=bin0_low) & (bin0_upp<=250)"
+    met_250: "(250<=bin0_low) & (bin0_upp<=310)"
+    met_310: "(310<=bin0_low) & (bin0_upp<=370)"
+    met_370: "(370<=bin0_low) & (bin0_upp<=430)"
+    met_430: "(430<=bin0_low) & (bin0_upp<=510)"
+    met_510: "(510<=bin0_low) & (bin0_upp<=590)"
+    met_590: "(590<=bin0_low) & (bin0_upp<=690)"
+    met_690: "(690<=bin0_low) & (bin0_upp<=790)"
+    met_790: "(790<=bin0_low) & (bin0_upp<=900)"
+shape: True
+regions:
+    - "monojetqcd"
+    - "singlemuqcd"
+processes:
+    qcd: 0
+    wlnu: 1
+    bkg: 2
+conversions:
+    data:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "MonojetQCD", "MET"]]
+        new_labels: ["MET", "monojetqcd", "data_obs"]
+    qcd:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "MonojetQCD", "QCD"]]
+        new_labels: ["MET", "monojetqcd", "qcd"]
+    muqcd:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "MonojetQCD", "WJetsToENu"],
+                     ["MET", "MonojetQCD", "WJetsToMuNu"],
+                     ["MET", "MonojetQCD", "WJetsToTauNu"]]
+        new_labels: ["MET", "monojetqcd", "wlnu"]
+    bkg:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "MonojetQCD", "DYJetsToEE"],
+                     ["MET", "MonojetQCD", "DYJetsToMuMu"],
+                     ["MET", "MonojetQCD", "DYJetsToTauTau"],
+                     ["MET", "MonojetQCD", "Diboson"],
+                     ["MET", "MonojetQCD", "EWKV2Jets"],
+                     ["MET", "MonojetQCD", "G1Jet"],
+                     ["MET", "MonojetQCD", "SingleTop"],
+                     ["MET", "MonojetQCD", "TTJets"],
+                     ["MET", "MonojetQCD", "VGamma"],
+                     ["MET", "MonojetQCD", "ZJetsToNuNu"]]
+        new_labels: ["MET", "monojetqcd", "bkg"]
+    data_cr:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "SingleMuonQCD", "MET"]]
+        new_labels: ["MET", "singlemuqcd", "data_obs"]
+    qcd_cr:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "SingleMuonQCD", "QCD"]]
+        new_labels: ["MET", "singlemuqcd", "qcd"]
+    muqcd_cr:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "SingleMuonQCD", "WJetsToENu"],
+                     ["MET", "SingleMuonQCD", "WJetsToMuNu"],
+                     ["MET", "SingleMuonQCD", "WJetsToTauNu"]]
+        new_labels: ["MET", "singlemuqcd", "wlnu"]
+    bkg_cr:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "SingleMuonQCD", "DYJetsToEE"],
+                     ["MET", "SingleMuonQCD", "DYJetsToMuMu"],
+                     ["MET", "SingleMuonQCD", "DYJetsToTauTau"],
+                     ["MET", "SingleMuonQCD", "Diboson"],
+                     ["MET", "SingleMuonQCD", "EWKV2Jets"],
+                     ["MET", "SingleMuonQCD", "G1Jet"],
+                     ["MET", "SingleMuonQCD", "SingleTop"],
+                     ["MET", "SingleMuonQCD", "TTJets"],
+                     ["MET", "SingleMuonQCD", "VGamma"],
+                     ["MET", "SingleMuonQCD", "ZJetsToNuNu"]]
+        new_labels: ["MET", "singlemuqcd", "bkg"]
+parameters:
+    tf_wlnu: ["rateParam", "*", "wlnu", "1", "[0.1,2.0]"]
+    "*": ["autoMCStats", "10", "1"]
+systematics:
+    - "lumi"
+    - "d1k_ew"
+    - "d2k_ew_w"
+    - "d2k_ew_z"
+    - "d3k_ew_w"
+    - "d3k_ew_z"
+    - "metTrigSF"
+    - "muonId"
+    - "muonIso"
+    - "muonTrack"
+    - "pileup"
+    - "jesAbsoluteStat"
+    - "jesAbsoluteScale"
+    - "jesAbsoluteMPFBias"
+    - "jesFragmentation"
+    - "jesSinglePionECAL"
+    - "jesSinglePionHCAL"
+    - "jesFlavorQCD"
+    - "jesTimePtEta"
+    - "jesRelativeJEREC1"
+    - "jesRelativeJEREC2"
+    - "jesRelativeJERHF"
+    - "jesRelativePtBB"
+    - "jesRelativePtEC1"
+    - "jesRelativePtEC2"
+    - "jesRelativePtHF"
+    - "jesRelativeBal"
+    - "jesRelativeFSR"
+    - "jesRelativeStatFSR"
+    - "jesRelativeStatEC"
+    - "jesRelativeStatHF"
+    - "jesPileUpDataMC"
+    - "jesPileUpPtRef"
+    - "jesPileUpPtBB"
+    - "jesPileUpPtEC1"
+    - "jesPileUpPtEC2"
+    - "jesPileUpPtHF"
+    - "jesTotal"
+    - "jer"
+    - "unclust"
+    - "eleIdIso"
+    - "eleReco"
+    - "eleTrig"
