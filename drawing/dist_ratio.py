@@ -280,7 +280,10 @@ def dist_ratio(df, bins, filepath, cfg):
 
     # Actually save the figure
     #plt.tight_layout()
-    fig.savefig(filepath+".pdf", format="pdf", bbox_inches="tight")
+    try:
+        fig.savefig(filepath+".pdf", format="pdf", bbox_inches="tight")
+    except IndexError:
+        print("Failed for some reason")
     plt.close(fig)
 
     return df

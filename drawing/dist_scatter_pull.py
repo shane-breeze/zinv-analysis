@@ -113,10 +113,10 @@ def dist_scatter_pull(df, bins, variations, filepath, cfg):
     axmidnull.axis('off')
 
     # top axes
-    axtop.text(0, 1.005, r'$\mathbf{CMS}\ \mathit{Preliminary}$',
+    axtop.text(0, 1, r'$\mathbf{CMS}\ \mathit{Preliminary}$',
                ha='left', va='bottom', transform=axtop.transAxes,
                fontsize='large')
-    axtop.text(1, 1.005, r'$35.9\ \mathrm{fb}^{-1}(13\ \mathrm{TeV})$',
+    axtop.text(1, 1, r'$35.9\ \mathrm{fb}^{-1}(13\ \mathrm{TeV})$',
                ha='right', va='bottom', transform=axtop.transAxes,
                fontsize='large')
 
