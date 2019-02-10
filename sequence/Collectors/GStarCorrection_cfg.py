@@ -25,7 +25,13 @@ histogrammer_cfgs = [
         "variables": ["ev: ev.GenPartBoson_mass"],
         "bins": [[-inf]+list(np.linspace(50., 150., 201))+[inf]],
         "weights": variations,
-    }
+    }, {
+        "name": "GenPartBoson_pt",
+        "categories": categories,
+        "variables": ["ev: ev.GenPartBoson_mass"],
+        "bins": [[-inf]+list(np.linspace(0., 1000., 101))+[inf]],
+        "weights": variations,
+    },
 ]
 
 sample_colours = {
@@ -44,4 +50,5 @@ sample_names = {
 
 axis_label = {
     "GenPartBoson_mass": r'$m_{ll}$ (GeV)',
+    "GenPartBoson_pt": r'$p_{\mathrm{T}}(\mathrm{Z})$ (GeV)',
 }
