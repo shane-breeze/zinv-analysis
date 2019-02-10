@@ -82,15 +82,18 @@ def reformat(df, cfg):
         return df
     binvar, binning = cfg["binning"].split("=")
     binning = eval(binning)
+    binning = binning + [2*binning[-1]-binning[-2]]
     bins = [-np.infty]+list(binning)+[np.infty]
     df = rebin(df, bins, binvar)
 
-    df = process_syst(df, syst="lhePdf",
-                      how_up=lambda x: x.mean()+x.std(),
-                      how_down=lambda x: x.mean()*x.mean()/(x.mean()+x.std()))
-    df = process_syst(df, syst="lheScale",
-                      how_up=lambda x: x.max(),
-                      how_down=lambda x: x.min())
+    if "lhePdf" in cfg["systematics"]:
+        df = process_syst(df, syst="lhePdf",
+                          how_up=lambda x: x.mean()+x.std(),
+                          how_down=lambda x: x.mean()*x.mean()/(x.mean()+x.std()))
+    if "lheScale" in cfg["systematics"]:
+        df = process_syst(df, syst="lheScale",
+                          how_up=lambda x: x.max(),
+                          how_down=lambda x: x.min())
 
     # Rename
     dfs = []
@@ -132,7 +135,6 @@ def create_shape_datacards(df, cfg):
 
     df = df.reset_index([i for i in all_inds if "bin" in i])
     for (d, r, p, w, n, v), dfgrp in df.groupby(all_inds_no_bins):
-        print(p)
         if r not in [k.GetName() for k in rfile.GetListOfKeys()]:
             rfile.mkdir(r)
         rfile.cd(r)
@@ -152,13 +154,30 @@ def create_shape_datacards(df, cfg):
             if not dfbin.empty:
                 content = dfbin.iloc[0]["yield"]
                 error = np.sqrt(dfbin.iloc[0]["variance"])
+                if np.abs(content) <= 1e-7:
+                    content = 1e-7
+                    error = 1e-7
                 hist.SetBinContent(idx, content)
                 hist.SetBinError(idx, error)
         hist.Write()
+        hist.Delete()
         rfile.cd()
+
+    # Create all data_obs (just in case some are completely blinded)
+    for r in df.index.get_level_values("region").unique():
+        if r not in [k.GetName() for k in rfile.GetListOfKeys()]:
+            rfile.mkdir(r)
+        rfile.cd(r)
+
+        if "data_obs" not in [k.GetName() for k in ROOT.gDirectory.GetListOfKeys()]:
+            bins = array('f', binning)
+            hist = ROOT.TH1D("data_obs", "data_obs", len(bins)-1, bins)
+            hist.Write()
+            hist.Delete()
+        rfile.cd()
+
     rfile.Close()
     logger.info("Created {}".format("Zinv_METnoX-ShapeTemplates_{}.root".format(cfg["name"])))
-    exit()
     df = df.set_index([binlab+"_low", binlab+"_upp"], append=True)\
             .reorder_levels(all_inds)
 
@@ -169,16 +188,14 @@ def create_shape_datacards(df, cfg):
     # df_rate
     df_rate = df[df.index.get_level_values("weight").isin(["nominal"])]["yield"]
     df_rate = df_rate.groupby(df_rate.index.names).sum()
-    df_rate = df_rate.reset_index("process")
-    df_rate["proc"] = df_rate["process"].map(
-        dict(zip(*zip(*enumerate(cfg["processes"], 0))[::-1]))
-    )
-    df_rate = df_rate.set_index("process", append=True)\
-            .reorder_levels(all_inds)
-    df_rate[df_rate["yield"]<0.] = np.nan
-    df_rate[df_rate.groupby("region").apply(lambda x: x/x.sum())["yield"]<0.0001] = np.nan
+    df_rate[df_rate<0.] = np.nan
+    df_rate[df_rate.groupby("region").apply(lambda x: x/x.sum())<0.0001] = np.nan
     df_rate = df_rate.dropna()
     df_rate = df_rate.groupby([n for n in df_rate.index.names if "bin" not in n]).sum()
+    df_rate = df_rate.reset_index("process")
+    df_rate["proc"] = df_rate["process"].map(cfg["processes"])
+    df_rate = df_rate.set_index("process", append=True)\
+            .reorder_levels([n for n in all_inds if "bin" not in n])
 
     # df_nuis
     df_nominal = df[df.index.get_level_values("weight").isin(["nominal"])]
@@ -196,8 +213,8 @@ def create_shape_datacards(df, cfg):
     df_nuis = df_nuis.fillna(1.)
 
     df_nuis = df_nuis[[
-        c for c in df_nuis.columns
-        if (c[:-2] if c.endswith("Up") else c[:-4]) in cfg["systematics"]
+        ss for s in cfg["systematics"] for ss in (s+"Down", s+"Up")
+        if ss in df_nuis.columns
     ]]
 
     proc_order = [
@@ -215,9 +232,9 @@ def create_shape_datacards(df, cfg):
     df_rate = df_rate.reindex(proc_order).dropna()
     df_nuis = df_nuis.loc[df_rate.index]
 
-    create_shape_datacard(df_obs, df_rate, df_nuis, cfg["parameters"], "Zinv_METnoX-Shapes_{}.txt".format(cfg["name"]))
+    create_shape_datacard(df_obs, df_rate, df_nuis, cfg["parameters"], "Zinv_METnoX-Shapes_{}.txt".format(cfg["name"]), cfg["name"])
 
-def create_shape_datacard(df_obs, df_rate, df_nuis, params, filename):
+def create_shape_datacard(df_obs, df_rate, df_nuis, params, filename, name):
     # IDX
     dc = tab([
         ["imax * number of channels"],
@@ -228,7 +245,7 @@ def create_shape_datacard(df_obs, df_rate, df_nuis, params, filename):
     # SHAPES
     df_obs = df_obs.reset_index()
     dc += tab([
-        ["shapes", "*", "*", "Zinv_METnoX-ShapeTemplates.root", "$CHANNEL/$PROCESS", "$CHANNEL/$SYSTEMATIC/$PROCESS"]
+        ["shapes", "*", "*", "Zinv_METnoX-ShapeTemplates_{}.root".format(name), "$CHANNEL/$PROCESS", "$CHANNEL/$SYSTEMATIC/$PROCESS"]
     ], [], tablefmt="plain") + "\n" + "-"*80 + "\n"
 
     # OBS
@@ -247,8 +264,11 @@ def create_shape_datacard(df_obs, df_rate, df_nuis, params, filename):
     ], [], tablefmt="plain") + "\n" + "-"*80 + "\n"
 
     # NUISANCES
-    nuisances = sorted(list(set((c[:-2] if c.endswith("Up") else c[:-4]) for c in df_nuis.columns)))
-    nuisances = [n for n in nuisances if "nominal" not in n]
+    nuisances = []
+    for c in df_nuis.columns:
+        syst = c[:-2] if c.endswith("Up") else c[:-4] if c.endswith("Down") else c
+        if syst not in nuisances and "nominal" not in syst:
+            nuisances.append(syst)
 
     nuisance_block = []
     for nuis in nuisances:

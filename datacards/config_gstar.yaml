@@ -13,17 +13,17 @@ conversions:
     dyll:
         labels: ["dataset", "region", "process"]
         old_labels: [["MET", "None", "DYJetsToLL"]]
-        new_labels: ["MET", "none", "dyll"]
+        new_labels: [["MET", "none", "dyll"]]
     gll:
         labels: ["dataset", "region", "process"]
         old_labels: [["MET", "None", "GStarJetsToLL"]]
-        new_labels: ["MET", "none", "gll"]
+        new_labels: [["MET", "none", "gll"]]
     zll:
         labels: ["dataset", "region", "process"]
         old_labels: [["MET", "None", "ZJetsToLL"]]
-        new_labels: ["MET", "none", "zll"]
+        new_labels: [["MET", "none", "zll"]]
 parameters:
-    "*": ["autoMCStats", "10", "1"]
+    - ["*", "autoMCStats", "10", "1"]
 systematics:
     - "lhePdf"
     - "lheScale"

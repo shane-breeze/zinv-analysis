@@ -9,6 +9,9 @@ regions:
     - "doublemu"
     - "singlee"
     - "doublee"
+    - "monojetqcd"
+    - "singlemuqcd"
+    - "singleeqcd"
 processes:
     znunu:     0
     dymumu:    1
@@ -19,7 +22,8 @@ processes:
     gee:       6
     wlnu:      7
     qcd:       8
-    bkg:       9
+    wlnu_qcd:  9
+    bkg:       10
 conversions:
     data_sr:
         labels: ["dataset", "region", "process"]
@@ -137,18 +141,88 @@ conversions:
                      ["SingleElectron", "DoubleElectron", "VGamma"],
                      ["SingleElectron", "DoubleElectron", "DYJetsToTauTau"]]
         new_labels: [["SingleElectron", "doublee", "bkg"]]
+    data_qcd:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "MonojetQCD", "MET"]]
+        new_labels: [["MET", "monojetqcd", "data_obs"]]
+    qcd_qcd:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "MonojetQCD", "QCD"]]
+        new_labels: [["MET", "monojetqcd", "qcd"]]
+    znunu_qcd:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "MonojetQCD", "ZJetsToNuNu"]]
+        new_labels: [["MET", "monojetqcd", "znunu"]]
+    wlnu_qcd:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "MonojetQCD", "WJetsToENu"],
+                     ["MET", "MonojetQCD", "WJetsToMuNu"],
+                     ["MET", "MonojetQCD", "WJetsToTauNu"]]
+        new_labels: [["MET", "monojetqcd", "wlnu_qcd"]]
+    bkg_qcd:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "MonojetQCD", "TTJets"],
+                     ["MET", "MonojetQCD", "Diboson"],
+                     ["MET", "MonojetQCD", "EWKV2Jets"],
+                     ["MET", "MonojetQCD", "SingleTop"],
+                     ["MET", "MonojetQCD", "G1Jet"],
+                     ["MET", "MonojetQCD", "VGamma"],
+                     ["MET", "MonojetQCD", "DYJetsToTauTau"]]
+        new_labels: [["MET", "monojetqcd", "bkg"]]
+    data_muqcd:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "SingleMuonQCD", "MET"]]
+        new_labels: [["MET", "singlemuqcd", "data_obs"]]
+    wlnu_muqcd:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "SingleMuonQCD", "WJetsToENu"],
+                     ["MET", "SingleMuonQCD", "WJetsToMuNu"],
+                     ["MET", "SingleMuonQCD", "WJetsToTauNu"]]
+        new_labels: [["MET", "singlemuqcd", "wlnu_qcd"]]
+    bkg_muqcd:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "SingleMuonQCD", "TTJets"],
+                     ["MET", "SingleMuonQCD", "Diboson"],
+                     ["MET", "SingleMuonQCD", "EWKV2Jets"],
+                     ["MET", "SingleMuonQCD", "SingleTop"],
+                     ["MET", "SingleMuonQCD", "G1Jet"],
+                     ["MET", "SingleMuonQCD", "VGamma"],
+                     ["MET", "SingleMuonQCD", "DYJetsToTauTau"]]
+        new_labels: [["MET", "singlemuqcd", "bkg"]]
+    data_eqcd:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["SingleElectron", "SingleElectronQCD", "SingleElectron"]]
+        new_labels: [["SingleElectron", "singleeqcd", "data_obs"]]
+    wlnu_eqcd:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["SingleElectron", "SingleElectronQCD", "WJetsToENu"],
+                     ["SingleElectron", "SingleElectronQCD", "WJetsToMuNu"],
+                     ["SingleElectron", "SingleElectronQCD", "WJetsToTauNu"]]
+        new_labels: [["SingleElectron", "singleeqcd", "wlnu_qcd"]]
+    bkg_eqcd:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["SingleElectron", "SingleElectronQCD", "TTJets"],
+                     ["SingleElectron", "SingleElectronQCD", "Diboson"],
+                     ["SingleElectron", "SingleElectronQCD", "EWKV2Jets"],
+                     ["SingleElectron", "SingleElectronQCD", "SingleTop"],
+                     ["SingleElectron", "SingleElectronQCD", "G1Jet"],
+                     ["SingleElectron", "SingleElectronQCD", "VGamma"],
+                     ["SingleElectron", "SingleElectronQCD", "DYJetsToTauTau"]]
+        new_labels: [["SingleElectron", "singleeqcd", "bkg"]]
 parameters:
     - ["kzll_mcstat", "param", "0", "1"]
     - ["kgll_mcstat", "param", "0", "1"]
     - ["kzmumu", "rateParam", "*", "zmumu", "1.0164589*(1+0.025340129*(@0<0)-0.005476561*(@0>=0))**(@0)*(1+0.001696478*(@1<0)-0.000764713*(@1>=0))**(@1)*(1+0.00081649300)**(@2)",  "lhePdf,lheScale,kzll_mcstat"]
     - ["kzee",   "rateParam", "*", "zee",   "1.0164589*(1+0.025340129*(@0<0)-0.005476561*(@0>=0))**(@0)*(1+0.001696478*(@1<0)-0.000764713*(@1>=0))**(@1)*(1+0.00081649300)**(@2)",  "lhePdf,lheScale,kzll_mcstat"]
     - ["kgll",   "rateParam", "*", "g*",    "0.015040019*(1+0.009749389*(@0<0)-0.005555179*(@0>=0))**(@0)*(1-0.001761234*(@1<0)+0.001456315*(@1>=0))**(@1)*(1+0.0014868245)**(@2)", "lhePdf,lheScale,kgll_mcstat"]
-    - ["tf_wlnu",  "rateParam", "*", "wlnu",  "1",             "[0.1,2.0]"]
-    - ["rz",       "rateParam", "*", "znunu", "1",             "[0.1,2.0]"]
-    - ["rz_dy",    "rateParam", "*", "dy*",   "sqrt(@0)",      "rz"]
-    - ["rz_zmumu", "rateParam", "*", "zmumu", "(@0-sqrt(@0))", "rz"]
-    - ["rz_zee",   "rateParam", "*", "zee",   "(@0-sqrt(@0))", "rz"]
-    - ["rz_gstar", "rateParam", "*", "g*",    "(1-sqrt(@0))",  "rz"]
+    - ["rw",       "rateParam", "*", "wlnu",     "1",             "[0.1,2.0]"]
+    - ["rz",       "rateParam", "*", "znunu",    "1",             "[0.1,2.0]"]
+    - ["rz_dy",    "rateParam", "*", "dy*",      "sqrt(@0)",      "rz"]
+    - ["rz_zmumu", "rateParam", "*", "zmumu",    "(@0-sqrt(@0))", "rz"]
+    - ["rz_zee",   "rateParam", "*", "zee",      "(@0-sqrt(@0))", "rz"]
+    - ["rz_gstar", "rateParam", "*", "g*",       "(1-sqrt(@0))",  "rz"]
+    - ["rqcd",     "rateParam", "*", "qcd",      "1",             "[0.1,2.0]"]
+    - ["rw_qcd",   "rateParam", "*", "wlnu_qcd", "1",             "[0.1,2.0]"]
     - ["*", "autoMCStats", "10", "1"]
 systematics:
     - "lumi"
