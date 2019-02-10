@@ -1,0 +1,15 @@
+path: /vols/cms/ZinvWidth/NanoAOD/201901_Jan/data/{}/info.yaml
+default:
+    lumi: 35860
+    energy: 13000
+datasets:
+    - SingleElectron_Run2016B_v1
+    - SingleElectron_Run2016B_v2
+    - SingleElectron_Run2016C_v1
+    - SingleElectron_Run2016D_v1
+    - SingleElectron_Run2016E_v1
+    - SingleElectron_Run2016F_v1
+    - SingleElectron_Run2016G_v1
+    - SingleElectron_Run2016H_v2
+    - SingleElectron_Run2016H_v3
+    - DYJetsToLL
