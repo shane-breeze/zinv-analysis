@@ -6,6 +6,9 @@ import pandas as pd
 from array import array
 from tabulate import tabulate as tab
 
+from scipy.ndimage import gaussian_filter1d
+from scipy.interpolate import UnivariateSpline
+
 import ROOT
 ROOT.gROOT.SetBatch(True)
 
@@ -21,13 +24,20 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("input", type=str, help="Input pickle file")
     parser.add_argument("config", type=str, help="Yaml config file")
+    parser.add_argument("-s", "--systematics", type=int, default=1,
+                        help="Turn systematics on(1)/off(0)")
     return parser.parse_args()
 
 def open_df(cfg):
     path = cfg["input"]
     with open(path, 'r') as f:
         _, df = pickle.load(f)
+        df = df.reset_index("variable0", drop=True)
     return df
+
+def smooth(x, y, err):
+    s = UnivariateSpline(x, y, w=1./err, k=2, s=x.shape[0]*4)
+    return gaussian_filter1d(s(x), 1)
 
 def process_syst(df, syst=None, how_up=lambda x: x.mean()+x.std(), how_down = lambda x: x.mean()-x.std()):
     df_nominal = df[df.index.get_level_values("weight").isin(["nominal"])]
@@ -56,9 +66,9 @@ def apply_selection(df, selection):
     df["selection"] = df.eval(selection)
     df_s = df[df["selection"]==True]
     if "bin0" in selection:
-        df_s = df_s.reset_index(["variable0", "bin0_low", "bin0_upp"], drop=True)
+        df_s = df_s.reset_index(["bin0_low", "bin0_upp"], drop=True)
     if "bin1" in selection:
-        df_s = df_s.reset_index(["variable1", "bin1_low", "bin1_upp"], drop=True)
+        df_s = df_s.reset_index(["bin1_low", "bin1_upp"], drop=True)
     df_s = df_s.groupby(list(df_s.index.names)).sum()\
             .drop("selection", axis=1)
     return df_s
@@ -82,7 +92,6 @@ def reformat(df, cfg):
         return df
     binvar, binning = cfg["binning"].split("=")
     binning = eval(binning)
-    binning = binning + [2*binning[-1]-binning[-2]]
     bins = [-np.infty]+list(binning)+[np.infty]
     df = rebin(df, bins, binvar)
 
@@ -125,7 +134,6 @@ def reformat(df, cfg):
 
 def create_shape_datacards(df, cfg):
     binlab, binning = cfg["binning"].split("=")
-    varlab = binlab.replace("bin", "variable")
     binning = eval(binning)
     all_inds = df.index.names
     all_inds_no_bins = [i for i in all_inds if "bin" not in i]
@@ -134,7 +142,75 @@ def create_shape_datacards(df, cfg):
     rfile = ROOT.TFile.Open("Zinv_METnoX-ShapeTemplates_{}.root".format(cfg["name"]), 'RECREATE')
 
     df = df.reset_index([i for i in all_inds if "bin" in i])
-    for (d, r, p, w, n, v), dfgrp in df.groupby(all_inds_no_bins):
+
+    # Smooth
+    # Skip smoothing for now
+    #for s in set([s[:-2] if s.endswith("Up") else s[:-4] if s.endswith("Down") else s for s in df.index.get_level_values("weight").unique()]):
+    #    if s == "nominal":
+    #        continue
+
+    #    for (d, r, p, n), _ in df.groupby([c for c in all_inds_no_bins if c!="weight"]):
+    #        if p == "data_obs":
+    #            continue
+
+    #        df_nominal = df.loc[(d, r, p, "nominal", n), :]
+    #        try:
+    #            df_up = df.loc[(d, r, p, s+"Up", n), :]
+    #        except KeyError:
+    #            print(d, r, p, s+"Up", n)
+    #            continue
+    #        try:
+    #            df_down = df.loc[(d, r, p, s+"Down", n), :]
+    #        except KeyError:
+    #            print(d, r, p, s+"Down", n)
+    #            continue
+    #        xvals = (np.array(binning)[1:]+np.array(binning)[:-1])/2
+
+    #        df_nominal = df_nominal.reset_index(drop=True)\
+    #                .set_index("bin0_low")\
+    #                .reindex(np.array(binning[:-1]))\
+    #                .fillna(0.)\
+    #                .reset_index("bin0_low")
+    #        df_up = df_up.reset_index(drop=True)\
+    #                .set_index("bin0_low")\
+    #                .reindex(np.array(binning[:-1]))\
+    #                .fillna(0.)\
+    #                .reset_index("bin0_low")
+    #        df_down = df_down.reset_index(drop=True)\
+    #                .set_index("bin0_low")\
+    #                .reindex(np.array(binning[:-1]))\
+    #                .fillna(0.)\
+    #                .reset_index("bin0_low")
+
+    #        ratio = df_up["yield"].values/df_nominal["yield"].values
+    #        ratio[np.isnan(ratio) | np.isinf(ratio)] = 1.
+    #        ratio_err = np.sqrt(np.abs(df_up["variance"].values-df_down["variance"].values))/df_nominal["yield"].values
+    #        ratio_err[np.isnan(ratio_err) | np.isinf(ratio_err) | (ratio_err==0.)] = 1.
+    #        up_smooth = np.maximum(smooth(xvals, ratio, ratio_err), 0.)
+    #        scale = df_up["yield"].sum() / (up_smooth*df_nominal["yield"]).sum()
+
+    #        try:
+    #            if pd.isnull(up_smooth).any():
+    #                continue
+    #            df.loc[(d, r, p, s+"Up", n), "yield"] = (df_nominal["yield"].values*scale*up_smooth)[np.isin(np.array(binning)[:-1], df_up["bin0_low"])]
+    #        except ValueError:
+    #            print(d, r, p, s+"Up", n)
+
+    #        ratio = df_down["yield"].values/df_nominal["yield"].values
+    #        ratio[np.isnan(ratio) | np.isinf(ratio)] = 1.
+    #        ratio_err = np.sqrt(np.abs(df_down["variance"].values-df_nominal["variance"].values))/df_nominal["yield"].values
+    #        ratio_err[np.isnan(ratio_err) | np.isinf(ratio_err) | (ratio_err==0.)] = 1.
+    #        down_smooth = np.maximum(smooth(xvals, ratio, ratio_err), 0.)
+    #        scale = df_down["yield"].sum() / (down_smooth*df_nominal["yield"]).sum()
+
+    #        try:
+    #            if pd.isnull(down_smooth).any():
+    #                continue
+    #            df.loc[(d, r, p, s+"Down", n), "yield"] = (df_nominal["yield"].values*scale*down_smooth)[np.isin(np.array(binning)[:-1], df_down["bin0_low"])]
+    #        except ValueError:
+    #            print(d, r, p, s+"Down", n)
+
+    for (d, r, p, w, n), dfgrp in df.groupby(all_inds_no_bins):
         if r not in [k.GetName() for k in rfile.GetListOfKeys()]:
             rfile.mkdir(r)
         rfile.cd(r)
@@ -226,8 +302,8 @@ def create_shape_datacards(df, cfg):
     for bin, proc in proc_order:
         if bin not in bin_order:
             bin_order.append(bin)
-    df_obs = df_obs.reset_index(["dataset", "process", "weight", "name", varlab], drop=True)
-    df_rate = df_rate.reset_index(["dataset", "weight", "name", varlab], drop=True)
+    df_obs = df_obs.reset_index(["dataset", "process", "weight", "name"], drop=True)
+    df_rate = df_rate.reset_index(["dataset", "weight", "name"], drop=True)
     df_obs = df_obs.reindex(bin_order, fill_value=0)
     df_rate = df_rate.reindex(proc_order).dropna()
     df_nuis = df_nuis.loc[df_rate.index]
@@ -315,6 +391,10 @@ def main():
     with open(options.config, 'r') as f:
         config = yaml.load(f)
     config["input"] = options.input
+
+    if options.systematics == 0:
+        config["systematics"] = []
+
     df = open_df(config)
     for name, selection in config["selections"].items():
         df_s = apply_selection(df, selection)

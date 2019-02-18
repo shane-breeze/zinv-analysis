@@ -31,7 +31,8 @@ conversions:
         labels: ["dataset", "region", "process"]
         old_labels: [["MET", "MonojetQCD", "WJetsToENu"],
                      ["MET", "MonojetQCD", "WJetsToMuNu"],
-                     ["MET", "MonojetQCD", "WJetsToTauNu"]]
+                     ["MET", "MonojetQCD", "WJetsToTauLNu"],
+                     ["MET", "MonojetQCD", "WJetsToTauHNu"]]
         new_labels: [["MET", "monojetqcd", "wlnu_qcd"]]
     bkg:
         labels: ["dataset", "region", "process"]
@@ -58,7 +59,8 @@ conversions:
         labels: ["dataset", "region", "process"]
         old_labels: [["MET", "SingleMuonQCD", "WJetsToENu"],
                      ["MET", "SingleMuonQCD", "WJetsToMuNu"],
-                     ["MET", "SingleMuonQCD", "WJetsToTauNu"]]
+                     ["MET", "SingleMuonQCD", "WJetsToTauLNu"],
+                     ["MET", "SingleMuonQCD", "WJetsToTauHNu"]]
         new_labels: [["MET", "singlemuqcd", "wlnu_qcd"]]
     bkg_cr:
         labels: ["dataset", "region", "process"]
@@ -95,6 +97,7 @@ systematics:
     - "muonIso"
     - "muonTrack"
     - "pileup"
+    - "prefiring"
     - "jesAbsoluteStat"
     - "jesAbsoluteScale"
     - "jesAbsoluteMPFBias"
@@ -127,3 +130,4 @@ systematics:
     - "eleIdIso"
     - "eleReco"
     - "eleTrig"
+    - "tauId"

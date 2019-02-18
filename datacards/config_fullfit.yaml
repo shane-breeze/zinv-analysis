@@ -1,5 +1,6 @@
 variable: "variable0"
 binning: "bin0=[200,220,250,280,310,340,370,400,430,470,510,550,590,640,690,740,790,840,900,960,1020]"
+#binning: "bin0=[200,220,250,280,310,340,370,400,430,470,510,550,590,640,690,740,790,840,900,960,1020,1100]"
 selections:
     met_shape: "True"
 shape: True
@@ -12,6 +13,7 @@ regions:
     - "monojetqcd"
     - "singlemuqcd"
     - "singleeqcd"
+    - "singletau"
 processes:
     znunu:     0
     dymumu:    1
@@ -37,7 +39,8 @@ conversions:
         labels: ["dataset", "region", "process"]
         old_labels: [["MET", "Monojet", "WJetsToENu"],
                      ["MET", "Monojet", "WJetsToMuNu"],
-                     ["MET", "Monojet", "WJetsToTauNu"]]
+                     ["MET", "Monojet", "WJetsToTauLNu"],
+                     ["MET", "Monojet", "WJetsToTauHNu"]]
         new_labels: [["MET", "monojet", "wlnu"]]
     qcd_sr:
         labels: ["dataset", "region", "process"]
@@ -61,7 +64,8 @@ conversions:
         labels: ["dataset", "region", "process"]
         old_labels: [["MET", "SingleMuon", "WJetsToENu"],
                      ["MET", "SingleMuon", "WJetsToMuNu"],
-                     ["MET", "SingleMuon", "WJetsToTauNu"]]
+                     ["MET", "SingleMuon", "WJetsToTauLNu"],
+                     ["MET", "SingleMuon", "WJetsToTauHNu"]]
         new_labels: [["MET", "singlemu", "wlnu"]]
     qcd_mu:
         labels: ["dataset", "region", "process"]
@@ -105,7 +109,8 @@ conversions:
         labels: ["dataset", "region", "process"]
         old_labels: [["SingleElectron", "SingleElectron", "WJetsToENu"],
                      ["SingleElectron", "SingleElectron", "WJetsToMuNu"],
-                     ["SingleElectron", "SingleElectron", "WJetsToTauNu"]]
+                     ["SingleElectron", "SingleElectron", "WJetsToTauLNu"],
+                     ["SingleElectron", "SingleElectron", "WJetsToTauHNu"]]
         new_labels: [["SingleElectron", "singlee", "wlnu"]]
     qcd_e:
         labels: ["dataset", "region", "process"]
@@ -157,7 +162,8 @@ conversions:
         labels: ["dataset", "region", "process"]
         old_labels: [["MET", "MonojetQCD", "WJetsToENu"],
                      ["MET", "MonojetQCD", "WJetsToMuNu"],
-                     ["MET", "MonojetQCD", "WJetsToTauNu"]]
+                     ["MET", "MonojetQCD", "WJetsToTauLNu"],
+                     ["MET", "MonojetQCD", "WJetsToTauHNu"]]
         new_labels: [["MET", "monojetqcd", "wlnu_qcd"]]
     bkg_qcd:
         labels: ["dataset", "region", "process"]
@@ -177,7 +183,8 @@ conversions:
         labels: ["dataset", "region", "process"]
         old_labels: [["MET", "SingleMuonQCD", "WJetsToENu"],
                      ["MET", "SingleMuonQCD", "WJetsToMuNu"],
-                     ["MET", "SingleMuonQCD", "WJetsToTauNu"]]
+                     ["MET", "SingleMuonQCD", "WJetsToTauLNu"],
+                     ["MET", "SingleMuonQCD", "WJetsToTauHNu"]]
         new_labels: [["MET", "singlemuqcd", "wlnu_qcd"]]
     bkg_muqcd:
         labels: ["dataset", "region", "process"]
@@ -197,7 +204,8 @@ conversions:
         labels: ["dataset", "region", "process"]
         old_labels: [["SingleElectron", "SingleElectronQCD", "WJetsToENu"],
                      ["SingleElectron", "SingleElectronQCD", "WJetsToMuNu"],
-                     ["SingleElectron", "SingleElectronQCD", "WJetsToTauNu"]]
+                     ["SingleElectron", "SingleElectronQCD", "WJetsToTauLNu"],
+                     ["SingleElectron", "SingleElectronQCD", "WJetsToTauHNu"]]
         new_labels: [["SingleElectron", "singleeqcd", "wlnu_qcd"]]
     bkg_eqcd:
         labels: ["dataset", "region", "process"]
@@ -209,6 +217,31 @@ conversions:
                      ["SingleElectron", "SingleElectronQCD", "VGamma"],
                      ["SingleElectron", "SingleElectronQCD", "DYJetsToTauTau"]]
         new_labels: [["SingleElectron", "singleeqcd", "bkg"]]
+    data_tau:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "SingleTau", "MET"]]
+        new_labels: [["MET", "singletau", "data_obs"]]
+    wlnu_tau:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "SingleTau", "WJetsToENu"],
+                     ["MET", "SingleTau", "WJetsToMuNu"],
+                     ["MET", "SingleTau", "WJetsToTauLNu"],
+                     ["MET", "SingleTau", "WJetsToTauHNu"]]
+        new_labels: [["MET", "singletau", "wlnu"]]
+    qcd_tau:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "SingleTau", "QCD"]]
+        new_labels: [["MET", "singletau", "qcd"]]
+    bkg_tau:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "SingleTau", "TTJets"],
+                     ["MET", "SingleTau", "Diboson"],
+                     ["MET", "SingleTau", "EWKV2Jets"],
+                     ["MET", "SingleTau", "SingleTop"],
+                     ["MET", "SingleTau", "G1Jet"],
+                     ["MET", "SingleTau", "VGamma"],
+                     ["MET", "SingleTau", "DYJetsToTauTau"]]
+        new_labels: [["MET", "singletau", "bkg"]]
 parameters:
     - ["kzll_mcstat", "param", "0", "1"]
     - ["kgll_mcstat", "param", "0", "1"]
@@ -243,6 +276,7 @@ systematics:
     - "muonIso"
     - "muonTrack"
     - "pileup"
+    - "prefiring"
     - "jesAbsoluteStat"
     - "jesAbsoluteScale"
     - "jesAbsoluteMPFBias"
@@ -275,3 +309,4 @@ systematics:
     - "eleIdIso"
     - "eleReco"
     - "eleTrig"
+    - "tauId"
