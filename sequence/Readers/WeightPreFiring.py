@@ -36,7 +36,7 @@ class WeightPreFiring(object):
         jet_effs, jet_effs_stat = get_efficiencies(jets, self.jet_eff_map)
         jet_effs_err = awkward.JaggedArray(
             jets.starts, jets.stops,
-            np.sqrt(jet_effs_stat.content**2 + self.syst*jet_effs.content),
+            np.sqrt(jet_effs_stat.content**2 + (self.syst*jet_effs.content)**2),
         )
         jets.preFiringEff = jet_effs
         jets.preFiringEffErr = jet_effs_err
@@ -45,7 +45,7 @@ class WeightPreFiring(object):
         photon_effs, photon_effs_stat = get_efficiencies(photons, self.photon_eff_map)
         photon_effs_err = awkward.JaggedArray(
             photons.starts, photons.stops,
-            np.sqrt(photon_effs_stat.content**2 + self.syst*photon_effs.content),
+            np.sqrt(photon_effs_stat.content**2 + (self.syst*photon_effs.content)**2),
         )
         photons.preFiringEff = photon_effs
         photons.preFiringEffErr = photon_effs_err

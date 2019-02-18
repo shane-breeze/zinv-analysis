@@ -28,7 +28,7 @@ histogrammer_cfgs = [
     }, {
         "name": "GenPartBoson_pt",
         "categories": categories,
-        "variables": ["ev: ev.GenPartBoson_mass"],
+        "variables": ["ev: ev.GenPartBoson_pt"],
         "bins": [[-inf]+list(np.linspace(0., 1000., 101))+[inf]],
         "weights": variations,
     },
