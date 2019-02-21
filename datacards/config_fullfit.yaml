@@ -1,14 +1,18 @@
 variable: "variable0"
-binning: "bin0=[200,220,250,280,310,340,370,400,430,470,510,550,590,640,690,740,790,840,900,960,1020]"
-#binning: "bin0=[200,220,250,280,310,340,370,400,430,470,510,550,590,640,690,740,790,840,900,960,1020,1100]"
+#binning: "bin0=[200,220,250,280,310,340,370,400,430,470,510,550,590,640,690,740,790,840,900,960,1020]"
+binning: "bin0=[200,220,250,280,310,340,370,400,430,470,510,550,590,640,690,740,790,840,900,960,1020,1100]"
 selections:
     met_shape: "True"
 shape: True
 regions:
     - "monojet"
     - "singlemu"
+    - "singlemuplus"
+    - "singlemuminus"
     - "doublemu"
     - "singlee"
+    - "singleeplus"
+    - "singleeminus"
     - "doublee"
     - "monojetqcd"
     - "singlemuqcd"
@@ -81,6 +85,56 @@ conversions:
                      ["MET", "SingleMuon", "VGamma"],
                      ["MET", "SingleMuon", "DYJetsToTauTau"]]
         new_labels: [["MET", "singlemu", "bkg"]]
+    data_muplus:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "SingleMuonPlus", "MET"]]
+        new_labels: [["MET", "singlemuplus", "data_obs"]]
+    wlnu_muplus:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "SingleMuonPlus", "WJetsToENu"],
+                     ["MET", "SingleMuonPlus", "WJetsToMuNu"],
+                     ["MET", "SingleMuonPlus", "WJetsToTauLNu"],
+                     ["MET", "SingleMuonPlus", "WJetsToTauHNu"]]
+        new_labels: [["MET", "singlemuplus", "wlnu"]]
+    qcd_muplus:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "SingleMuonPlus", "QCD"]]
+        new_labels: [["MET", "singlemuplus", "qcd"]]
+    bkg_muplus:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "SingleMuonPlus", "TTJets"],
+                     ["MET", "SingleMuonPlus", "Diboson"],
+                     ["MET", "SingleMuonPlus", "EWKV2Jets"],
+                     ["MET", "SingleMuonPlus", "SingleTop"],
+                     ["MET", "SingleMuonPlus", "G1Jet"],
+                     ["MET", "SingleMuonPlus", "VGamma"],
+                     ["MET", "SingleMuonPlus", "DYJetsToTauTau"]]
+        new_labels: [["MET", "singlemuplus", "bkg"]]
+    data_muminus:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "SingleMuonMinus", "MET"]]
+        new_labels: [["MET", "singlemuminus", "data_obs"]]
+    wlnu_muminus:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "SingleMuonMinus", "WJetsToENu"],
+                     ["MET", "SingleMuonMinus", "WJetsToMuNu"],
+                     ["MET", "SingleMuonMinus", "WJetsToTauLNu"],
+                     ["MET", "SingleMuonMinus", "WJetsToTauHNu"]]
+        new_labels: [["MET", "singlemuminus", "wlnu"]]
+    qcd_muminus:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "SingleMuonMinus", "QCD"]]
+        new_labels: [["MET", "singlemuminus", "qcd"]]
+    bkg_muminus:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["MET", "SingleMuonMinus", "TTJets"],
+                     ["MET", "SingleMuonMinus", "Diboson"],
+                     ["MET", "SingleMuonMinus", "EWKV2Jets"],
+                     ["MET", "SingleMuonMinus", "SingleTop"],
+                     ["MET", "SingleMuonMinus", "G1Jet"],
+                     ["MET", "SingleMuonMinus", "VGamma"],
+                     ["MET", "SingleMuonMinus", "DYJetsToTauTau"]]
+        new_labels: [["MET", "singlemuminus", "bkg"]]
     data_mumu:
         labels: ["dataset", "region", "process"]
         old_labels: [["MET", "DoubleMuon", "MET"]]
@@ -126,6 +180,56 @@ conversions:
                      ["SingleElectron", "SingleElectron", "VGamma"],
                      ["SingleElectron", "SingleElectron", "DYJetsToTauTau"]]
         new_labels: [["SingleElectron", "singlee", "bkg"]]
+    data_eplus:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["SingleElectron", "SingleElectronPlus", "SingleElectron"]]
+        new_labels: [["SingleElectron", "singleeplus", "data_obs"]]
+    wlnu_eplus:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["SingleElectron", "SingleElectronPlus", "WJetsToENu"],
+                     ["SingleElectron", "SingleElectronPlus", "WJetsToMuNu"],
+                     ["SingleElectron", "SingleElectronPlus", "WJetsToTauLNu"],
+                     ["SingleElectron", "SingleElectronPlus", "WJetsToTauHNu"]]
+        new_labels: [["SingleElectron", "singleeplus", "wlnu"]]
+    qcd_eplus:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["SingleElectron", "SingleElectronPlus", "QCD"]]
+        new_labels: [["SingleElectron", "singleeplus", "qcd"]]
+    bkg_eplus:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["SingleElectron", "SingleElectronPlus", "TTJets"],
+                     ["SingleElectron", "SingleElectronPlus", "Diboson"],
+                     ["SingleElectron", "SingleElectronPlus", "EWKV2Jets"],
+                     ["SingleElectron", "SingleElectronPlus", "SingleTop"],
+                     ["SingleElectron", "SingleElectronPlus", "G1Jet"],
+                     ["SingleElectron", "SingleElectronPlus", "VGamma"],
+                     ["SingleElectron", "SingleElectronPlus", "DYJetsToTauTau"]]
+        new_labels: [["SingleElectron", "singleeplus", "bkg"]]
+    data_eminus:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["SingleElectron", "SingleElectronMinus", "SingleElectron"]]
+        new_labels: [["SingleElectron", "singleeminus", "data_obs"]]
+    wlnu_eminus:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["SingleElectron", "SingleElectronMinus", "WJetsToENu"],
+                     ["SingleElectron", "SingleElectronMinus", "WJetsToMuNu"],
+                     ["SingleElectron", "SingleElectronMinus", "WJetsToTauLNu"],
+                     ["SingleElectron", "SingleElectronMinus", "WJetsToTauHNu"]]
+        new_labels: [["SingleElectron", "singleeminus", "wlnu"]]
+    qcd_eminus:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["SingleElectron", "SingleElectronMinus", "QCD"]]
+        new_labels: [["SingleElectron", "singleeminus", "qcd"]]
+    bkg_eminus:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["SingleElectron", "SingleElectronMinus", "TTJets"],
+                     ["SingleElectron", "SingleElectronMinus", "Diboson"],
+                     ["SingleElectron", "SingleElectronMinus", "EWKV2Jets"],
+                     ["SingleElectron", "SingleElectronMinus", "SingleTop"],
+                     ["SingleElectron", "SingleElectronMinus", "G1Jet"],
+                     ["SingleElectron", "SingleElectronMinus", "VGamma"],
+                     ["SingleElectron", "SingleElectronMinus", "DYJetsToTauTau"]]
+        new_labels: [["SingleElectron", "singleeminus", "bkg"]]
     data_ee:
         labels: ["dataset", "region", "process"]
         old_labels: [["SingleElectron", "DoubleElectron", "SingleElectron"]]

@@ -8,6 +8,9 @@ class WeightQcdEwk(object):
         self.__dict__.update(kwargs)
 
     def begin(self, event):
+        if event.config.dataset.isdata:
+            return
+
         self.variations = [""]\
                 + [n+"Up" for n in self.nuisances]\
                 + [n+"Down" for n in self.nuisances]
@@ -71,21 +74,24 @@ class WeightQcdEwk(object):
         #self.input_df = input_df.reset_index()
 
     def event(self, event):
-        if self.parent not in self.input_paths:
-            weights = np.ones(event.size)
-            event.WeightQcdEwk = weights
-            for variation in self.variations[1:]:
-                setattr(event, "WeightQcdEwk_{}".format(variation), weights)
+        if event.config.dataset.isdata:
+            event.WeightQcdEwk = np.ones(event.size)
         else:
-            corrections = self.input_df.iloc[get_bin_indices(
-                event.GenPartBoson_pt,
-                self.input_df.index.get_level_values("bin_min").values,
-                self.input_df.index.get_level_values("bin_max").values,
-            )]
-            event.WeightQcdEwk = corrections[""].values
-            for variation in self.variations[1:]:
-                setattr(event, "WeightQcdEwk_{}".format(variation),
-                        (corrections[variation]/corrections[""]).values)
+            if self.parent not in self.input_paths:
+                weights = np.ones(event.size)
+                event.WeightQcdEwk = weights
+                for variation in self.variations[1:]:
+                    setattr(event, "WeightQcdEwk_{}".format(variation), weights)
+            else:
+                corrections = self.input_df.iloc[get_bin_indices(
+                    event.GenPartBoson_pt,
+                    self.input_df.index.get_level_values("bin_min").values,
+                    self.input_df.index.get_level_values("bin_max").values,
+                )]
+                event.WeightQcdEwk = corrections[""].values
+                for variation in self.variations[1:]:
+                    setattr(event, "WeightQcdEwk_{}".format(variation),
+                            (corrections[variation]/corrections[""]).values)
 
         event.Weight_MET *= event.WeightQcdEwk
         event.Weight_SingleMuon *= event.WeightQcdEwk
