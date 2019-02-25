@@ -28,12 +28,12 @@ ele_total_charge = "ev: ev.ElectronTotalCharge == {}"
 ele_selection = "ev: (ev.ElectronSelection.size == ev.ElectronVeto.size) & (ev.ElectronVeto.size == {})"
 tau_selection = "ev: (ev.TauSelection.size == ev.TauVeto.size) & (ev.TauVeto.size == {})"
 pho_veto = "ev: (ev.PhotonSelection.size == ev.PhotonVeto.size) & (ev.PhotonVeto.size == 0)"
-nbjet_veto = "ev: (ev.nBJetSelectionMedium == 0)"
+nbjet_veto = "ev: (ev.nBJetSelectionMedium == 0) if ev.config.dataset.isdata else np.ones(ev.size, dtype=bool)"
 mtw_selection = "ev: (ev.MTW >= 30.) & (ev.MTW < 125.)"
 mll_selection = "ev: (ev.MLL >= 71.) & (ev.MLL < 111.)"
 met_pf_selection = "ev: ev.MET_pt > 100."
 
-ngen_boson_selection = "ev: np.array([True]*ev.size) if ev.config.dataset.parent not in 'EWKV2Jets' else (ev.nGenBosons==1)"
+ngen_boson_selection = "ev: np.ones(ev.size, dtype=bool) if ev.config.dataset.parent not in 'EWKV2Jets' else (ev.nGenBosons==1)"
 
 blind_mask = "ev: ev.BlindMask"
 

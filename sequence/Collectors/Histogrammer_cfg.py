@@ -373,7 +373,6 @@ histogrammer_cfgs = [
     }, {
         "name": "SecondMuonSelection_pt",
         "categories": dimuon_categories,
-        "variables": ["ev: ev.MuonSelection_pt[:,1]"],
         "variables": ["ev: get_nth_object(ev.MuonSelection_pt, 1, ev.size)"],
         "bins": [[-inf]+list(np.linspace(0., 1000., 51))+[inf]],
         "weights": [("", "ev: ev.Weight_{dataset}")],
