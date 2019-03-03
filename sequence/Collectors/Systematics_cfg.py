@@ -91,7 +91,7 @@ jes_variation_names = [
     "jesFlavorQCD", "jesTimePtEta", "jesRelativeJEREC1", "jesRelativeJEREC2", "jesRelativeJERHF", "jesRelativeBal",
     "jesRelativePtBB", "jesRelativePtEC1", "jesRelativePtEC2", "jesRelativePtHF", "jesRelativeStatFSR", "jesRelativeStatEC", "jesRelativeStatHF",
     "jesRelativeFSR", "jesPileUpDataMC", "jesPileUpPtRef", "jesPileUpPtBB", "jesPileUpPtEC1", "jesPileUpPtEC2", "jesPileUpPtHF",
-    "jer", "unclust",
+    "jer", "unclust", "eleEnergyScale", "muPtScale", "photonEnergyScale",
 ]
 jes_variations = [var+"Up" for var in jes_variation_names]\
         + [var+"Down" for var in jes_variation_names]

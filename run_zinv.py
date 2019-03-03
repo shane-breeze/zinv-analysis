@@ -28,6 +28,14 @@ def parse_args():
                         help="Dataset config to run over")
     parser.add_argument("sequence_cfg", type=str,
                         help="Config for how to process events")
+    parser.add_argument("event_selection_cfg", type=str,
+                        help="Config for the event selection")
+    parser.add_argument("physics_object_cfg", type=str,
+                        help="Config for the physics object selection")
+    parser.add_argument("trigger_cfg", type=str,
+                        help="Config for the HLT trigger paths")
+    parser.add_argument("weight_cfg", type=str,
+                        help="Config for the weight sequence")
     parser.add_argument("-o", "--outdir", default="output", type=str,
                         help="Where to save the results")
     parser.add_argument("--mode", default="multiprocessing", type=str,
@@ -56,10 +64,6 @@ def parse_args():
                              "only to rerun the draw function on outdir")
     parser.add_argument("--nodraw", default=False, action='store_true',
                         help="Don't run drawing processes")
-    parser.add_argument("--systs", default="nominal", type=str,
-                        help="If any, which systematics to run over "
-                             "(\"nominal\", \"jec1\", \"jec2\", \"jec3\", "
-                             "\"jec4\", \"lhe\")")
     return parser.parse_args()
 
 def generate_report(outdir):
@@ -206,7 +210,10 @@ if __name__ == "__main__":
         os.makedirs(options.outdir)
     generate_report(options.outdir)
 
-    sequence = build_sequence(options.sequence_cfg, options.outdir)
+    sequence = build_sequence(
+        options.sequence_cfg, options.outdir, options.event_selection_cfg,
+        options.physics_object_cfg, options.trigger_cfg, options.weight_cfg,
+    )
     datasets = get_datasets(options.dataset_cfg)
     if options.sample is not None:
         if options.sample.lower() == "data":
@@ -221,17 +228,19 @@ if __name__ == "__main__":
                         if d.name in samples or d.parent in samples]
 
     # Pass any other options through to the datasets
-    for d in datasets:
-        d.systs = options.systs
+    #for d in datasets:
+    #    d.systs = options.systs
 
     if options.redraw:
         jobs = redraw(sequence, datasets, options)
     else:
         jobs = run(sequence, datasets, options)
-        if len(jobs)!=0:
+        if jobs is not None and len(jobs)!=0:
             jobs = [reduce(lambda x, y: x + y, [ssjobs
                 for ssjobs in sjobs
                 if not ssjobs is None
             ]) for sjobs in jobs]
+        else:
+            jobs = []
     if not options.nodraw:
         parallel_draw(jobs, options)

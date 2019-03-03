@@ -14,10 +14,9 @@ dimuon_categories = [("MET", "DoubleMuon"), ("SingleMuon", "DoubleMuon")]
 ele_categories = [("SingleElectron", "SingleElectron"),
                   ("SingleElectron", "SingleElectronQCD")]
 diele_categories = [("SingleElectron", "DoubleElectron")]
-
 dielealt_categories = [("SingleElectron", "DoubleElectronAlt")]
 
-tau_categories = [("MET", "SingleTau"), ("MET", "SingleTauQCD")]
+tau_categories = [("MET", "SingleTau")]
 ditau_categories = [("MET", "DoubleTau")]
 
 categories = monojet_categories + muon_categories + dimuon_categories \
@@ -28,13 +27,13 @@ histogrammer_cfgs = [
     {
         "name": "METnoX_pt",
         "categories": categories,
-        "variables": ["ev: ev.METnoX_pt"],
-        "bins": [[-inf]+list(np.linspace(0., 1000., 41))+[inf]],
+        "variables": ["ev: ev.METnoX_pt(ev)"],
+        "bins": [[-inf]+list(np.linspace(0., 1500., 61))+[inf]],
         "weights": [("", "ev: ev.Weight_{dataset}")],
     }, {
         "name": "METnoX_phi",
         "categories": categories,
-        "variables": ["ev: ev.METnoX_phi"],
+        "variables": ["ev: ev.METnoX_phi(ev)"],
         "bins": [[-inf]+list(np.linspace(-pi, pi, 51))+[inf]],
         "weights": [("", "ev: ev.Weight_{dataset}")],
     }, {
@@ -671,14 +670,6 @@ axis_label = {
     "GenPartBoson_phi": r'Gen. $\phi(V)$',
     "GenPartBoson_mass": r'Gen. $m(V)$ (GeV)',
     "GenPartBoson_p3": r'Gen. $|p(V)|$ (GeV)',
-    "LeadGenPartBosonDaughters_pt": r'Gen. lead lepton $p_{\rm{T}}$ (GeV)',
-    "LeadGenPartBosonDaughters_eta": r'Gen. lead lepton $\eta$',
-    "LeadGenPartBosonDaughters_phi": r'Gen. lead lepton $\phi$',
-    "LeadGenPartBosonDaughters_p3": r'Gen. lead lepton $|p|$ (GeV)',
-    "SecondGenPartBosonDaughters_pt": r'Gen. 2nd lepton $p_{\rm{T}}$ (GeV)',
-    "SecondGenPartBosonDaughters_eta": r'Gen. 2nd lepton $\eta$',
-    "SecondGenPartBosonDaughters_phi": r'Gen. 2nd lepton $\phi$',
-    "SecondGenPartBosonDaughters_p3": r'Gen. 2nd lepton $|p|$ (GeV)',
     "Jet_genPtClosure": r'$(p_{\rm{T}}^{j} - p_{\rm{T},\rm{gen}}^{j})/p_{\rm{T}}^{j}$',
     "Weight_PreFiring": r'Pre-firing non-probability',
     "Weight_PreFiringUp": r'Pre-firing non-probability ($+1\sigma$)',

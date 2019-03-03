@@ -1,63 +1,19 @@
 import re
+import yaml
 import numpy as np
 
-trigger_selection = {
-    "MET": {
-        "B1": ['HLT_PFMETNoMu90_PFMHTNoMu90_IDTight',
-               'HLT_PFMETNoMu100_PFMHTNoMu100_IDTight',
-               'HLT_PFMETNoMu110_PFMHTNoMu110_IDTight',
-               'HLT_PFMETNoMu120_PFMHTNoMu120_IDTight',
-               'HLT_PFMET170_NotCleaned',
-               'HLT_PFMET170_BeamHaloCleaned',
-               'HLT_PFMET170_HBHECleaned',
-               'HLT_PFMET170_HBHE_BeamHaloCleaned'],
-        "B2": ['HLT_PFMETNoMu100_PFMHTNoMu100_IDTight',
-               'HLT_PFMETNoMu110_PFMHTNoMu110_IDTight',
-               'HLT_PFMETNoMu120_PFMHTNoMu120_IDTight',
-               'HLT_PFMET170_NotCleaned',
-               'HLT_PFMET170_BeamHaloCleaned',
-               'HLT_PFMET170_HBHECleaned',
-               'HLT_PFMET170_HBHE_BeamHaloCleaned'],
-        "C1": ['HLT_PFMETNoMu100_PFMHTNoMu100_IDTight',
-               'HLT_PFMETNoMu110_PFMHTNoMu110_IDTight',
-               'HLT_PFMETNoMu120_PFMHTNoMu120_IDTight',
-               'HLT_PFMET170_HBHECleaned',
-               'HLT_PFMET170_HBHE_BeamHaloCleaned'],
-        "D1": ['HLT_PFMETNoMu110_PFMHTNoMu110_IDTight',
-               'HLT_PFMETNoMu120_PFMHTNoMu120_IDTight',
-               'HLT_PFMET170_HBHECleaned',
-               'HLT_PFMET170_HBHE_BeamHaloCleaned'],
-        "E1": ['HLT_PFMETNoMu110_PFMHTNoMu110_IDTight',
-               'HLT_PFMETNoMu120_PFMHTNoMu120_IDTight',
-               'HLT_PFMET170_HBHECleaned',
-               'HLT_PFMET170_HBHE_BeamHaloCleaned'],
-        "F1": ['HLT_PFMETNoMu110_PFMHTNoMu110_IDTight',
-               'HLT_PFMETNoMu120_PFMHTNoMu120_IDTight',
-               'HLT_PFMET170_HBHECleaned',
-               'HLT_PFMET170_HBHE_BeamHaloCleaned'],
-        "G1": ['HLT_PFMETNoMu110_PFMHTNoMu110_IDTight',
-               'HLT_PFMETNoMu120_PFMHTNoMu120_IDTight',
-               'HLT_PFMET170_HBHECleaned',
-               'HLT_PFMET170_HBHE_BeamHaloCleaned'],
-        "H2": ['HLT_PFMETNoMu120_PFMHTNoMu120_IDTight',
-               'HLT_PFMET170_HBHECleaned',
-               'HLT_PFMET170_HBHE_BeamHaloCleaned'],
-        "H3": ['HLT_PFMETNoMu110_PFMHTNoMu110_IDTight',
-               'HLT_PFMETNoMu120_PFMHTNoMu120_IDTight',
-               'HLT_PFMET170_HBHECleaned',
-               'HLT_PFMET170_HBHE_BeamHaloCleaned'],
-    },
-    "SingleMuon": ["HLT_IsoMu24", "HLT_IsoTkMu24"],
-    "SingleElectron": ["HLT_Ele27_WPTight_Gsf"]
-}
+from cachetools.func import lru_cache
+from utils.NumbaFuncs import any_numba
 
-trigger_selection_mc = {
-    "MET": ['HLT_PFMETNoMu120_PFMHTNoMu120_IDTight',
-            'HLT_PFMET170_HBHECleaned',
-            'HLT_PFMET170_HBHE_BeamHaloCleaned'],
-    "SingleMuon": ["HLT_IsoMu24", "HLT_IsoTkMu24"],
-    "SingleElectron": ["HLT_Ele27_WPTight_Gsf"]
-}
+def evaluate_triggers(triggers):
+    @lru_cache(maxsize=32)
+    def fevaluate_triggers(ev, evidx, triggers_list):
+        return any_numba(np.vstack([
+            getattr(ev, trigger)
+            for trigger in triggers_list
+            if ev.hasbranch(trigger)
+        ]).T)
+    return lambda ev: fevaluate_triggers(ev, ev.iblock, tuple(triggers))
 
 class TriggerChecker(object):
     regex = re.compile("^(?P<dataset>[a-zA-Z0-9]*)_Run2016(?P<run_letter>[a-zA-Z])_v(?P<version>[0-9])$")
@@ -65,35 +21,34 @@ class TriggerChecker(object):
         self.__dict__.update(kwargs)
 
     def begin(self, event):
-        self.trigger_dict = trigger_selection
-        self.isdata = event.config.dataset.isdata
-        if not self.isdata:
-            self.trigger_dict = trigger_selection_mc
-            return
-        match = self.regex.search(event.config.dataset.name)
-        if match:
-            self.dataset = match.group("dataset")
-            self.run = match.group("run_letter")+match.group("version")
+        with open(self.trigger_selection_path, 'r') as f:
+            input_dict = yaml.load(f)
 
-        self.trigger_dict["MET"] = self.trigger_dict["MET"][self.run]
+        isdata = event.config.dataset.isdata
+        data_or_mc = "Data" if isdata else "MC"
+        trigger_dict = input_dict[data_or_mc]
+        if isdata:
+            match = self.regex.search(event.config.dataset.name)
+            if match:
+                dataset = match.group("dataset")
+                run = match.group("run_letter")+match.group("version")
 
-    def event(self, event):
-        # MC
-        if not self.isdata:
-            for dataset in self.trigger_dict.keys():
-                setattr(event, "Is{}Triggered".format(dataset), np.ones(event.size, dtype=bool))
-            event.IsTriggered = np.ones(event.size, dtype=float)
-            return
+            trigger_dict["MET"] = trigger_dict["MET"][run]
+        else:
+            dataset = "MET"
 
-        for dataset, trigger_list in self.trigger_dict.items():
-            setattr(
-                event,
-                "Is{}Triggered".format(dataset),
-                reduce(
-                    lambda x,y: x|y,
-                    [getattr(event, trigger)
-                     for trigger in trigger_list
-                     if event.hasbranch(trigger)],
-                ),
-            )
-        event.IsTriggered = getattr(event, "Is{}Triggered".format(self.dataset))
+        if not isdata:
+            for dataset in trigger_dict.keys():
+                setattr(
+                    event,
+                    "Is{}Triggered".format(dataset),
+                    lambda ev: np.ones(ev.size, dtype=float),
+                )
+        else:
+            for dataset, trigger_list in trigger_dict.items():
+                setattr(
+                    event,
+                    "Is{}Triggered".format(dataset),
+                    evaluate_triggers(trigger_list),
+                )
+        event.IsTriggered = getattr(event, "Is{}Triggered".format(dataset))

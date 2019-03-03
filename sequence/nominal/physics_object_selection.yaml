@@ -1,0 +1,86 @@
+JetVeto:
+    original: "Jet"
+    selections:
+        - "ev: ev.Jet_ptShift(ev)>40"
+        - "ev: ev.Jet.jetId>=1"
+        - "ev: (ev.Jet.puId>=1) | (ev.Jet_ptShift(ev)>50.)"
+JetSelection:
+    original: "Jet"
+    selections:
+        - "ev: ev.Jet_ptShift(ev)>40"
+        - "ev: np.abs(ev.Jet.eta)<2.4"
+        - "ev: ev.Jet.jetId>=1"
+        - "ev: (ev.Jet.puId>=1) | (ev.Jet_ptShift(ev)>50.)"
+JetBVeto:
+    original: "Jet"
+    selections:
+        - "ev: ev.Jet_ptShift(ev)>40"
+        - "ev: ev.Jet.jetId>=1"
+        - "ev: (ev.Jet.puId>=1) | (ev.Jet_ptShift(ev)>50.)"
+        - "ev: ev.Jet.btagCSVV2>0.8484"
+JetBSelection:
+    original: "Jet"
+    selections:
+        - "ev: ev.Jet_ptShift(ev)>40"
+        - "ev: np.abs(ev.Jet.eta)<2.4"
+        - "ev: ev.Jet.jetId>=1"
+        - "ev: (ev.Jet.puId>=1) | (ev.Jet_ptShift(ev)>50.)"
+        - "ev: ev.Jet.btagCSVV2>0.8484"
+MuonVeto:
+    original: "Muon"
+    selections:
+        - "ev: ev.Muon_ptShift(ev)>10."
+        - "ev: np.abs(ev.Muon.eta)<2.5"
+        - "ev: np.abs(ev.Muon.pfRelIso04_all)<0.25"
+        - "ev: np.abs(ev.Muon.dxy)<0.5"
+        - "ev: np.abs(ev.Muon.dz)<1.0"
+MuonSelection:
+    original: "Muon"
+    selections:
+        - "ev: ev.Muon_ptShift(ev)>30."
+        - "ev: np.abs(ev.Muon.eta)<2.4"
+        - "ev: np.abs(ev.Muon.pfRelIso04_all)<0.15"
+        - "ev: ev.Muon.tightId>=1"
+ElectronVeto:
+    original: "Electron"
+    selections:
+        - "ev: ev.Electron_ptShift(ev)>10."
+        - "ev: np.abs(ev.Electron.eta)<2.5"
+        - "ev: ev.Electron.cutBased>=1"
+        - "ev: np.abs(ev.Electron.dxy)<0.118"
+        - "ev: np.abs(ev.Electron.dz)<0.822"
+        - "ev: ev.Electron.convVeto"
+ElectronSelection:
+    original: "Electron"
+    selections:
+        - "ev: ev.Electron_ptShift(ev)>30."
+        - "ev: np.abs(ev.Electron.eta)<2.4"
+        - "ev: ev.Electron.cutBased>=4"
+        - "ev: ((np.abs(ev.Electron.eta)<=1.479) & (np.abs(ev.Electron.dxy)<0.05) & (np.abs(ev.Electron.dz)<0.1)) | ((np.abs(ev.Electron.eta)>1.479) & (np.abs(ev.Electron.dxy)<0.1) & (np.abs(ev.Electron.dz)<0.2))"
+        - "ev: ev.Electron.convVeto"
+PhotonVeto:
+    original: "Photon"
+    selections:
+        - "ev: ev.Photon_ptShift(ev)>25."
+        - "ev: np.abs(ev.Photon.eta)<2.5"
+        - "ev: ev.Photon.cutBased>=1"
+        - "ev: ~ev.Photon.pixelSeed"
+PhotonSelection:
+    original: "Photon"
+    selections:
+        - "ev: ev.Photon_ptShift(ev)>165."
+        - "ev: np.abs(ev.Photon.eta)<1.45"
+        - "ev: ev.Photon.cutBased>=3"
+        - "ev: ~ev.Photon.pixelSeed"
+TauVeto:
+    original: "Tau"
+    selections:
+        - "ev: ev.Tau_ptShift(ev)>20."
+        - "ev: np.abs(ev.Tau.eta)<2.3"
+        - "ev: ev.Tau.idMVAoldDM>=1"
+TauSelection:
+    original: "Tau"
+    selections:
+        - "ev: ev.Tau_ptShift(ev)>40."
+        - "ev: np.abs(ev.Tau.eta)<2.3"
+        - "ev: ev.Tau.idMVAoldDM>=8"

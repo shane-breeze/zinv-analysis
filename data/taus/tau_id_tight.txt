@@ -1,2 +1,2 @@
-# pt_low, pt_high, correction, unc_up, unc_down
-0.0  1000.0  0.95  0.0  0.0
+pt_low pt_high correction unc_up unc_down
+0.0    1000.0  0.95       0.0    0.0

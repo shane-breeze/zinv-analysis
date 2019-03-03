@@ -16,7 +16,7 @@ class SystematicsReader(HistReader):
         self.histograms.configs = [
             c for c in self.histograms.configs
             if c["weightname"] in event.variations\
-            or not any(v in c["weightname"] for v in ["jes", "jer", "unclust"])
+            or not any(v in c["weightname"] for v in ["jes", "jer", "unclust", "eleEnergyScale", "muPtScale", "photonEnergyScale"])
         ]
         if "lhe" not in event.optsysts:
             self.histograms.configs = [

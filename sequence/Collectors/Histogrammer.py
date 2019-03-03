@@ -1,7 +1,10 @@
 import os
 import operator
+import yaml
+import numpy as np
 import pandas as pd
 import cPickle as pickle
+pi = np.pi + 1e-10
 
 from drawing.dist_ratio import dist_ratio
 from utils.Histogramming import Histograms
@@ -15,53 +18,57 @@ class Config(object):
         self.log = log
 
 class HistReader(object):
-    split_samples = {
-        "DYJetsToLL": {
-            "DYJetsToEE": ["ev: ev.LeptonIsElectron"],
-            "DYJetsToMuMu": ["ev: ev.LeptonIsMuon"],
-            "DYJetsToTauLTauL": ["ev: ev.LeptonIsTau & (ev.nGenTauL==2)"],
-            "DYJetsToTauLTauH": ["ev: ev.LeptonIsTau & (ev.nGenTauL==1)"],
-            "DYJetsToTauHTauH": ["ev: ev.LeptonIsTau & (ev.nGenTauL==0)"],
-        },
-        "WJetsToLNu": {
-            "WJetsToENu": ["ev: ev.LeptonIsElectron"],
-            "WJetsToMuNu": ["ev: ev.LeptonIsMuon"],
-            "WJetsToTauLNu": ["ev: ev.LeptonIsTau & (ev.nGenTauL==1)"],
-            "WJetsToTauHNu": ["ev: ev.LeptonIsTau & (ev.nGenTauL==0)"],
-        },
-    }
     def __init__(self, **kwargs):
-        cfg = kwargs.pop("cfg")
+        with open(kwargs.pop("cfg"), 'r') as f:
+            cfg = yaml.load(f)
+        with open(kwargs.pop("drawing_cfg"), 'r') as f:
+            drawing_cfg = yaml.load(f)
         self.cfg = Config(
-            sample_names = cfg.sample_names,
-            sample_colours = cfg.sample_colours,
-            axis_label = cfg.axis_label,
+            sample_names = drawing_cfg["sample_names"],
+            sample_colours = drawing_cfg["sample_colours"],
+            axis_label = drawing_cfg["axis_label"],
             log = True,
         )
         self.__dict__.update(kwargs)
+        self.categories = self.create_categories(cfg["categories"])
         self.histograms = self.create_histograms(cfg)
+
+    def create_categories(self, cfg):
+        all_cat = []
+        for _, catlist in cfg.items():
+            all_cat.extend(catlist)
+        cfg["all"] = all_cat
+        return cfg
 
     def create_histograms(self, cfg):
         configs = []
-        for cfg in cfg.histogrammer_cfgs:
+        for name, config in cfg["configs"].items():
             # expand categories
-            for dataset, cutflow in cfg["categories"]:
-                cutflow_restriction = "ev: ev.Cutflow_{}".format(cutflow)
+            cats = []
+            for c in config["categories"]:
+                cats.extend(self.categories[c])
+            for dataset, cutflow in cats:
+                cutflow_restriction = "ev: ev.Cutflow_{}(ev)".format(cutflow)
                 selection = [cutflow_restriction]
-                if "additional_selection" in cfg:
-                    selection.extend(cfg["additional_selection"])
-                for weightname, weight in cfg["weights"]:
+                if "additional_selection" in config:
+                    selection.extend(config["additional_selection"])
+                for weightname, nsig, source, weight in config["weights"]:
                     weight = weight.format(dataset=dataset)
 
                     configs.append({
-                        "name": cfg["name"],
+                        "name": name,
                         "dataset": dataset,
                         "region": cutflow,
                         "weight": weight,
+                        "nsig": nsig,
+                        "source": source,
                         "weightname": weightname,
                         "selection": selection,
-                        "variables": cfg["variables"],
-                        "bins": cfg["bins"],
+                        "variables": config["variables"],
+                        "bins": [
+                            [-np.inf]+list(np.linspace(*bs))+[np.inf]
+                            for bs in config["bins"]
+                        ],
                     })
 
         # Histograms collection
@@ -91,11 +98,14 @@ class HistReader(object):
 class HistCollector(object):
     def __init__(self, **kwargs):
         # drop unpicklables
-        cfg = kwargs.pop("cfg")
+        with open(kwargs.pop("cfg"), 'r') as f:
+            cfg = yaml.load(f)
+        with open(kwargs.pop("drawing_cfg"), 'r') as f:
+            drawing_cfg = yaml.load(f)
         self.cfg = Config(
-            sample_names = cfg.sample_names,
-            sample_colours = cfg.sample_colours,
-            axis_label = cfg.axis_label,
+            sample_names = drawing_cfg["sample_names"],
+            sample_colours = drawing_cfg["sample_colours"],
+            axis_label = drawing_cfg["axis_label"],
             log = True,
         )
         self.__dict__.update(kwargs)

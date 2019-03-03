@@ -63,9 +63,11 @@ class Histograms(object):
         dfs = []
         for config in self.full_configs:
             weight = config["weight"].lower()
-            if self.isdata and ("up" in weight or "down" in weight or "lhepdf" in weight or "lhescale" in weight):
+            if self.isdata and ("up" in weight or "down" in weight or "pdf" in weight or "scale" in weight):
                 continue
 
+            event.nsig = config["nsig"]
+            event.source = config["source"]
             df = self.generate_dataframe(event, config)
             dfs.append(df)
 
@@ -83,19 +85,17 @@ class Histograms(object):
         return self
 
     def generate_dataframe(self, event, config):
-        selection = reduce(lambda x,y: x & y, [
+        selection = reduce(lambda x,y: x&y, [
             self.string_to_func[s](event)
             for s in config["selection"]
-        ]) if len(config["selection"])>0 else np.array([True]*event.size)
-
-        weight = self.string_to_func[config["weight"]](event)[selection]
-
+        ]) if len(config["selection"])>0 else np.ones(event.size, dtype=bool)
+        weight = self.string_to_func[config["weight"]](event)*selection
         variables = []
         for idx, v in enumerate(config["variables"]):
             try:
-                variables.append(self.string_to_func[v](event)[selection])
+                variables.append(self.string_to_func[v](event))
             except AttributeError:
-                temp = np.empty((int(selection.sum())))
+                temp = np.empty(ev.size, dtype=float)
                 temp[:] = np.nan
                 variables.append(temp)
 
