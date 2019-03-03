@@ -151,6 +151,13 @@ event_selection.tripleelectron_selection = [
     ("ele_selection_fmt_3", ele_selection.format(3)),
     ("tau_selection_fmt_0", tau_selection.format(0)),
 ]
+event_selection.quadelectron_selection = [
+    #("trigger_ele_selection", trigger_selection.format("SingleElectron")),
+    ("dphi_jet_met_selection", dphi_jet_met_selection),
+    ("muon_selection_fmt_0", muon_selection.format(0)),
+    ("ele_selection_fmt_4", ele_selection.format(4)),
+    ("tau_selection_fmt_0", tau_selection.format(0)),
+]
 
 event_selection.monojetqcd_selection = [
     ("dphi_jet_met_inv_selection", dphi_jet_met_inv_selection),

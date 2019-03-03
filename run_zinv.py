@@ -8,6 +8,7 @@ warnings.filterwarnings('ignore')
 from atuproot.atuproot_main import AtUproot
 from atsge.build_parallel import build_parallel
 from utils.grouped_run import grouped_run
+from utils.gittools import git_diff, git_revision_hash
 from datasets.datasets import get_datasets
 from sequence.config import build_sequence
 
@@ -50,7 +51,7 @@ def parse_args():
     parser.add_argument("--profile", default=False, action='store_true',
                         help="Profile the code")
     parser.add_argument("--sample", default=None, type=str,
-                        help="Select some sample (comma delimited)")
+                        help="Select some sample (comma delimited). Can selected from (data, mc and more)")
     parser.add_argument("--redraw", default=False, action='store_true',
                         help="Overrides most options. Runs over collectors "
                              "only to rerun the draw function on outdir")
@@ -63,9 +64,30 @@ def parse_args():
     return parser.parse_args()
 
 def generate_report(outdir):
+    # command
     filepath = os.path.join(outdir, "report.txt")
     with open(filepath, 'w') as f:
         f.write("python "+" ".join(sys.argv)+"\n")
+
+    # git hash
+    filepath = os.path.join(outdir, "git_hash.txt")
+    hash = git_revision_hash()
+    with open(filepath, 'w') as f:
+        f.write(hash)
+
+    # git diff
+    filepath = os.path.join(outdir, "git_diff.txt")
+    with open(filepath, 'w') as f:
+        f.write(git_diff())
+
+    # commands to checkout the hash with the diffs applied
+    string = "#!/bin/bash\n"
+    string += "git clone git@github.com:shane-breeze/zinv-analysis.git\n"
+    string += "git checkout {}\n".format(hash)
+    string += "git apply {}\n".format(os.path.abspath(filepath))
+    filepath = os.path.join(outdir, "git_checkout.sh")
+    with open(filepath, 'w') as f:
+        f.write(string)
 
 vmem_dict = {
     # 500,000 events per block:

@@ -1,9 +1,13 @@
+enum34
+six
+futures
 numpy
 icc-rt
 numba
-alphatwirl==0.20.1
+alphatwirl
 pandas
 pyyaml
+<<<<<<< HEAD
 uproot==2.9.7
 atuproot==0.1.0
 atsge==0.1.6
@@ -48,3 +52,17 @@ uncertainties==3.0.3
 uproot==3.3.1
 uproot-methods==0.3.1
 
+=======
+uproot
+awkward
+uproot-methods
+backports.lzma
+cachetools
+atuproot
+atsge
+tabulate
+uncertainties
+matplotlib
+scipy
+seaborn
+>>>>>>> 6fbe08a0d95741565d63e0bb804f3a5fe5b3b442

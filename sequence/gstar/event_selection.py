@@ -27,6 +27,7 @@ event_selection.singleelectronminus_selection = []
 event_selection.doubleelectron_selection = [("mll_selection", mll_selection)]
 event_selection.doubleelectron_alt_selection = []
 event_selection.tripleelectron_selection = []
+event_selection.quadelectron_selection = []
 
 event_selection.singletau_selection = []
 event_selection.singletauqcd_selection = []

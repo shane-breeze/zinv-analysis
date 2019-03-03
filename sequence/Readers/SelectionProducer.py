@@ -109,6 +109,17 @@ class SelectionProducer(object):
                                       + es.baseline_selection\
                                       + es.triplemuon_selection
                                       if n not in ["met_selection", "blind_mask", "mtw_selection", "mll_selection"]],
+            "QuadMuon_noMETTrigger": [(n, s)
+                                      for (n, s) in baseline\
+                                      + es.baseline_selection\
+                                      + es.quadmuon_selection
+                                      if n not in ["met_selection", "blind_mask", "mtw_selection", "mll_selection"]],
+            "QuadMuon_METTrigger": [(n, s)
+                                    for (n, s) in baseline\
+                                    + es.met_trigger_selection\
+                                    + es.baseline_selection\
+                                    + es.quadmuon_selection
+                                    if n not in ["met_selection", "blind_mask", "mtw_selection", "mll_selection"]],
             "SingleElectron": baseline + es.baseline_selection + es.singleelectron_selection,
             "SingleElectron_noMETTrigger": [(n, s)
                                             for (n, s) in baseline\
@@ -153,6 +164,17 @@ class SelectionProducer(object):
                                           + es.baseline_selection\
                                           + es.tripleelectron_selection
                                           if n not in ["met_selection", "blind_mask", "mtw_selection", "mll_selection"]],
+            "QuadElectron_noMETTrigger": [(n, s)
+                                          for (n, s) in baseline\
+                                          + es.baseline_selection\
+                                          + es.quadelectron_selection
+                                          if n not in ["met_selection", "blind_mask", "mtw_selection", "mll_selection"]],
+            "QuadElectron_METTrigger": [(n, s)
+                                        for (n, s) in baseline\
+                                        + es.met_trigger_selection\
+                                        + es.baseline_selection\
+                                        + es.quadelectron_selection
+                                        if n not in ["met_selection", "blind_mask", "mtw_selection", "mll_selection"]],
             "SingleTau": baseline + es.baseline_selection + es.singletau_selection,
             "SingleTauQCD": baseline + es.baseline_selection + es.singletauqcd_selection,
             "DoubleTau": baseline + es.baseline_selection + es.doubletau_selection,

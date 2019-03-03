@@ -206,6 +206,14 @@ weight_taus = Readers.WeightObjects(
     data = False,
 )
 
+weight_btagging = Readers.WeightBTagging(
+    name = "weight_btagging",
+    operating_point = "medium",
+    measurement_types = {"b": "comb", "c": "comb", "udsg": "incl"},
+    calibration_file = datapath+"/btagging/CSVv2_Moriond17_B_H.csv",
+    data = False,
+)
+
 weight_qcd_ewk = Readers.WeightQcdEwk(
     name = "weight_qcd_ewk",
     input_paths = {
@@ -249,6 +257,7 @@ weight_prefiring = Readers.WeightPreFiring(
     photon_selection = "y: (y.pt>20) & ((2<np.abs(y.eta)) & (np.abs(y.eta)<3))",
     syst = 0.2,
     apply = True,
+    #data = False,
 )
 
 selection_producer = Readers.SelectionProducer(
@@ -372,6 +381,7 @@ sequence = [
     (weight_muons, NullCollector()),
     (weight_electrons, NullCollector()),
     (weight_taus, NullCollector()),
+    #(weight_btagging, NullCollector()),
     (weight_qcd_ewk, NullCollector()),
     (weight_prefiring, NullCollector()),
     (selection_producer, NullCollector()),
@@ -381,8 +391,8 @@ sequence = [
     #(hist2d_reader, hist2d_collector),
     #(gen_stitching_reader, gen_stitching_collector),
     #(met_response_resolution_reader, met_response_resolution_collector),
-    #(qcd_ewk_corrections_reader, qcd_ewk_corrections_collector),
-    (systematics_reader, systematics_collector),
+    (qcd_ewk_corrections_reader, qcd_ewk_corrections_collector),
+    #(systematics_reader, systematics_collector),
     #(trigger_efficiency_reader, trigger_efficiency_collector),
     #(qcd_estimation_reader, qcd_estimation_collector),
 ]

@@ -1,44 +1,40 @@
-dataset_regions:
-    - !!python/tuple ["singlemu_tot", "singlemu_tot"]
-    - !!python/tuple ["doublemu_tot", "doublemu_tot"]
-    - !!python/tuple ["triplemu_tot", "triplemu_tot"]
+variable: "variable0"
+binning: "bin0=[100,120,140,160,180,200,220,240,260,280,300,340,380,420,500,600,800,1000]"
+selections:
+    met_trigger: "True"
+shape: True
+regions:
+    - "singlemu"
+    - "doublemu"
+    - "triplemu"
 processes:
-    - "singlemu_pass"
-    - "doublemu_pass"
-    - "triplemu_pass"
-proc_id:
     singlemu_pass: 1
     doublemu_pass: 2
     triplemu_pass: 3
-parameters:
-    eff:    ["extArg", "0.75", "[0,1.5]"]
-    mueff:  ["extArg", "0.75", "[0,2]"]
-    eff1mu: ["rateParam", "singlemu_tot", "*", "1/(@0*@1)",    "eff,mueff"]
-    eff2mu: ["rateParam", "doublemu_tot", "*", "1/(@0*@1**2)", "eff,mueff"]
-    eff3mu: ["rateParam", "triplemu_tot", "*", "1/(@0*@1**3)", "eff,mueff"]
-systematics:
-dataset_conv:
-    SingleMuon: "singlemu_tot"
-    DoubleMuon: "doublemu_tot"
-    TripleMuon: "triplemu_tot"
-region_conv:
-    SingleMuon: "singlemu_tot"
-    DoubleMuon: "doublemu_tot"
-    TripleMuon: "triplemu_tot"
-process_conv:
-    SingleMuon_Passed: "singlemu_pass"
-    DoubleMuon_Passed: "doublemu_pass"
-    TripleMuon_Passed: "triplemu_pass"
-    SingleMuon_Total: "singlemu_tot"
-    DoubleMuon_Total: "doublemu_tot"
-    TripleMuon_Total: "triplemu_tot"
-dataset_region_process_conv:
-    !!python/tuple ["SingleMuon", "SingleMuon",              "SingleMuon"]: !!python/tuple ["SingleMuon", "SingleMuon", "SingleMuon_Drop"]
-    !!python/tuple ["SingleMuon", "DoubleMuon",              "SingleMuon"]: !!python/tuple ["DoubleMuon", "DoubleMuon", "DoubleMuon_Drop"]
-    !!python/tuple ["SingleMuon", "TripleMuon",              "SingleMuon"]: !!python/tuple ["TripleMuon", "TripleMuon", "TripleMuon_Drop"]
-    !!python/tuple ["SingleMuon", "SingleMuon_METTrigger",   "SingleMuon"]: !!python/tuple ["SingleMuon", "SingleMuon", "SingleMuon_Passed"]
-    !!python/tuple ["SingleMuon", "DoubleMuon_METTrigger",   "SingleMuon"]: !!python/tuple ["DoubleMuon", "DoubleMuon", "DoubleMuon_Passed"]
-    !!python/tuple ["SingleMuon", "TripleMuon_METTrigger",   "SingleMuon"]: !!python/tuple ["TripleMuon", "TripleMuon", "TripleMuon_Passed"]
-    !!python/tuple ["SingleMuon", "SingleMuon_noMETTrigger", "SingleMuon"]: !!python/tuple ["SingleMuon", "SingleMuon", "SingleMuon_Total"]
-    !!python/tuple ["SingleMuon", "DoubleMuon_noMETTrigger", "SingleMuon"]: !!python/tuple ["DoubleMuon", "DoubleMuon", "DoubleMuon_Total"]
-    !!python/tuple ["SingleMuon", "TripleMuon_noMETTrigger", "SingleMuon"]: !!python/tuple ["TripleMuon", "TripleMuon", "TripleMuon_Total"]
+conversions:
+    singlemu_tot:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["SingleMuon", "SingleMuon_noMETTrigger", "SingleMuon"]]
+        new_labels: [["SingleMuon", "singlemu", "data_obs"]]
+    doublemu_tot:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["SingleMuon", "DoubleMuon_noMETTrigger", "SingleMuon"]]
+        new_labels: [["SingleMuon", "doublemu", "data_obs"]]
+    triplemu_tot:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["SingleMuon", "TripleMuon_noMETTrigger", "SingleMuon"]]
+        new_labels: [["SingleMuon", "triplemu", "data_obs"]]
+    singlemu_pass:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["SingleMuon", "SingleMuon_METTrigger", "SingleMuon"]]
+        new_labels: [["SingleMuon", "singlemu", "singlemu_pass"]]
+    doublemu_pass:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["SingleMuon", "DoubleMuon_METTrigger", "SingleMuon"]]
+        new_labels: [["SingleMuon", "doublemu", "doublemu_pass"]]
+    triplemu_pass:
+        labels: ["dataset", "region", "process"]
+        old_labels: [["SingleMuon", "TripleMuon_METTrigger", "SingleMuon"]]
+        new_labels: [["SingleMuon", "triplemu", "triplemu_pass"]]
+parameters: []
+systematics: []

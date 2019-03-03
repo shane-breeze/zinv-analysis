@@ -1,21 +1,19 @@
 import argparse
-from array import array
 import copy
 import numpy as np
-from tabulate import tabulate as tab
 import oyaml as yaml
+import pandas as pd
+from array import array
+from tabulate import tabulate as tab
+
+from scipy.ndimage import gaussian_filter1d
+from scipy.interpolate import UnivariateSpline
 
 import ROOT
 ROOT.gROOT.SetBatch(True)
 
 try: import cPickle as pickle
 except ImportError: import pickle
-
-import pandas as pd
-pd.set_option('display.max_rows', None)
-pd.set_option('display.max_columns', None)
-pd.set_option('display.max_colwidth', -1)
-pd.set_option('display.width', None)
 
 import logging
 logging.basicConfig()
@@ -24,24 +22,22 @@ logger.setLevel(logging.INFO)
 
 def parse_args():
     parser = argparse.ArgumentParser()
-
     parser.add_argument("input", type=str, help="Input pickle file")
     parser.add_argument("config", type=str, help="Yaml config file")
-    parser.add_argument("--binning", type=str, default="[200.]",
-                        help="Binning to use")
-    parser.add_argument("--selection", type=str, default=None,
-                        help="Additional selection to apply to all regions")
-    parser.add_argument("--shape", default=False, action='store_true',
-                        help="Create shape datacards")
-
+    parser.add_argument("-s", "--systematics", type=int, default=1,
+                        help="Turn systematics on(1)/off(0)")
     return parser.parse_args()
 
 def open_df(cfg):
     path = cfg["input"]
     with open(path, 'r') as f:
         _, df = pickle.load(f)
-    df = df.reset_index("variable0", drop=True)
+        df = df.reset_index("variable0", drop=True)
     return df
+
+def smooth(x, y, err):
+    s = UnivariateSpline(x, y, w=1./err, k=2, s=x.shape[0]*4)
+    return gaussian_filter1d(s(x), 1)
 
 def process_syst(df, syst=None, how_up=lambda x: x.mean()+x.std(), how_down = lambda x: x.mean()-x.std()):
     df_nominal = df[df.index.get_level_values("weight").isin(["nominal"])]
@@ -65,72 +61,73 @@ def process_syst(df, syst=None, how_up=lambda x: x.mean()+x.std(), how_down = la
     df = pd.concat([df, df_syst_up, df_syst_down], axis=0).sort_index()
     return df
 
-def reformat(df, cfg):
-    # apply selection
-    if cfg["selection"] is not None:
-        df["selection"] = df.eval(cfg["selection"])
-        df = df[df["selection"]==True]
-        if "bin0" in cfg["selection"]:
-            df = df.reset_index(["bin0_low", "bin0_upp"], drop=True)
-            df = df.groupby(list(df.index.names)).sum()
-        if "bin1" in cfg["selection"]:
-            df = df.reset_index(["bin1_low", "bin1_upp"], drop=True)
-            df = df.groupby(list(df.index.names)).sum()
+def apply_selection(df, selection):
+    # Apply selection
+    df["selection"] = df.eval(selection)
+    df_s = df[df["selection"]==True]
+    if "bin0" in selection:
+        df_s = df_s.reset_index(["bin0_low", "bin0_upp"], drop=True)
+    if "bin1" in selection:
+        df_s = df_s.reset_index(["bin1_low", "bin1_upp"], drop=True)
+    df_s = df_s.groupby(list(df_s.index.names)).sum()\
+            .drop("selection", axis=1)
+    return df_s
 
+def reformat(df, cfg):
     # Rebin
-    def rebin(df, bins):
-        df = df.reset_index(["bin0_low", "bin0_upp"])
-        df["merge_idx"] = df["bin0_low"].apply(
+    def rebin(df, bins, binvar):
+        df = df.reset_index([binvar+"_low", binvar+"_upp"])
+        df["merge_idx"] = df[binvar+"_low"].apply(
             lambda b: next(idx for idx, nb in enumerate(bins[1:]) if b<nb)
         )
-        df = df.drop(["bin0_low", "bin0_upp"], axis=1)
+        df = df.drop([binvar+"_low", binvar+"_upp"], axis=1)
         df = df.set_index("merge_idx", append=True)
         df = df.groupby(df.index.names).sum()
         df = df.reset_index("merge_idx")
-        df["bin0_low"] = df["merge_idx"].apply(lambda i: bins[i])
-        df["bin0_upp"] = df["merge_idx"].apply(lambda i: bins[i+1])
+        df[binvar+"_low"] = df["merge_idx"].apply(lambda i: bins[i])
+        df[binvar+"_upp"] = df["merge_idx"].apply(lambda i: bins[i+1])
         df = df.drop("merge_idx", axis=1)\
-                .set_index("bin0_low", append=True)\
-                .set_index("bin0_upp", append=True)
+                .set_index(binvar+"_low", append=True)\
+                .set_index(binvar+"_upp", append=True)
         return df
-    binning = cfg["binning"]
+    binvar, binning = cfg["binning"].split("=")
+    binning = eval(binning)
     bins = [-np.infty]+list(binning)+[np.infty]
-    df = rebin(df, bins)
+    df = rebin(df, bins, binvar)
 
-    df = process_syst(df, syst="lhePdf", how_up=lambda x: x.mean()+x.std(), how_down=lambda x: x.mean()*x.mean()/(x.mean()+x.std()))
-    df = process_syst(df, syst="lheScale", how_up=lambda x: x.max(), how_down=lambda x: x.min())
+    if "lhePdf" in cfg["systematics"]:
+        df = process_syst(df, syst="lhePdf",
+                          how_up=lambda x: x.mean()+x.std(),
+                          how_down=lambda x: x.mean()*x.mean()/(x.mean()+x.std()))
+    if "lheScale" in cfg["systematics"]:
+        df = process_syst(df, syst="lheScale",
+                          how_up=lambda x: x.max(),
+                          how_down=lambda x: x.min())
 
-    if "dataset_region_process_conv" in cfg:
+    # Rename
+    dfs = []
+    for key, val in cfg["conversions"].items():
         levels = df.index.names
-        df = df.reset_index(["dataset", "region", "process"])
-        df["drp"] = df["dataset"]+"__"+df["region"]+"__"+df["process"]
-        rp_map = {"__".join(k): "__".join(v) for k, v in cfg["dataset_region_process_conv"].items()}
-        df["drp"] = df["drp"].map(rp_map, na_action='ignore')
-        df = df[~df["drp"].isna()]
-        df["dataset"] = df["drp"].apply(lambda x: x.split("__")[0])
-        df["region"] = df["drp"].apply(lambda x: x.split("__")[1])
-        df["process"] = df["drp"].apply(lambda x: x.split("__")[2])
-        df = df.set_index(["dataset", "region", "process"], append=True)\
-                .drop("drp", axis=1)\
-                .reorder_levels(levels)
+        labs = val["labels"]
 
-    if "apply" in cfg:
-        for _, apply in cfg["apply"].items():
-            levels = list(df.index.names)
-            tdf = df.reset_index().set_index(apply["levels"])
-            try:
-                args = [
-                    tdf.loc[tuple(arg),:].reset_index(drop=True)\
-                    .set_index([l for l in levels if l not in apply["levels"]])
-                    for arg in apply["args"]
-                ]
-            except KeyError:
-                continue
-            new_df = eval('lambda {}'.format(apply["formula"]))(*args)
-            for idx, level in enumerate(apply["levels"]):
-                new_df[level] = apply["new_levels"][idx]
-            new_df = new_df.set_index(apply["levels"], append=True)\
+        sdf = df.reset_index(labs)
+        sdf["drp"] = ""
+        for i, l in enumerate(labs):
+            sdf["drp"] += sdf[l]
+            if i < len(labs)-1:
+                sdf["drp"] += "__"
+
+        for new_label in val["new_labels"]:
+            rp_map = {"__".join(k): "__".join(new_label) for k in val["old_labels"]}
+            ssdf = sdf.copy()
+            ssdf["drp"] = ssdf["drp"].map(rp_map, na_action='ignore')
+            ssdf = ssdf[~ssdf["drp"].isna()]
+            for i, l in enumerate(labs):
+                ssdf[l] = ssdf["drp"].apply(lambda x: x.split("__")[i])
+            ssdf = ssdf.set_index(labs, append=True)\
+                    .drop("drp", axis=1)\
                     .reorder_levels(levels)
+<<<<<<< HEAD
             df = pd.concat([df, new_df], axis=0)
 
     # Rename regions
@@ -303,28 +300,99 @@ def create_counting_datacard(df_obs, df_rate, df_nuis, params, filename):
     with open(filename, 'w') as f:
         f.write(dc)
     logger.info("Created {}".format(filename))
+=======
+            dfs.append(ssdf)
+    dfs = pd.concat(dfs)
+    dfs = dfs.groupby(dfs.index.names).sum()
+    return dfs
+>>>>>>> 6fbe08a0d95741565d63e0bb804f3a5fe5b3b442
 
 def create_shape_datacards(df, cfg):
-    binning = cfg["binning"]
-    all_columns = df.index.names
-    columns_no_bins = [c for c in all_columns if "bin" not in c]
+    binlab, binning = cfg["binning"].split("=")
+    binning = eval(binning)
+    all_inds = df.index.names
+    all_inds_no_bins = [i for i in all_inds if "bin" not in i]
 
     # open ROOT file
-    rfile = ROOT.TFile.Open("Zinv_METnoX-ShapeTemplates.root", 'RECREATE')
+    rfile = ROOT.TFile.Open("Zinv_METnoX-ShapeTemplates_{}.root".format(cfg["name"]), 'RECREATE')
 
-    # dataset, region, process, weight, variable
-    df = df.reset_index(["bin0_low", "bin0_upp"])
-    for (d, r, p, w, v), dfgrp in df.groupby(columns_no_bins):
+    df = df.reset_index([i for i in all_inds if "bin" in i])
+
+    # Smooth
+    # Skip smoothing for now
+    #for s in set([s[:-2] if s.endswith("Up") else s[:-4] if s.endswith("Down") else s for s in df.index.get_level_values("weight").unique()]):
+    #    if s == "nominal":
+    #        continue
+
+    #    for (d, r, p, n), _ in df.groupby([c for c in all_inds_no_bins if c!="weight"]):
+    #        if p == "data_obs":
+    #            continue
+
+    #        df_nominal = df.loc[(d, r, p, "nominal", n), :]
+    #        try:
+    #            df_up = df.loc[(d, r, p, s+"Up", n), :]
+    #        except KeyError:
+    #            print(d, r, p, s+"Up", n)
+    #            continue
+    #        try:
+    #            df_down = df.loc[(d, r, p, s+"Down", n), :]
+    #        except KeyError:
+    #            print(d, r, p, s+"Down", n)
+    #            continue
+    #        xvals = (np.array(binning)[1:]+np.array(binning)[:-1])/2
+
+    #        df_nominal = df_nominal.reset_index(drop=True)\
+    #                .set_index("bin0_low")\
+    #                .reindex(np.array(binning[:-1]))\
+    #                .fillna(0.)\
+    #                .reset_index("bin0_low")
+    #        df_up = df_up.reset_index(drop=True)\
+    #                .set_index("bin0_low")\
+    #                .reindex(np.array(binning[:-1]))\
+    #                .fillna(0.)\
+    #                .reset_index("bin0_low")
+    #        df_down = df_down.reset_index(drop=True)\
+    #                .set_index("bin0_low")\
+    #                .reindex(np.array(binning[:-1]))\
+    #                .fillna(0.)\
+    #                .reset_index("bin0_low")
+
+    #        ratio = df_up["yield"].values/df_nominal["yield"].values
+    #        ratio[np.isnan(ratio) | np.isinf(ratio)] = 1.
+    #        ratio_err = np.sqrt(np.abs(df_up["variance"].values-df_down["variance"].values))/df_nominal["yield"].values
+    #        ratio_err[np.isnan(ratio_err) | np.isinf(ratio_err) | (ratio_err==0.)] = 1.
+    #        up_smooth = np.maximum(smooth(xvals, ratio, ratio_err), 0.)
+    #        scale = df_up["yield"].sum() / (up_smooth*df_nominal["yield"]).sum()
+
+    #        try:
+    #            if pd.isnull(up_smooth).any():
+    #                continue
+    #            df.loc[(d, r, p, s+"Up", n), "yield"] = (df_nominal["yield"].values*scale*up_smooth)[np.isin(np.array(binning)[:-1], df_up["bin0_low"])]
+    #        except ValueError:
+    #            print(d, r, p, s+"Up", n)
+
+    #        ratio = df_down["yield"].values/df_nominal["yield"].values
+    #        ratio[np.isnan(ratio) | np.isinf(ratio)] = 1.
+    #        ratio_err = np.sqrt(np.abs(df_down["variance"].values-df_nominal["variance"].values))/df_nominal["yield"].values
+    #        ratio_err[np.isnan(ratio_err) | np.isinf(ratio_err) | (ratio_err==0.)] = 1.
+    #        down_smooth = np.maximum(smooth(xvals, ratio, ratio_err), 0.)
+    #        scale = df_down["yield"].sum() / (down_smooth*df_nominal["yield"]).sum()
+
+    #        try:
+    #            if pd.isnull(down_smooth).any():
+    #                continue
+    #            df.loc[(d, r, p, s+"Down", n), "yield"] = (df_nominal["yield"].values*scale*down_smooth)[np.isin(np.array(binning)[:-1], df_down["bin0_low"])]
+    #        except ValueError:
+    #            print(d, r, p, s+"Down", n)
+
+    for (d, r, p, w, n), dfgrp in df.groupby(all_inds_no_bins):
         if r not in [k.GetName() for k in rfile.GetListOfKeys()]:
             rfile.mkdir(r)
         rfile.cd(r)
 
         bins = array('f', binning)
         name = p
-        if w == "nominal":
-            if d == p:
-                name = "data_obs"
-        else:
+        if w != "nominal":
             if w not in [k.GetName() for k in ROOT.gDirectory.GetListOfKeys()]:
                 ROOT.gDirectory.mkdir(w)
             ROOT.gDirectory.cd(w)
@@ -333,33 +401,58 @@ def create_shape_datacards(df, cfg):
         for idx in range(1, hist.GetNbinsX()+1):
             binlow = bins[idx-1]
             binupp = bins[idx]
-            dfbin = dfgrp[(dfgrp["bin0_low"]==binlow) & (dfgrp["bin0_upp"]==binupp)]
+            dfbin = dfgrp[(dfgrp[binlab+"_low"]==binlow) & (dfgrp[binlab+"_upp"]==binupp)]
             if not dfbin.empty:
                 content = dfbin.iloc[0]["yield"]
                 error = np.sqrt(dfbin.iloc[0]["variance"])
+                if np.abs(content) <= 1e-7:
+                    content = 1e-7
+                    error = 1e-7
                 hist.SetBinContent(idx, content)
                 hist.SetBinError(idx, error)
         hist.Write()
+        hist.Delete()
         rfile.cd()
+
+    # Create all data_obs (just in case some are completely blinded)
+    for r in df.index.get_level_values("region").unique():
+        if r not in [k.GetName() for k in rfile.GetListOfKeys()]:
+            rfile.mkdir(r)
+        rfile.cd(r)
+
+        if "data_obs" not in [k.GetName() for k in ROOT.gDirectory.GetListOfKeys()]:
+            bins = array('f', binning)
+            hist = ROOT.TH1D("data_obs", "data_obs", len(bins)-1, bins)
+            hist.Write()
+            hist.Delete()
+        rfile.cd()
+
     rfile.Close()
-    logger.info("Created {}".format("Zinv_METnoX-ShapeTemplates.root"))
+    logger.info("Created {}".format("Zinv_METnoX-ShapeTemplates_{}.root".format(cfg["name"])))
+    df = df.set_index([binlab+"_low", binlab+"_upp"], append=True)\
+            .reorder_levels(all_inds)
 
     # df_obs
+<<<<<<< HEAD
     allowed_datasets = list(cfg["dataset_conv"].keys())
     df_obs = df[df.index.get_level_values("process").isin(allowed_datasets)]["yield"]
     df_obs = df_obs.groupby(df_obs.index.names).sum()
+=======
+    df_obs = df[df.index.get_level_values("process").isin(["data_obs"])]["yield"]
+    df_obs = df_obs.groupby([n for n in df_obs.index.names if "bin" not in n]).sum()
+>>>>>>> 6fbe08a0d95741565d63e0bb804f3a5fe5b3b442
 
     # df_rate
     df_rate = df[df.index.get_level_values("weight").isin(["nominal"])]["yield"]
     df_rate = df_rate.groupby(df_rate.index.names).sum()
-    df_rate = df_rate.reset_index("process")
-    df_rate["proc"] = df_rate["process"].map(
-        dict(zip(*zip(*enumerate(cfg["processes"], 0))[::-1]))
-    )
-    df_rate = df_rate.set_index("process", append=True)
-    df_rate[df_rate["yield"]<0.] = np.nan
-    df_rate[df_rate.groupby("region").apply(lambda x: x/x.sum())["yield"]<0.0001] = np.nan
+    df_rate[df_rate<0.] = np.nan
+    df_rate[df_rate.groupby("region").apply(lambda x: x/x.sum())<0.0001] = np.nan
     df_rate = df_rate.dropna()
+    df_rate = df_rate.groupby([n for n in df_rate.index.names if "bin" not in n]).sum()
+    df_rate = df_rate.reset_index("process")
+    df_rate["proc"] = df_rate["process"].map(cfg["processes"])
+    df_rate = df_rate.set_index("process", append=True)\
+            .reorder_levels([n for n in all_inds if "bin" not in n])
 
     # df_nuis
     df_nominal = df[df.index.get_level_values("weight").isin(["nominal"])]
@@ -372,23 +465,20 @@ def create_shape_datacards(df, cfg):
 
     df_nuis.loc[:,"lumiUp"] = 1.025
     df_nuis.loc[:,"lumiDown"] = 1/1.025
-    df_nuis.loc[df_nuis.index.get_level_values("process").isin(["wlnu"]),"lumiUp"] = 1.
-    df_nuis.loc[df_nuis.index.get_level_values("process").isin(["wlnu"]),"lumiDown"] = 1.
+    #df_nuis.loc[df_nuis.index.get_level_values("process").isin(["wlnu"]),"lumiUp"] = 1.
+    #df_nuis.loc[df_nuis.index.get_level_values("process").isin(["wlnu"]),"lumiDown"] = 1.
     df_nuis = df_nuis.fillna(1.)
 
     df_nuis = df_nuis[[
-        c for c in df_nuis.columns
-        if (c[:-2] if c.endswith("Up") else c[:-4]) in cfg["systematics"]
+        ss for s in cfg["systematics"] for ss in (s+"Down", s+"Up")
+        if ss in df_nuis.columns
     ]]
 
-    regions = [r for d, r in cfg["dataset_regions"]]
-    processes = cfg["processes"]
     proc_order = [
         (r, p)
-        for r in regions
-        for p in processes
+        for r in cfg["regions"]
+        for p in cfg["processes"].keys()
     ]
-
     bin_order = []
     for bin, proc in proc_order:
         if bin not in bin_order:
@@ -399,9 +489,9 @@ def create_shape_datacards(df, cfg):
     df_rate = df_rate.reindex(proc_order).dropna()
     df_nuis = df_nuis.loc[df_rate.index]
 
-    create_shape_datacard(df_obs, df_rate, df_nuis, cfg["parameters"], "Zinv_METnoX-Shapes.txt")
+    create_shape_datacard(df_obs, df_rate, df_nuis, cfg["parameters"], "Zinv_METnoX-Shapes_{}.txt".format(cfg["name"]), cfg["name"])
 
-def create_shape_datacard(df_obs, df_rate, df_nuis, params, filename):
+def create_shape_datacard(df_obs, df_rate, df_nuis, params, filename, name):
     # IDX
     dc = tab([
         ["imax * number of channels"],
@@ -412,7 +502,7 @@ def create_shape_datacard(df_obs, df_rate, df_nuis, params, filename):
     # SHAPES
     df_obs = df_obs.reset_index()
     dc += tab([
-        ["shapes", "*", "*", "Zinv_METnoX-ShapeTemplates.root", "$CHANNEL/$PROCESS", "$CHANNEL/$SYSTEMATIC/$PROCESS"]
+        ["shapes", "*", "*", "Zinv_METnoX-ShapeTemplates_{}.root".format(name), "$CHANNEL/$PROCESS", "$CHANNEL/$SYSTEMATIC/$PROCESS"]
     ], [], tablefmt="plain") + "\n" + "-"*80 + "\n"
 
     # OBS
@@ -431,8 +521,11 @@ def create_shape_datacard(df_obs, df_rate, df_nuis, params, filename):
     ], [], tablefmt="plain") + "\n" + "-"*80 + "\n"
 
     # NUISANCES
-    nuisances = sorted(list(set((c[:-2] if c.endswith("Up") else c[:-4]) for c in df_nuis.columns)))
-    nuisances = [n for n in nuisances if "nominal" not in n]
+    nuisances = []
+    for c in df_nuis.columns:
+        syst = c[:-2] if c.endswith("Up") else c[:-4] if c.endswith("Down") else c
+        if syst not in nuisances and "nominal" not in syst:
+            nuisances.append(syst)
 
     nuisance_block = []
     for nuis in nuisances:
@@ -464,12 +557,14 @@ def create_shape_datacard(df_obs, df_rate, df_nuis, params, filename):
 
     # PARAMS
     if params is not None:
-        dc += tab([[k]+v for k, v in params.items()], [], tablefmt="plain")
+        dc += tab(params, [], tablefmt="plain")
 
     with open(filename, 'w') as f:
         f.write(dc)
     logger.info("Created {}".format(filename))
 
+def create_counting_datacards(df, cfg):
+    pass
 
 def main():
     options = parse_args()
@@ -477,19 +572,20 @@ def main():
     with open(options.config, 'r') as f:
         config = yaml.load(f)
     config["input"] = options.input
-    config["binning"] = eval(options.binning)
-    config["selection"] = options.selection
-    config["shape"] = options.shape
+
+    if options.systematics == 0:
+        config["systematics"] = []
+
     df = open_df(config)
-    df = reformat(df, config)
+    for name, selection in config["selections"].items():
+        df_s = apply_selection(df, selection)
+        df_s = reformat(df_s, config)
 
-    with open("trigger_df.pkl", 'w') as f:
-        pickle.dump(df, f)
-
-    if config["shape"]:
-        create_shape_datacards(df, config)
-    else:
-        create_counting_datacards(df, config)
+        config["name"] = name
+        if config["shape"]:
+            create_shape_datacards(df_s, config)
+        else:
+            create_counting_datacards(df_s, config)
 
 if __name__ == "__main__":
     main()
