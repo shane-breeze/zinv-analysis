@@ -32,6 +32,8 @@ def evaluate_object_weights(df, bins_vars, add_syst, name):
     @lru_cache(maxsize=32)
     def fevaluate_object_weights(ev, evidx, nsig, source, name_):
         event_vars = [v(ev) for v in bins_vars]
+        for v in event_vars:
+            v.content[np.isnan(v.content)] = 0.
 
         # Select bin from reference table
         mask = np.ones((event_vars[0].content.shape[0], df.shape[0]), dtype=bool)
