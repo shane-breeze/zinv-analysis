@@ -34,3 +34,8 @@ class ScribblerWrapper(object):
         if hasattr(self.scribbler, "event"):
             return self.scribbler.event(event)
         return True
+
+    def end(self):
+        if hasattr(self.scribbler, "end"):
+            return self.scribbler.end()
+        return True

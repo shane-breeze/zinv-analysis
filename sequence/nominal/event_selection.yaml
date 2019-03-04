@@ -1,0 +1,345 @@
+selections:
+    lumi_selection: "ev: ev.IsCertified"
+    trigger_selection: "ev: ev.IsTriggered(ev)"
+    trigger_met_selection: "ev: ev.IsMETTriggered(ev)"
+    trigger_singlemuon_selection: "ev: ev.IsSingleMuonTriggered(ev)"
+    trigger_singleele_selection: "ev: ev.IsSingleElectronTriggered(ev)"
+    filter_selection:
+        "ev: (ev.Flag_goodVertices>0.5)
+             & (ev.Flag_globalTightHalo2016Filter>0.5)
+             & (ev.Flag_HBHENoiseFilter>0.5)
+             & (ev.Flag_HBHENoiseIsoFilter>0.5)
+             & (ev.Flag_EcalDeadCellTriggerPrimitiveFilter>0.5)
+             & (ev.Flag_eeBadScFilter>0.5)
+             & (ev.Flag_BadChargedCandidateFilter>0.5)
+             & (ev.Flag_BadGlobalMuon>0.5)
+             & (ev.Flag_BadPFMuonFilter>0.5)
+             & (ev.Flag_CloneGlobalMuon>0.5)"
+    met_selection: "ev: ev.METnoX_pt(ev) > 200."
+    met_low_selection: "ev: ev.METnoX_pt(ev) <= 200."
+    dphi_jet_met_selection: "ev: ev.MinDPhiJ1234METnoX(ev) > 0.5"
+    dphi_jet_met_inv_selection: "ev: ev.MinDPhiJ1234METnoX(ev) <= 0.5"
+    dcalo_pfmet_selection: "ev: ev.MET_dCaloMET(ev) < 0.6"
+    jet_selection:
+        "ev: (ev.JetSelection(ev, 'pt').counts > 0)
+             & (ev.JetSelection(ev, 'pt').counts == ev.JetVeto(ev, 'pt').counts)"
+    lead_jet_selection:
+        "ev: (get_nth_object(ev.JetSelection(ev, 'pt'), 0, ev.size)>200.)
+             & (get_nth_object(ev.JetSelection(ev, 'chHEF'), 0, ev.size)>0.1)
+             & (get_nth_object(ev.JetSelection(ev, 'chHEF'), 0, ev.size)<0.95)"
+    muon_0_selection:
+        "ev: (ev.MuonSelection(ev, 'pt').counts == ev.MuonVeto(ev, 'pt').counts)
+             & (ev.MuonVeto(ev, 'pt').counts == 0)"
+    muon_1_selection:
+        "ev: (ev.MuonSelection(ev, 'pt').counts == ev.MuonVeto(ev, 'pt').counts)
+             & (ev.MuonVeto(ev, 'pt').counts == 1)"
+    muon_2_selection:
+        "ev: (ev.MuonSelection(ev, 'pt').counts == ev.MuonVeto(ev, 'pt').counts)
+             & (ev.MuonVeto(ev, 'pt').counts == 2)"
+    muon_3_selection:
+        "ev: (ev.MuonSelection(ev, 'pt').counts == ev.MuonVeto(ev, 'pt').counts)
+             & (ev.MuonVeto(ev, 'pt').counts == 3)"
+    lepton_p1_charge: "ev: ev.LeptonCharge(ev) == 1"
+    lepton_m1_charge: "ev: ev.LeptonCharge(ev) == -1"
+    ele_0_selection:
+        "ev: (ev.ElectronSelection(ev, 'pt').counts == ev.ElectronVeto(ev, 'pt').counts)
+             & (ev.ElectronVeto(ev, 'pt').counts == 0)"
+    ele_1_selection:
+        "ev: (ev.ElectronSelection(ev, 'pt').counts == ev.ElectronVeto(ev, 'pt').counts)
+             & (ev.ElectronVeto(ev, 'pt').counts == 1)"
+    ele_2_selection:
+        "ev: (ev.ElectronSelection(ev, 'pt').counts == ev.ElectronVeto(ev, 'pt').counts)
+             & (ev.ElectronVeto(ev, 'pt').counts == 2)"
+    ele_3_selection:
+        "ev: (ev.ElectronSelection(ev, 'pt').counts == ev.ElectronVeto(ev, 'pt').counts)
+             & (ev.ElectronVeto(ev, 'pt').counts == 3)"
+    tau_0_selection:
+        "ev: (ev.TauSelection(ev, 'pt').counts == ev.TauVeto(ev, 'pt').counts)
+             & (ev.TauVeto(ev, 'pt').counts == 0)"
+    tau_1_selection:
+        "ev: (ev.TauSelection(ev, 'pt').counts == ev.TauVeto(ev, 'pt').counts)
+             & (ev.TauVeto(ev, 'pt').counts == 1)"
+    tau_2_selection:
+        "ev: (ev.TauSelection(ev, 'pt').counts == ev.TauVeto(ev, 'pt').counts)
+             & (ev.TauVeto(ev, 'pt').counts == 2)"
+    pho_0_selection:
+        "ev: (ev.PhotonSelection(ev, 'pt').counts == ev.PhotonVeto(ev, 'pt').counts)
+             & (ev.PhotonVeto(ev, 'pt').counts == 0)"
+    bjet_0_selection:
+        "ev: (ev.JetBSelection(ev, 'pt').counts == ev.JetBVeto(ev, 'pt').counts)
+             & (ev.JetBVeto(ev, 'pt').counts == 0)"
+    mtw_selection: "ev: (ev.MTW(ev) >= 30.) & (ev.MTW(ev) < 125.)"
+    mll_selection: "ev: (ev.MLL(ev) >= 71.) & (ev.MLL(ev) < 111.)"
+    met_pf_selection: "ev: ev.METShift_pt(ev) > 100."
+    ngen_boson_selection:
+        "ev: np.ones(ev.size, dtype=bool)
+             if ev.config.dataset.parent not in 'EWKV2Jets'
+             else (ev.nGenBosons==1)"
+grouped_selections:
+    data:
+        - "lumi_selection"
+        - "trigger_selection"
+    mc:
+        - "ngen_boson_selection"
+    baseline:
+        - "filter_selection"
+        - "met_selection"
+        - "dcalo_pfmet_selection"
+        - "jet_selection"
+        - "lead_jet_selection"
+    vbaseline:
+        - "pho_0_selection"
+        - "bjet_0_selection"
+    monojet:
+        - "dphi_jet_met_selection"
+    monojetqcd:
+        - "dphi_jet_met_inv_selection"
+    vmonojet:
+        - "muon_0_selection"
+        - "ele_0_selection"
+        - "tau_0_selection"
+    singlemuon:
+        - "dphi_jet_met_selection"
+        - "muon_1_selection"
+        - "mtw_selection"
+    vmuon:
+        - "ele_0_selection"
+        - "tau_0_selection"
+    singlemuonqcd:
+        - "dphi_jet_met_inv_selection"
+        - "muon_1_selection"
+        - "mtw_selection"
+    singlemuonplus:
+        - "lepton_p1_charge"
+    singlemuonminus:
+        - "lepton_m1_charge"
+    doublemuon:
+        - "dphi_jet_met_selection"
+        - "muon_2_selection"
+        - "mll_selection"
+    triplemuon:
+        - "dphi_jet_met_selection"
+        - "muon_3_selection"
+    singleelectron:
+        - "dphi_jet_met_selection"
+        - "ele_1_selection"
+        - "mtw_selection"
+    velectron:
+        - "muon_0_selection"
+        - "tau_0_selection"
+    singleelectronqcd:
+        - "dphi_jet_met_inv_selection"
+        - "ele_1_selection"
+        - "mtw_selection"
+    singleelectronplus:
+        - "lepton_p1_charge"
+    singleelectronminus:
+        - "lepton_m1_charge"
+    doubleelectron:
+        - "dphi_jet_met_selection"
+        - "ele_2_selection"
+        - "mll_selection"
+    doubleelectronalt:
+        - "filter_selection"
+        - "met_low_selection"
+        - "jet_selection"
+        - "ele_2_selection"
+    tripleelectron:
+        - "dphi_jet_met_selection"
+        - "ele_3_selection"
+    singletau:
+        - "dphi_jet_met_selection"
+        - "tau_1_selection"
+    vtau:
+        - "muon_0_selection"
+        - "ele_0_selection"
+    doubletau:
+        - "dphi_jet_met_selection"
+        - "tau_2_selection"
+cutflows:
+    None:
+        Data: []
+        MC: []
+    Monojet:
+        Data:
+            - "data"
+            - "baseline"
+            - "vbaseline"
+            - "monojet"
+            - "vmonojet"
+        MC:
+            - "mc"
+            - "baseline"
+            - "monojet"
+    MonojetQCD:
+        Data:
+            - "data"
+            - "baseline"
+            - "vbaseline"
+            - "monojetqcd"
+            - "vmonojet"
+        MC:
+            - "mc"
+            - "baseline"
+            - "monojetqcd"
+    SingleMuon:
+        Data:
+            - "data"
+            - "baseline"
+            - "vbaseline"
+            - "singlemuon"
+            - "vmuon"
+        MC:
+            - "mc"
+            - "baseline"
+            - "singlemuon"
+    SingleMuonQCD:
+        Data:
+            - "data"
+            - "baseline"
+            - "vbaseline"
+            - "singlemuonqcd"
+            - "vmuon"
+        MC:
+            - "mc"
+            - "baseline"
+            - "singlemuonqcd"
+    SingleMuonPlus:
+        Data:
+            - "data"
+            - "baseline"
+            - "vbaseline"
+            - "singlemuonplus"
+            - "vmuon"
+        MC:
+            - "mc"
+            - "baseline"
+            - "singlemuonplus"
+    SingleMuonMinus:
+        Data:
+            - "data"
+            - "baseline"
+            - "vbaseline"
+            - "singlemuonminus"
+            - "vmuon"
+        MC:
+            - "mc"
+            - "baseline"
+            - "singlemuonminus"
+    DoubleMuon:
+        Data:
+            - "data"
+            - "baseline"
+            - "vbaseline"
+            - "doublemuon"
+            - "vmuon"
+        MC:
+            - "mc"
+            - "baseline"
+            - "doublemuon"
+    TripleMuon:
+        Data:
+            - "data"
+            - "baseline"
+            - "vbaseline"
+            - "triplemuon"
+            - "vmuon"
+        MC:
+            - "mc"
+            - "baseline"
+            - "triplemuon"
+    SingleElectron:
+        Data:
+            - "data"
+            - "baseline"
+            - "vbaseline"
+            - "singleelectron"
+            - "velectron"
+        MC:
+            - "mc"
+            - "baseline"
+            - "singleelectron"
+    SingleElectronQCD:
+        Data:
+            - "data"
+            - "baseline"
+            - "vbaseline"
+            - "singleelectronqcd"
+            - "velectron"
+        MC:
+            - "mc"
+            - "baseline"
+            - "singleelectronqcd"
+    SingleElectronPlus:
+        Data:
+            - "data"
+            - "baseline"
+            - "vbaseline"
+            - "singleelectronplus"
+            - "velectron"
+        MC:
+            - "mc"
+            - "baseline"
+            - "singleelectronplus"
+    SingleElectronMinus:
+        Data:
+            - "data"
+            - "baseline"
+            - "vbaseline"
+            - "singleelectronminus"
+            - "velectron"
+        MC:
+            - "mc"
+            - "baseline"
+            - "singleelectronminus"
+    DoubleElectron:
+        Data:
+            - "data"
+            - "baseline"
+            - "vbaseline"
+            - "doubleelectron"
+            - "velectron"
+        MC:
+            - "mc"
+            - "baseline"
+            - "doubleelectron"
+    DoubleElectronAlt:
+        Data:
+            - "data"
+            - "doubleelectronalt"
+        MC:
+            - "mc"
+            - "doubleelectronalt"
+    TripleElectron:
+        Data:
+            - "data"
+            - "baseline"
+            - "vbaseline"
+            - "tripleelectron"
+            - "velectron"
+        MC:
+            - "mc"
+            - "baseline"
+            - "tripleelectron"
+    SingleTau:
+        Data:
+            - "data"
+            - "baseline"
+            - "vbaseline"
+            - "singletau"
+            - "vtau"
+        MC:
+            - "mc"
+            - "baseline"
+            - "singletau"
+    DoubleTau:
+        Data:
+            - "data"
+            - "baseline"
+            - "vbaseline"
+            - "doubletau"
+            - "vtau"
+        MC:
+            - "mc"
+            - "baseline"
+            - "doubletau"

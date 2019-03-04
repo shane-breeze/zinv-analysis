@@ -1,24 +1,29 @@
+from .EventTools import EventTools
 from .ScribblerWrapper import ScribblerWrapper
 
-from .CertifiedLumiChecker import CertifiedLumiChecker
-from .TriggerChecker import TriggerChecker
 from .CollectionCreator import CollectionCreator, Collection
-from .SkimCollections import SkimCollections
-from .ObjectCrossCleaning import ObjectCrossCleaning
-from .JecVariations import JecVariations
-from .EventSumsProducer import EventSumsProducer
-from .SignalRegionBlinder import SignalRegionBlinder
-from .InvMassProducer import InvMassProducer
+from .SelectionProducer import SelectionProducer
+from .WeightProducer import WeightProducer
+
 from .GenBosonProducer import GenBosonProducer
 from .LHEPartAssigner import LHEPartAssigner, GenPartAssigner
 
-from .WeightCreator import WeightCreator
+from .JecVariations import JecVariations
+
+from .ObjectFunctions import ObjectFunctions
+from .EventFunctions import EventFunctions
+
+from .SkimCollections import SkimCollections
+from .ObjectCrossCleaning import ObjectCrossCleaning
+
+from .TriggerChecker import TriggerChecker
+from .CertifiedLumiChecker import CertifiedLumiChecker
+
 from .WeightXsLumi import WeightXsLumi
+from .WeightPdfScale import WeightPdfScale
 from .WeightPileup import WeightPileup
 from .WeightMetTrigger import WeightMetTrigger
 from .WeightObjects import WeightObjects
 from .WeightBTagging import WeightBTagging
 from .WeightQcdEwk import WeightQcdEwk
 from .WeightPreFiring import WeightPreFiring
-
-from .SelectionProducer import SelectionProducer

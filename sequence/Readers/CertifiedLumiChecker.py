@@ -10,8 +10,10 @@ class CertifiedLumiChecker(object):
         self.runs, self.lumi_list = read_json(self.lumi_json_path)
 
     def event(self, event):
-        event.IsCertified = is_certified_lumi(event.run, event.luminosityBlock,
-                                              self.runs, self.lumi_list)
+        event.IsCertified = is_certified_lumi(
+            event.run, event.luminosityBlock,
+            self.runs, self.lumi_list,
+        )
 
 @njit
 def is_certified_lumi(runs, lumis, cert_runs, cert_lumis):

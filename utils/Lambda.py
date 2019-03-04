@@ -1,3 +1,4 @@
+import awkward as awk
 import numpy as np
 np.warnings.filterwarnings('ignore')
 
@@ -31,7 +32,7 @@ class Lambda(object):
         """
         if not hasattr(self, "lambda_function"):
             self.begin()
-        try:
-            return self.lambda_function(*args, **kwargs)
-        except Exception as e:
-            raise AttributeError(e, self.function)
+        #try:
+        return self.lambda_function(*args, **kwargs)
+        #except Exception as e:
+        #    raise AttributeError(e, self.function)

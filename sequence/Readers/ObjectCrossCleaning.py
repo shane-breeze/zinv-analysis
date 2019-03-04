@@ -1,56 +1,64 @@
-import uproot
 import numpy as np
-from numpy import pi
-from numba import njit, boolean
-from .CollectionCreator import Collection
+import awkward as awk
+import operator
 
+from cachetools import cachedmethod
+from cachetools.keys import hashkey
+from functools import partial
+from numba import njit, boolean
 from utils.Geometry import DeltaR2
+from utils.NumbaFuncs import all_numba
+
+def evaluate_xclean_mask(obj1name, obj2names):
+    @njit
+    def xclean_mask_numba(
+        etas1, phis1, starts1, stops1, etas2, phis2, starts2, stops2,
+    ):
+        content = np.ones(stops1[-1], dtype=boolean)
+        for iev, (start1, stop1, start2, stop2) in enumerate(zip(
+            starts1, stops1, starts2, stops2,
+        )):
+            for idx1 in range(start1, stop1):
+                for idx2 in range(start2, stop2):
+                    deta = etas1[idx1] - etas2[idx2]
+                    dphi = phis1[idx1] - phis2[idx2]
+
+                    # dR**2 < 0.4**2
+                    if DeltaR2(deta, dphi) < 0.16:
+                        content[idx1] = False
+                        break
+
+        return content
+
+    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_xclean_mask'))
+    def fevaluate_xclean_mask(ev, obj1name, obj2names, eidx, nsig, source):
+        obj1 = getattr(ev, obj1name)
+        masks = []
+        for obj2name in obj2names:
+            obj2 = getattr(ev, obj2name)
+            masks.append(xclean_mask_numba(
+                obj1.eta.content, obj1.phi.content,
+                obj1.eta.starts, obj1.eta.stops,
+                obj2(ev, 'eta').content, obj2(ev, 'phi').content,
+                obj2(ev, 'eta').starts, obj2(ev, 'eta').stops,
+            ))
+        return awk.JaggedArray(
+            obj1.eta.starts, obj1.eta.stops,
+            all_numba(np.vstack(masks).T),
+        )
+
+    return lambda ev: fevaluate_xclean_mask(
+        ev, obj1name, tuple(obj2names), ev.iblock, ev.nsig, ev.source,
+    )
 
 class ObjectCrossCleaning(object):
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
-    def event(self, event):
-        variations = event.variations
-        if self.variations == "none":
-            variations = [""]
-
-        for collection_name in self.collections:
-            collection = getattr(event, collection_name)
-
-            selections = np.ones(collection.stops[-1], dtype=bool)
-            for ref_collection_name in self.ref_collections:
-                ref_collection = getattr(event, ref_collection_name)
-                selections = selections & comp(collection, ref_collection)
-
-            for variation in variations:
-                for cat in ["Veto", "Selection"]:
-                    new_collection_name = collection_name + cat + variation
-                    old_selection = getattr(event, new_collection_name).selection
-                    new_selection = old_selection & selections
-                    getattr(event, new_collection_name).selection = new_selection
-
-def comp(coll1, coll2):
-    return comp_jit(coll1.eta.content, coll1.phi.content,
-                    coll1.starts, coll1.stops,
-                    coll2.eta.content, coll2.phi.content,
-                    coll2.starts, coll2.stops)
-
-@njit
-def comp_jit(etas1_cont, phis1_cont, starts_1, stops_1,
-             etas2_cont, phis2_cont, starts_2, stops_2):
-    content = np.ones(stops_1[-1], dtype=boolean)
-    for iev, (start_1, stop_1, start_2, stop_2) in enumerate(zip(starts_1,
-                                                                 stops_1,
-                                                                 starts_2,
-                                                                 stops_2)):
-        for idx1 in range(start_1, stop_1):
-            for idx2 in range(start_2, stop_2):
-                deta = etas1_cont[idx1] - etas2_cont[idx2]
-                dphi = phis1_cont[idx1] - phis2_cont[idx2]
-
-                # dR**2 < 0.4**2
-                if DeltaR2(deta, dphi) < 0.16:
-                    content[idx1] = False
-                    break
-    return content
+    def begin(self, event):
+        for cname in self.collections:
+            setattr(
+                event,
+                "{}_XCleanMask".format(cname),
+                evaluate_xclean_mask(cname, self.ref_collections),
+            )

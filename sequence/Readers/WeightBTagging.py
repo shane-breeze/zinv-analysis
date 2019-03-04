@@ -1,17 +1,64 @@
-import awkward
 import numpy as np
 import pandas as pd
+import awkward as awk
+import operator
+
+from cachetools import cachedmethod
+from cachetools.keys import hashkey
+from functools import partial
 
 from utils.Lambda import Lambda
-from utils.NumbaFuncs import (get_bin_indices, get_val_indices,
-                              get_bin_mask, get_val_mask)
+from utils.NumbaFuncs import weight_numba, get_bin_mask, get_val_mask
 
 dict_apply = np.vectorize(lambda d, x: d[x])
+func_apply = np.vectorize(lambda f, x: f(x))
+
+def evaluate_btagsf(df, attrs, h2f):
+    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_btagsf'))
+    def fevaluate_btagsf(ev, evidx, nsig, source, attrs_):
+        jet_flavour = dict_apply(h2f, ev.Jet.hadronFlavour.content)
+
+        # Create mask
+        mask = np.ones((jet_flavour.shape[0], df.shape[0]), dtype=bool)
+
+        # Flavour mask
+        flav_bins = get_val_mask(jet_flavour, df["jetFlavor"].values)
+        mask = mask & flav_bins
+
+        for jet_attr, df_attr in attrs_:
+            obj_attr = getattr(ev.Jet, jet_attr)
+            if callable(obj_attr):
+                obj_attr = obj_attr(ev)
+            mask_attr = get_bin_mask(
+                obj_attr.content,
+                df[df_attr+"Min"].values,
+                df[df_attr+"Max"].values,
+            )
+            mask = mask & mask_attr
+
+        # Create indices from mask
+        indices = np.array([np.nonzero(x)[0] for x in mask])
+        idx_central = indices[:,0]
+        idx_down = indices[:,1]
+        idx_up = indices[:,2]
+
+        jpt = ev.Jet.ptShift(ev)
+        sf = func_apply(df.iloc[idx_central]["lambda_formula"].values, jpt.content)
+        sf_up = func_apply(df.iloc[idx_up]["lambda_formula"].values, jpt.content)
+        sf_down = func_apply(df.iloc[idx_down]["lambda_formula"].values, jpt.content)
+
+        sf_up = (source=="btagSF")*(sf_up/sf-1.)
+        sf_down = (source=="btagSF")*(sf_down/sf-1.)
+        return awk.JaggedArray(
+            jpt.starts, jpt.stops, weight_numba(sf, nsig, sf_up, sf_down),
+        )
+
+    return lambda ev: fevaluate_btagsf(ev, ev.iblock, ev.nsig, ev.source, tuple(attrs))
 
 class WeightBTagging(object):
     ops = {"loose": 0, "medium": 1, "tight": 2, "reshaping": 3}
     flavours = {"b": 0, "c": 1, "udsg": 2}
-    parton_to_flavour = {
+    hadron_to_flavour = {
         5: 0, -5: 0,
         4: 1, -4: 1,
         0: 2, 1: 2, 2: 2, 3: 2, -1: 2, -2: 2, -3: 2, 21: 2,
@@ -31,67 +78,20 @@ class WeightBTagging(object):
             mask = mask | ((df["measurementType"]==mtype) & (df["jetFlavor"]==self.flavours[flav]))
         df = df.loc[mask]
 
-        self.calibrations = df[["sysType", "measurementType", "jetFlavor",
-                                "etaMin", "etaMax", "ptMin", "ptMax",
-                                "discrMin", "discrMax", "formula"]]
+        self.calibrations = df[[
+            "sysType", "measurementType", "jetFlavor", "etaMin", "etaMax",
+            "ptMin", "ptMax", "discrMin", "discrMax", "formula",
+        ]].sort_values(["sysType"]).reset_index(drop=True)
 
     def begin(self, event):
-        self.calibrations["lambda_formula"] = self.calibrations["formula"].apply(lambda f: Lambda(f))
+        self.calibrations["lambda_formula"] = self.calibrations["formula"].apply(Lambda)
+        attrs = [("eta", "eta"), ("ptShift", "pt")]
+        if self.operating_point == "reshaping":
+            attrs.append(("btagCSVV2", "discr"))
+
+        setattr(event, "Jet_btagSF", evaluate_btagsf(
+            self.calibrations, attrs, self.hadron_to_flavour,
+        ))
 
     def end(self):
         self.calibrations = None
-
-    def event(self, event):
-        for syst, name in [("central", ""), ("up", "Up"), ("down", "Down")]:
-            # systematic type
-            df = self.calibrations.loc[self.calibrations["sysType"] == syst]\
-                    .reset_index(drop=True)
-
-            jet_flavour = dict_apply(
-                self.parton_to_flavour,
-                event.JetSelection.partonFlavour.content,
-            )
-
-            # Create mask
-            mask = np.ones((jet_flavour.shape[0], df.shape[0]), dtype=bool)
-
-            # exact values
-            flav_bins = get_val_mask(jet_flavour, df["jetFlavor"].values)
-            mask = mask & flav_bins
-
-            attrs = [("eta", "eta"), ("pt", "pt")]
-            if self.operating_point == "reshaping":
-                attrs.append(("btagCSVV2", "discr"))
-
-            for jet_attr, df_attr in attrs:
-                obj_attr = getattr(event.JetSelection, jet_attr).content
-                mask_attr = get_bin_mask(
-                    obj_attr,
-                    df[df_attr+"Min"].values,
-                    df[df_attr+"Max"].values,
-                )
-                if jet_attr in ["pt"]:
-                    mask_attr[obj_attr>=df[df_attr+"Max"].max()] = True
-                mask = mask & mask_attr
-
-            # Create indices from mask
-            for x in mask:
-                print(np.nonzero(x))
-            indices = np.array([np.nonzero(x) for x in mask]).ravel()
-            sf = np.vectorize(lambda f, x: f(x), otypes=[object])(
-                df.iloc[indices]["lambda_formula"].values,
-                event.JetSelection.pt.content,
-            )
-
-            setattr(event, "Jet_btagSF{}".format(name), awkward.JaggedArray(
-                event.JetSelection.starts,
-                event.JetSelection.stops,
-                sf,
-            ))
-
-if __name__ == "__main__":
-    weight_btagging = WeightBTagging(
-        operating_point = "medium",
-        measurement_types = {"b": "comb", "c": "comb", "udsg": "incl"},
-        calibration_file = datapath+"/btagging/CSVv2_Moriond17_B_H.csv",
-    )

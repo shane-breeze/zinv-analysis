@@ -1,7 +1,26 @@
 import numpy as np
 import pandas as pd
-from numba import njit, int32
-from utils.Lambda import Lambda
+import operator
+
+from cachetools import cachedmethod
+from cachetools.keys import hashkey
+from functools import partial
+
+from utils.NumbaFuncs import get_bin_indices, weight_numba
+
+def evaluate_qcdewk_weight():
+    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_qcdewk_weight'))
+    def fevaluate_qcdewk_weight(ev, evidx, nsig, source):
+        central = ev.WeightQcdEwkNominal
+        try:
+            up = getattr(ev, 'WeightQcdEwk_{}Up'.format(source))
+            down = getattr(ev, 'WeightQcdEwk_{}Down'.format(source))
+        except AttributeError:
+            up = 0.
+            down = 0.
+        return weight_numba(central, nsig, up, down)
+
+    return lambda ev: fevaluate_qcdewk_weight(ev, ev.iblock, ev.nsig, ev.source)
 
 class WeightQcdEwk(object):
     def __init__(self, **kwargs):
@@ -10,6 +29,8 @@ class WeightQcdEwk(object):
     def begin(self, event):
         if event.config.dataset.isdata:
             return
+
+        event.WeightQcdEwk = evaluate_qcdewk_weight()
 
         self.variations = [""]\
                 + [n+"Up" for n in self.nuisances]\
@@ -74,38 +95,28 @@ class WeightQcdEwk(object):
         #self.input_df = input_df.reset_index()
 
     def event(self, event):
-        if event.config.dataset.isdata:
-            event.WeightQcdEwk = np.ones(event.size)
+        if self.parent not in self.input_paths:
+            weights = np.ones(event.size)
+            event.WeightQcdEwkNominal = weights
+            for variation in self.variations[1:]:
+                setattr(
+                    event,
+                    "WeightQcdEwk_{}".format(variation),
+                    np.zeros(event.size),
+                )
         else:
-            if self.parent not in self.input_paths:
-                weights = np.ones(event.size)
-                event.WeightQcdEwk = weights
-                for variation in self.variations[1:]:
-                    setattr(event, "WeightQcdEwk_{}".format(variation), weights)
-            else:
-                corrections = self.input_df.iloc[get_bin_indices(
-                    event.GenPartBoson_pt,
-                    self.input_df.index.get_level_values("bin_min").values,
-                    self.input_df.index.get_level_values("bin_max").values,
-                )]
-                event.WeightQcdEwk = corrections[""].values
-                for variation in self.variations[1:]:
-                    setattr(event, "WeightQcdEwk_{}".format(variation),
-                            (corrections[variation]/corrections[""]).values)
-
-        event.Weight_MET *= event.WeightQcdEwk
-        event.Weight_SingleMuon *= event.WeightQcdEwk
-        event.Weight_SingleElectron *= event.WeightQcdEwk
-
-@njit
-def get_bin_indices(vals, mins, maxs):
-    idxs = -1*np.ones_like(vals, dtype=int32)
-    for iev, val in enumerate(vals):
-        for ib, (bin_min, bin_max) in enumerate(zip(mins, maxs)):
-            if bin_min <= val < bin_max:
-                idxs[iev] = ib
-                break
-    return idxs
+            corrections = self.input_df.iloc[get_bin_indices(
+                event.GenPartBoson_pt,
+                self.input_df.index.get_level_values("bin_min").values,
+                self.input_df.index.get_level_values("bin_max").values,
+            )]
+            event.WeightQcdEwkNominal = corrections[""].values
+            for variation in self.variations[1:]:
+                setattr(
+                    event,
+                    "WeightQcdEwk_{}".format(variation),
+                    (corrections[variation]/corrections[""]).values - 1.
+                )
 
 def read_input(path, histname):
     with open(path, 'r') as f:

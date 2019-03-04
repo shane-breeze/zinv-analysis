@@ -1,89 +1,28 @@
-import sys
+from alphatwirl.loop import NullCollector
 import os
+import sys
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
+toppath = os.path.abspath(os.environ["TOPDIR"])
+datapath = os.path.join(toppath, "data")
+collpath = os.path.join(toppath, "sequence", "Collectors")
+drawpath = os.path.join(toppath, "drawing")
 
 import Readers
 import Collectors
-from event_selection import event_selection
-from physics_object_selection import physics_object_selection
-from alphatwirl.loop import NullCollector
 
-import os
-datapath = os.path.join(os.environ["TOPDIR"], "data")
-
-# Create all possible variations
-jes_variations = [
-    "Total",
-    "AbsoluteStat", "AbsoluteScale", "AbsoluteMPFBias", "Fragmentation", "SinglePionECAL", "SinglePionHCAL",
-    "FlavorQCD", "TimePtEta", "RelativeJEREC1", "RelativeJEREC2", "RelativeJERHF", "RelativePtBB",
-    "RelativePtEC1", "RelativePtEC2", "RelativePtHF", "RelativeBal", "RelativeFSR", "RelativeStatFSR", "RelativeStatEC",
-    "RelativeStatHF", "PileUpDataMC", "PileUpPtRef", "PileUpPtBB", "PileUpPtEC1", "PileUpPtEC2", "PileUpPtHF",
-]
-variations_noupdown = ["jes"+j for j in jes_variations] + ["jer", "unclust"]
-
-all_variations = [""]\
-        + [var+"Up" for var in variations_noupdown]\
-        + [var+"Down" for var in variations_noupdown]
+event_tools = Readers.EventTools(
+    name = "event_tools",
+    maxsize = int(6*1024**3), # 6 GB
+)
 
 # Initialise readers and collectors
-certified_lumi_checker = Readers.CertifiedLumiChecker(
-    name = "certified_lumi_checker",
-    lumi_json_path = datapath + "/json/Cert_271036-284044_13TeV_23Sep2016ReReco_Collisions16_JSON.txt",
-    mc = False,
-)
-
-trigger_checker = Readers.TriggerChecker(
-    name = "trigger_checker",
-)
-
 collection_creator = Readers.CollectionCreator(
     name = "collection_creator",
     collections = ["CaloMET", "MET", "Jet", "Electron", "Muon", "Photon", "Tau",
                    "GenMET", "GenPart", "GenJet", "GenDressedLepton", "LHEPart"],
-    variations = all_variations,
 )
 
-skim_collections = Readers.SkimCollections(
-    name = "skim_collections",
-    selection_dict = physics_object_selection.selection_dict,
-)
-
-tau_cross_cleaning = Readers.ObjectCrossCleaning(
-    name = "tau_cross_cleaning",
-    collections = ("Tau",),
-    ref_collections = ("MuonVeto", "ElectronVeto"),
-    variations = "none",
-)
-
-jet_cross_cleaning = Readers.ObjectCrossCleaning(
-    name = "jet_cross_cleaning",
-    collections = ("Jet",),
-    ref_collections = ("MuonVeto", "ElectronVeto", "PhotonVeto", "TauVeto"),
-    variations = "all",
-)
-
-jec_variations = Readers.JecVariations(
-    name = "jec_variations",
-    jes_unc_file = datapath + "/jecs/Summer16_23Sep2016V4_MC_UncertaintySources_AK4PFchs.txt",
-    jer_sf_file = datapath + "/jecs/Spring16_25nsV10a_MC_SF_AK4PFchs.txt",
-    jer_file = datapath + "/jecs/Spring16_25nsV10_MC_PtResolution_AK4PFchs.txt",
-    apply_jer_corrections = True,
-    do_jes = True,
-    do_jer = True,
-    do_unclust = True,
-)
-
-event_sums_producer = Readers.EventSumsProducer(
-    name = "event_sums_producer",
-)
-signal_region_blinder = Readers.SignalRegionBlinder(
-    name = "signal_region_blinder",
-    blind = True,
-    apply_to_mc = False,
-)
-inv_mass_producer = Readers.InvMassProducer(
-    name = "inv_mass_producer",
-)
+# Gen/Lhe level producers
 gen_boson_producer = Readers.GenBosonProducer(
     name = "gen_boson_producer",
     data = False,
@@ -97,17 +36,83 @@ gen_part_assigner = Readers.GenPartAssigner(
     data = False,
 )
 
-weight_creator = Readers.WeightCreator(
-    name = "weight_creator",
+jec_variations = Readers.JecVariations(
+    name = "jec_variations",
+    jes_unc_file = datapath + "/jecs/Summer16_23Sep2016V4_MC_UncertaintySources_AK4PFchs.txt",
+    jer_sf_file = datapath + "/jecs/Spring16_25nsV10a_MC_SF_AK4PFchs.txt",
+    jer_file = datapath + "/jecs/Spring16_25nsV10_MC_PtResolution_AK4PFchs.txt",
+    apply_jer_corrections = True,
+    jes_regex = "jes(?P<source>.*)(Up|Down)",
+    unclust_threshold = 15.,
+    data = False,
 )
+
+object_functions = Readers.ObjectFunctions(
+    name = "object_functions",
+    selections = [
+        ("Jet", "JetVeto", True),
+        ("Jet", "JetVetoNoSelection", True),
+        ("Jet", "JetSelection", True),
+        ("Jet", "JetBVeto", True),
+        ("Jet", "JetBVetoNoSelection", True),
+        ("Jet", "JetBSelection", True),
+        ("Muon", "MuonVeto", False),
+        ("Muon", "MuonVetoNoSelection", False),
+        ("Muon", "MuonSelection", False),
+        ("Electron", "ElectronVeto", False),
+        ("Electron", "ElectronVetoNoSelection", False),
+        ("Electron", "ElectronSelection", False),
+        ("Photon", "PhotonVeto", False),
+        ("Photon", "PhotonVetoNoSelection", False),
+        ("Photon", "PhotonSelection", False),
+        ("Tau", "TauVeto", True),
+        ("Tau", "TauVetoNoSelection", True),
+        ("Tau", "TauSelection", True),
+    ],
+)
+
+event_functions = Readers.EventFunctions(
+    name = "event_functions",
+)
+
+skim_collections = Readers.SkimCollections(
+    name = "skim_collections",
+)
+
+tau_cross_cleaning = Readers.ObjectCrossCleaning(
+    name = "tau_cross_cleaning",
+    collections = ("Tau",),
+    ref_collections = ("MuonVeto", "ElectronVeto"),
+)
+
+jet_cross_cleaning = Readers.ObjectCrossCleaning(
+    name = "jet_cross_cleaning",
+    collections = ("Jet",),
+    ref_collections = ("MuonVeto", "ElectronVeto", "PhotonVeto", "TauVeto"),
+)
+
+trigger_checker = Readers.TriggerChecker(
+    name = "trigger_checker",
+)
+
+certified_lumi_checker = Readers.CertifiedLumiChecker(
+    name = "certified_lumi_checker",
+    lumi_json_path = datapath + "/json/Cert_271036-284044_13TeV_23Sep2016ReReco_Collisions16_JSON.txt",
+    mc = False,
+)
+
 weight_xsection_lumi = Readers.WeightXsLumi(
     name = "weight_xsection_lumi",
+    data = False,
+)
+weight_pdf_scale = Readers.WeightPdfScale(
+    name = "weight_pdf_scale",
     data = False,
 )
 weight_pu = Readers.WeightPileup(
     name = "weight_pu",
     correction_file = datapath + "/pileup/nTrueInt_corrections.txt",
-    overflow = True,
+    variable = "Pileup_nTrueInt",
     data = False,
 )
 weight_met_trigger = Readers.WeightMetTrigger(
@@ -119,96 +124,116 @@ weight_met_trigger = Readers.WeightMetTrigger(
     },
     data = False,
 )
-weight_muons = Readers.WeightObjects(
-    name = "weight_muons",
-    dataset_applicators = {
-        "MET": "muonId*muonIso*muonTrack",
-        "SingleMuon": "muonId*muonIso*muonTrack*muonTrig",
-        "SingleElectron": "muonId*muonIso*muonTrack",
-    },
+weight_electrons = Readers.WeightObjects(
+    name = "weight_electrons",
     correctors = [
         {
-            "name": "muonId",
-            "collection": "MuonSelection",
-            "binning_variables": ("mu: mu.pt.content", "mu: np.abs(mu.eta.content)"),
-            "weighted_paths": [(19.7, datapath+"/muons/muon_id_runBCDEF.txt"),
-                               (16.2, datapath+"/muons/muon_id_runGH.txt")],
-            "add_syst": "mu: 0.01",
+            "name": "eleIdIsoTight",
+            "collection": "Electron",
+            "binning_variables": ("ev: ev.Electron.eta", "ev: ev.Electron_ptShift(ev)"),
+            "weighted_paths": [(1, datapath+"/electrons/electron_idiso_tight.txt")],
+            "add_syst": "ev: awk.JaggedArray.zeros_like(ev.Electron.eta)",
         }, {
-            "name": "muonIso",
-            "collection": "MuonSelection",
-            "binning_variables": ("mu: mu.pt.content", "mu: np.abs(mu.eta.content)"),
-            "weighted_paths": [(19.7, datapath+"/muons/muon_isolation_runBCDEF.txt"),
-                               (16.2, datapath+"/muons/muon_isolation_runGH.txt")],
-            "add_syst": "mu: 0.005",
+            "name": "eleIdIsoVeto",
+            "collection": "Electron",
+            "binning_variables": ("ev: ev.Electron.eta", "ev: ev.Electron_ptShift(ev)"),
+            "weighted_paths": [(1, datapath+"/electrons/electron_idiso_veto.txt")],
+            "add_syst": "ev: awk.JaggedArray.zeros_like(ev.Electron.eta)",
         }, {
-            "name": "muonTrack",
-            "collection": "MuonSelection",
-            "binning_variables": ("mu: mu.eta.content", ),
-            "weighted_paths": [(1., datapath+"/muons/muon_tracking.txt")],
+            "name": "eleReco",
+            "collection": "Electron",
+            "binning_variables": ("ev: ev.Electron.eta", "ev: ev.Electron_ptShift(ev)"),
+            "weighted_paths": [(1, datapath+"/electrons/electron_reconstruction.txt")],
+            "add_syst": "ev: 0.01*((ev.Electron_ptShift(ev)<20) | (ev.Electron_ptShift(ev)>80))",
         }, {
-            "name": "muonTrig",
-            "collection": "MuonSelection",
-            "binning_variables": ("mu: mu.pt.content", "mu: np.abs(mu.eta.content)"),
-            "weighted_paths": [(19.7, datapath + "/muons/muon_trigger_runBCDEF.txt"),
-                               (16.2, datapath + "/muons/muon_trigger_runGH.txt")],
-            "any_pass": True,
-            "add_syst": "mu: 0.005",
+            "name": "eleTrig",
+            "collection": "Electron",
+            "binning_variables": ("ev: ev.Electron_ptShift(ev)", "ev: np.abs(ev.Electron.eta)"),
+            "weighted_paths": [(1, datapath+"/electrons/electron_trigger_v2.txt")],
+            "add_syst": "ev: awk.JaggedArray.zeros_like(ev.Electron.eta)",
         },
     ],
     data = False,
 )
-weight_electrons = Readers.WeightObjects(
-    name = "weight_electrons",
-    dataset_applicators = {
-        "MET": "eleIdIso*eleReco",
-        "SingleMuon": "eleIdIso*eleReco",
-        "SingleElectron": "eleIdIso*eleReco*eleTrig",
-    },
+weight_muons = Readers.WeightObjects(
+    name = "weight_muons",
     correctors = [
         {
-            "name": "eleIdIso",
-            "collection": "ElectronSelection",
-            "binning_variables": ("e: e.eta.content", "e: e.pt.content"),
-            "weighted_paths": [(1, datapath+"/electrons/electron_idiso.txt")],
+            "name": "muonIdTight",
+            "collection": "Muon",
+            "binning_variables": ("ev: np.abs(ev.Muon.eta)", "ev: ev.Muon_ptShift(ev)"),
+            "weighted_paths": [(19.7, datapath+"/muons/muon_id_loose_runBCDEF.txt"),
+                               (16.2, datapath+"/muons/muon_id_loose_runGH.txt")],
+            "add_syst": "ev: 0.01*awk.JaggedArray.ones_like(ev.Muon.eta)",
         }, {
-            "name": "eleReco",
-            "collection": "ElectronSelection",
-            "binning_variables": ("e: e.eta.content", "e: e.pt.content"),
-            "weighted_paths": [(1, datapath+"/electrons/electron_reconstruction.txt")],
-            "add_syst": "e: np.where((e.pt.content<20) | (e.pt.content>80), 0.01, 0.00)",
+            "name": "muonIdLoose",
+            "collection": "Muon",
+            "binning_variables": ("ev: np.abs(ev.Muon.eta)", "ev: ev.Muon_ptShift(ev)"),
+            "weighted_paths": [(19.7, datapath+"/muons/muon_id_loose_runBCDEF.txt"),
+                               (16.2, datapath+"/muons/muon_id_loose_runGH.txt")],
+            "add_syst": "ev: 0.01*awk.JaggedArray.ones_like(ev.Muon.eta)",
         }, {
-            "name": "eleTrig",
-            "collection": "ElectronSelection",
-            "binning_variables": ("e: e.pt.content", "e: np.abs(e.eta.content)"),
-            "weighted_paths": [(1, datapath+"/electrons/electron_trigger_v2.txt")],
-            "any_pass": True,
+            "name": "muonIsoTight",
+            "collection": "Muon",
+            "binning_variables": ("ev: np.abs(ev.Muon.eta)", "ev: ev.Muon_ptShift(ev)"),
+            "weighted_paths": [(19.7, datapath+"/muons/muon_iso_tight_tightID_runBCDEF.txt"),
+                               (16.2, datapath+"/muons/muon_iso_tight_tightID_runGH.txt")],
+            "add_syst": "ev: 0.005*awk.JaggedArray.ones_like(ev.Muon.eta)",
+        }, {
+            "name": "muonIsoLoose",
+            "collection": "Muon",
+            "binning_variables": ("ev: np.abs(ev.Muon.eta)", "ev: ev.Muon_ptShift(ev)"),
+            "weighted_paths": [(19.7, datapath+"/muons/muon_iso_loose_looseID_runBCDEF.txt"),
+                               (16.2, datapath+"/muons/muon_iso_loose_looseID_runGH.txt")],
+            "add_syst": "ev: 0.005*awk.JaggedArray.ones_like(ev.Muon.eta)",
+        }, {
+            "name": "muonTrig",
+            "collection": "Muon",
+            "binning_variables": ("ev: np.abs(ev.Muon.eta)", "ev: ev.Muon_ptShift(ev)"),
+            "weighted_paths": [(19.7, datapath + "/muons/muon_trigger_IsoMu24_OR_IsoTkMu24_runBCDEF.txt"),
+                               (16.2, datapath + "/muons/muon_trigger_IsoMu24_OR_IsoTkMu24_runGH.txt")],
+            "add_syst": "ev: 0.005*awk.JaggedArray.ones_like(ev.Muon.eta)",
         },
     ],
     data = False,
 )
 weight_taus = Readers.WeightObjects(
     name = "weight_taus",
-    dataset_applicators = {
-        "MET": "tauId",
-        "SingleMuon": "tauId",
-        "SingleElectron": "tauId",
-    },
     correctors = [
         {
-            "name": "tauId",
-            "collection": "TauSelection",
-            "binning_variables": ("t: t.pt.content",),
+            "name": "tauIdTight",
+            "collection": "Tau",
+            "binning_variables": ("ev: ev.Tau_ptShift(ev)",),
             "weighted_paths": [(1, datapath+"/taus/tau_id_tight.txt")],
-            "add_syst": "t: 0.05",
+            "add_syst": "ev: 0.05*awk.JaggedArray.ones_like(ev.Tau.eta)",
+        },
+    ],
+    data = False,
+)
+weight_photon = Readers.WeightObjects(
+    name = "weight_photon",
+    correctors = [
+        {
+            "name": "photonIdLoose",
+            "collection": "Photon",
+            "binning_variables": ("ev: ev.Photon.eta", "ev: ev.Photon_ptShift(ev)"),
+            "weighted_paths": [(1, datapath+"/photons/photon_cutbasedid_loose.txt")],
+            "add_syst": "ev: awk.JaggedArray.zeros_like(ev.Photon.eta)",
+        }, {
+            "name": "photonPixelSeedVeto",
+            "collection": "Photon",
+            "binning_variables": ("ev: ev.Photon.r9", "ev: np.abs(ev.Photon.eta)", "ev: ev.Photon_ptShift(ev)"),
+            "weighted_paths": [(1, datapath+"/photons/photon_pixelseedveto.txt")],
+            "add_syst": "ev: awk.JaggedArray.zeros_like(ev.Photon.eta)",
         },
     ],
     data = False,
 )
 
-weight_btagging = Readers.WeightBTagging(
-    name = "weight_btagging",
+weight_btags = Readers.WeightBTagging(
+    name = "weight_btags",
     operating_point = "medium",
+    threshold = 0.8484,
     measurement_types = {"b": "comb", "c": "comb", "udsg": "incl"},
     calibration_file = datapath+"/btagging/CSVv2_Moriond17_B_H.csv",
     data = False,
@@ -233,165 +258,205 @@ weight_qcd_ewk = Readers.WeightQcdEwk(
               "d3kappa_EW", "dK_NLO_mix"],
     nuisances = ["d1k_qcd", "d2k_qcd", "d3k_qcd", "d1k_ew", "d2k_ew_z",
                  "d2k_ew_w", "d3k_ew_z", "d3k_ew_w", "dk_mix"],
-)
-#weight_qcd_ewk = Readers.WeightQcdEwk(
-#    name = "weight_qcd_ewk",
-#    input_paths = {
-#        "ZJetsToNuNu": (datapath+"/qcd_ewk/vvj.dat", "vvj_pTV_{}"),
-#        "WJetsToLNu":  (datapath+"/qcd_ewk/evj.dat", "evj_pTV_{}"),
-#        "DYJetsToLL":  (datapath+"/qcd_ewk/eej.dat", "eej_pTV_{}"),
-#    },
-#    underflow = True,
-#    overflow = True,
 #    formula = "1 + kappa_EW + d1k_ew*d1kappa_EW + isz*(d2k_ew_z*d2kappa_EW + d3k_ew_z*d3kappa_EW)"\
 #                                               "+ isw*(d2k_ew_w*d2kappa_EW + d3k_ew_w*d3kappa_EW)",
 #    params = ["kappa_EW", "d1kappa_EW", "d2kappa_EW", "d3kappa_EW"],
 #    nuisances = ["d1k_ew", "d2k_ew_z", "d2k_ew_w", "d3k_ew_z", "d3k_ew_w"],
-#)
+    data = False,
+)
 
 weight_prefiring = Readers.WeightPreFiring(
     name = "weight_prefiring",
     jet_eff_map_path = datapath+"/prefiring/L1prefiring_jetpt_2016BtoH.txt",
     photon_eff_map_path = datapath+"/prefiring/L1prefiring_photonpt_2016BtoH.txt",
-    jet_selection = "j: (j.pt>20) & ((2<np.abs(j.eta)) & (np.abs(j.eta)<3))",
-    photon_selection = "y: (y.pt>20) & ((2<np.abs(y.eta)) & (np.abs(y.eta)<3))",
+    jet_selection = "ev: (ev.Jet_ptShift(ev)>20) & ((2<np.abs(ev.Jet_eta)) & (np.abs(ev.Jet_eta)<3))",
+    photon_selection = "ev: (ev.Photon_ptShift(ev)>20) & ((2<np.abs(ev.Photon_eta)) & (np.abs(ev.Photon_eta)<3))",
     syst = 0.2,
-    apply = True,
-    #data = False,
+    data = False,
 )
 
 selection_producer = Readers.SelectionProducer(
     name = "selection_producer",
-    event_selection = event_selection,
+)
+
+weight_producer = Readers.WeightProducer(
+    name = "weight_producer",
 )
 
 hist_reader = Collectors.HistReader(
     name = "hist_reader",
-    cfg = Collectors.Histogrammer_cfg,
+    cfg = os.path.join(collpath, "Histogrammer_cfg.yaml"),
+    drawing_cfg = os.path.join(drawpath, "config.yaml"),
+    split_samples = {
+        "DYJetsToLL": {
+            "DYJetsToEE": ["ev: ev.LeptonIsElectron"],
+            "DYJetsToMuMu": ["ev: ev.LeptonIsMuon"],
+            "DYJetsToTauLTauL": ["ev: ev.LeptonIsTau & (ev.nGenTauL==2)"],
+            "DYJetsToTauLTauH": ["ev: ev.LeptonIsTau & (ev.nGenTauL==1)"],
+            "DYJetsToTauHTauH": ["ev: ev.LeptonIsTau & (ev.nGenTauL==0)"],
+        },
+        "WJetsToLNu": {
+            "WJetsToENu": ["ev: ev.LeptonIsElectron"],
+            "WJetsToMuNu": ["ev: ev.LeptonIsMuon"],
+            "WJetsToTauLNu": ["ev: ev.LeptonIsTau & (ev.nGenTauL==1)"],
+            "WJetsToTauHNu": ["ev: ev.LeptonIsTau & (ev.nGenTauL==0)"],
+        },
+    },
 )
 hist_collector = Collectors.HistCollector(
     name = "hist_collector",
     plot = True,
-    cfg = Collectors.Histogrammer_cfg,
+    cfg = os.path.join(collpath, "Histogrammer_cfg.yaml"),
+    drawing_cfg = os.path.join(drawpath, "config.yaml"),
 )
 
 hist2d_reader = Collectors.Hist2DReader(
     name = "hist2d_reader",
-    cfg = Collectors.Histogrammer2D_cfg,
+    cfg = os.path.join(collpath, "Histogrammer2D_cfg.yaml"),
+    drawing_cfg = os.path.join(drawpath, "config.yaml"),
 )
 hist2d_collector = Collectors.Hist2DCollector(
     name = "hist2d_collector",
     plot = True,
-    cfg = Collectors.Histogrammer2D_cfg,
+    cfg = os.path.join(collpath, "Histogrammer2D_cfg.yaml"),
+    drawing_cfg = os.path.join(drawpath, "config.yaml"),
 )
 
 gen_stitching_reader = Collectors.GenStitchingReader(
     name = "gen_stitching_reader",
-    cfg = Collectors.GenStitching_cfg,
+    cfg = os.path.join(collpath, "GenStitching_cfg.yaml"),
+    drawing_cfg = os.path.join(drawpath, "config.yaml"),
 )
 gen_stitching_collector = Collectors.GenStitchingCollector(
     name = "gen_stitching_collector",
     plot = True,
-    cfg = Collectors.GenStitching_cfg,
+    cfg = os.path.join(collpath, "GenStitching_cfg.yaml"),
+    drawing_cfg = os.path.join(drawpath, "config.yaml"),
 )
 
 met_response_resolution_reader = Collectors.MetResponseResolutionReader(
     name = "met_response_resolution_reader",
-    cfg = Collectors.MetResponseResolution_cfg,
+    cfg = os.path.join(collpath, "MetResponseResolution_cfg.yaml"),
+    drawing_cfg = os.path.join(drawpath, "config.yaml"),
 )
 met_response_resolution_collector = Collectors.MetResponseResolutionCollector(
     name = "met_response_resolution_collector",
     plot = True,
-    cfg = Collectors.MetResponseResolution_cfg,
+    cfg = os.path.join(collpath, "MetResponseResolution_cfg.yaml"),
+    drawing_cfg = os.path.join(drawpath, "config.yaml"),
 )
 
 qcd_ewk_corrections_reader = Collectors.QcdEwkCorrectionsReader(
     name = "qcd_ewk_corrections_reader",
-    cfg = Collectors.QcdEwkCorrections_cfg,
+    cfg = os.path.join(collpath, "QcdEwkCorrections_cfg.yaml"),
+    drawing_cfg = os.path.join(drawpath, "config.yaml"),
 )
 qcd_ewk_corrections_collector = Collectors.QcdEwkCorrectionsCollector(
     name = "qcd_ewk_corrections_collector",
     plot = True,
-    cfg = Collectors.QcdEwkCorrections_cfg,
+    cfg = os.path.join(collpath, "QcdEwkCorrections_cfg.yaml"),
+    drawing_cfg = os.path.join(drawpath, "config.yaml"),
 )
 
 systematics_reader = Collectors.SystematicsReader(
     name = "systematics_reader",
-    cfg = Collectors.Systematics_cfg,
+    cfg = os.path.join(collpath, "Systematics_cfg.yaml"),
+    drawing_cfg = os.path.join(drawpath, "config.yaml"),
+    split_samples = {
+        "DYJetsToLL": {
+            "DYJetsToEE": ["ev: ev.LeptonIsElectron"],
+            "DYJetsToMuMu": ["ev: ev.LeptonIsMuon"],
+            "DYJetsToTauLTauL": ["ev: ev.LeptonIsTau & (ev.nGenTauL==2)"],
+            "DYJetsToTauLTauH": ["ev: ev.LeptonIsTau & (ev.nGenTauL==1)"],
+            "DYJetsToTauHTauH": ["ev: ev.LeptonIsTau & (ev.nGenTauL==0)"],
+        },
+        "WJetsToLNu": {
+            "WJetsToENu": ["ev: ev.LeptonIsElectron"],
+            "WJetsToMuNu": ["ev: ev.LeptonIsMuon"],
+            "WJetsToTauLNu": ["ev: ev.LeptonIsTau & (ev.nGenTauL==1)"],
+            "WJetsToTauHNu": ["ev: ev.LeptonIsTau & (ev.nGenTauL==0)"],
+        },
+    },
 )
 systematics_collector = Collectors.SystematicsCollector(
     name = "systematics_collector",
     plot = True,
-    cfg = Collectors.Systematics_cfg,
+    cfg = os.path.join(collpath, "Systematics_cfg.yaml"),
+    drawing_cfg = os.path.join(drawpath, "config.yaml"),
 )
 
 trigger_efficiency_reader = Collectors.TriggerEfficiencyReader(
     name = "trigger_efficiency_reader",
-    cfg = Collectors.TriggerEfficiency_cfg,
+    cfg = os.path.join(collpath, "TriggerEfficiency_cfg.yaml"),
+    drawing_cfg = os.path.join(drawpath, "config.yaml"),
 )
 trigger_efficiency_collector = Collectors.TriggerEfficiencyCollector(
     name = "trigger_efficiency_collector",
     plot = True,
-    cfg = Collectors.TriggerEfficiency_cfg,
+    cfg = os.path.join(collpath, "TriggerEfficiency_cfg.yaml"),
+    drawing_cfg = os.path.join(drawpath, "config.yaml"),
 )
 
 qcd_estimation_reader = Collectors.QcdEstimationReader(
     name = "qcd_estimation_reader",
-    cfg = Collectors.QcdEstimation_cfg,
+    cfg = os.path.join(collpath, "QcdEstimation_cfg.yaml"),
+    drawing_cfg = os.path.join(drawpath, "config.yaml"),
 )
 qcd_estimation_collector = Collectors.QcdEstimationCollector(
     name = "qcd_estimation_collector",
     plot = True,
-    cfg = Collectors.QcdEstimation_cfg,
+    cfg = os.path.join(collpath, "QcdEstimation_cfg.yaml"),
+    drawing_cfg = os.path.join(drawpath, "config.yaml"),
 )
 
 sequence = [
+    # Setup caching, nsig and source
+    (event_tools, NullCollector()),
     # Creates object collections accessible through the event variable. e.g.
-    # event.Jet.pt rather than event.Jet_pt. Simpler to pass a collection to
-    # functions and allows subcollections (done by skim_collections)
+    # event.Jet.pt rather than event.Jet_pt.
     (collection_creator, NullCollector()),
-    # Try to keep GenPart branch stuff before everything else. It's quite big
-    # and is deleted after use. Don't want to add the memory consumption of
-    # this with all other branches
+    # selection and weight producers. They only create functions and hence can
+    # be placed near the start
+    (selection_producer, NullCollector()),
+    (weight_producer, NullCollector()),
+    # # Try to keep GenPart branch stuff before everything else. It's quite big
+    # # and is deleted after use. Don't want to add the memory consumption of
+    # # this with all other branches
     (gen_boson_producer, NullCollector()),
     (lhe_part_assigner, NullCollector()),
     (gen_part_assigner, NullCollector()),
     (jec_variations, NullCollector()),
+    (object_functions, NullCollector()),
+    (event_functions, NullCollector()),
+    # # Cross cleaning must be placed after the veto and selection collections
+    # # are created. They update the selection flags produced in skim_collections
     (skim_collections, NullCollector()),
-    # Cross cleaning must be placed after the veto and selection collections
-    # are created but before they're used anywhere to allow the collection
-    # selection mask to be updated
     (tau_cross_cleaning, NullCollector()),
     (jet_cross_cleaning, NullCollector()),
-    # General event variable producers
-    (event_sums_producer, NullCollector()),
-    (inv_mass_producer, NullCollector()),
-    # Readers which create a mask for the event. Doesn't apply it, just stores
-    # the mask as an array of booleans
+    # # Readers which create a mask for the event. Doesn't apply it, just stores
+    # # the mask as an array of booleans
     (trigger_checker, NullCollector()),
     (certified_lumi_checker, NullCollector()),
-    (signal_region_blinder, NullCollector()),
-    # Weighters. Need to add a weight (of ones) to the event first -
-    # weight_creator. The generally just apply to MC and that logic it dealt
-    # with by the ScribblerWrapper.
-    (weight_creator, NullCollector()),
+    # # Weighters. The generally just apply to MC and that logic is dealt with by
+    # # the ScribblerWrapper.
     (weight_xsection_lumi, NullCollector()),
+    (weight_pdf_scale, NullCollector()),
     (weight_pu, NullCollector()),
     (weight_met_trigger, NullCollector()),
-    (weight_muons, NullCollector()),
     (weight_electrons, NullCollector()),
+    (weight_muons, NullCollector()),
     (weight_taus, NullCollector()),
-    #(weight_btagging, NullCollector()),
+    (weight_photon, NullCollector()),
+    (weight_btags, NullCollector()),
     (weight_qcd_ewk, NullCollector()),
     (weight_prefiring, NullCollector()),
-    (selection_producer, NullCollector()),
     # Add collectors (with accompanying readers) at the end so that all
     # event attributes are available to them
-    #(hist_reader, hist_collector),
+    (hist_reader, hist_collector),
     #(hist2d_reader, hist2d_collector),
     #(gen_stitching_reader, gen_stitching_collector),
     #(met_response_resolution_reader, met_response_resolution_collector),
-    (qcd_ewk_corrections_reader, qcd_ewk_corrections_collector),
+    #(qcd_ewk_corrections_reader, qcd_ewk_corrections_collector),
     #(systematics_reader, systematics_collector),
     #(trigger_efficiency_reader, trigger_efficiency_collector),
     #(qcd_estimation_reader, qcd_estimation_collector),

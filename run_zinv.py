@@ -28,6 +28,14 @@ def parse_args():
                         help="Dataset config to run over")
     parser.add_argument("sequence_cfg", type=str,
                         help="Config for how to process events")
+    parser.add_argument("event_selection_cfg", type=str,
+                        help="Config for the event selection")
+    parser.add_argument("physics_object_cfg", type=str,
+                        help="Config for the physics object selection")
+    parser.add_argument("trigger_cfg", type=str,
+                        help="Config for the HLT trigger paths")
+    parser.add_argument("weight_cfg", type=str,
+                        help="Config for the weight sequence")
     parser.add_argument("-o", "--outdir", default="output", type=str,
                         help="Where to save the results")
     parser.add_argument("--mode", default="multiprocessing", type=str,
@@ -56,10 +64,6 @@ def parse_args():
                              "only to rerun the draw function on outdir")
     parser.add_argument("--nodraw", default=False, action='store_true',
                         help="Don't run drawing processes")
-    parser.add_argument("--systs", default="nominal", type=str,
-                        help="If any, which systematics to run over "
-                             "(\"nominal\", \"jec1\", \"jec2\", \"jec3\", "
-                             "\"jec4\", \"lhe\")")
     return parser.parse_args()
 
 def generate_report(outdir):
@@ -90,51 +94,63 @@ def generate_report(outdir):
 
 vmem_dict = {
     # 500,000 events per block:
-    "DYJetsToLL_Pt-50To100": 16,
-    "DYJetsToLL_Pt-50To100_ext1": 16,
+    "DYJetsToLL_Pt-0To50":         16,
+    "DYJetsToLL_Pt-50To100":       16,
+    "DYJetsToLL_Pt-50To100_ext1":  16,
     "DYJetsToLL_Pt-100To250_ext3": 20,
-    "DYJetsToLL_Pt-250To400_ext3": 24,
+    "DYJetsToLL_Pt-250To400_ext3": 20,
+    "G1Jet_Pt-50To100_ext1":  16,
+    "G1Jet_Pt-100To250_ext2": 16,
     "G1Jet_Pt-250To400_ext2": 16,
-    "SingleTop_t-channel_antitop_InclusiveDecays": 20,
-    "SingleTop_t-channel_top_InclusiveDecays": 20,
-    "SingleTop_tW_antitop_InclusiveDecays": 20,
-    "SingleTop_tW_top_InclusiveDecays": 20,
-    "QCD_Pt-170To300": 16,
-    "QCD_Pt-170To300_ext1": 16,
-    "QCD_Pt-300To470": 16,
-    "QCD_Pt-300To470_ext1": 20,
-    "QCD_Pt-470To600": 24,
-    "QCD_Pt-600To800": 20,
-    "QCD_Pt-600To800_ext1": 20,
-    "QCD_Pt-800To1000": 20,
-    "QCD_Pt-800To1000_ext1": 20,
-    "QCD_Pt-1000To1400": 16,
-    "QCD_Pt-1000To1400_ext1": 24,
+    "SingleTop_tW_antitop_InclusiveDecays":        20,
+    "SingleTop_tW_top_InclusiveDecays":            20,
+    "SingleTop_t-channel_top_InclusiveDecays":     20,
+    "SingleTop_t-channel_antitop_InclusiveDecays": 16,
+    "QCD_Pt-50To80":          16,
+    "QCD_Pt-80To120":         16,
+    "QCD_Pt-120To170":        16,
+    "QCD_Pt-120To170_ext1":   16,
+    "QCD_Pt-170To300":        16,
+    "QCD_Pt-170To300_ext1":   16,
+    "QCD_Pt-300To470":        16,
+    "QCD_Pt-300To470_ext1":   20,
+    "QCD_Pt-470To600":        16,
+    "QCD_Pt-600To800":        16,
+    "QCD_Pt-600To800_ext1":   20,
+    "QCD_Pt-800To1000":       16,
+    "QCD_Pt-800To1000_ext1":  20,
+    "QCD_Pt-1000To1400":      16,
+    "QCD_Pt-1000To1400_ext1": 20,
     "QCD_Pt-1400To1800_ext1": 16,
     "TTJets_Inclusive": 24,
-    "WJetsToLNu_Pt-50To100": 16,
-    "WJetsToLNu_Pt-100To250": 16,
+    "WJetsToLNu_Pt-0To50":         16,
+    "WJetsToLNu_Pt-50To100":       16,
+    "WJetsToLNu_Pt-100To250":      16,
     "WJetsToLNu_Pt-100To250_ext1": 16,
     "WJetsToLNu_Pt-100To250_ext2": 16,
     "WJetsToLNu_Pt-250To400_ext2": 20,
-    "WWTo4Q": 16,
     "WWTo1L1Nu2Q": 16,
-    "WZTo2Q2Nu": 20,
-    "WZTo1L1Nu2Q": 16,
+    "WWTo4Q":      16,
+    "WZTo1L1Nu2Q":    16,
     "WZTo1L3Nu_ext1": 16,
-    "WZTo2L2Q": 16,
-    "WZTo3L1Nu": 16,
+    "WZTo2L2Q":       16,
+    "WZTo2Q2Nu":      16,
+    "WZTo3L1Nu":      16,
+    "ZJetsToNuNu_Pt-100To250":      16,
     "ZJetsToNuNu_Pt-100To250_ext1": 16,
-    "ZJetsToNuNu_Pt-100To250_ext2": 20,
+    "ZJetsToNuNu_Pt-100To250_ext2": 16,
     "ZJetsToNuNu_Pt-250To400_ext2": 16,
-    "ZZTo2Q2Nu": 16,
-    "ZZTo2L2Nu": 16,
+    "ZZTo2L2Q":       16,
+    "ZZTo2L2Nu":      16,
     "ZZTo2L2Nu_ext1": 16,
-    "ZZTo2L2Q": 20,
-    "ZZTo4L": 16,
-    "ZZTo4Q": 16,
+    "ZZTo2Q2Nu":      16,
+    "ZZTo4L":         16,
+    "ZZTo4Q":         16,
     "ZGToLLG": 16,
+    "WGToLNuG": 16,
+    "EWKWPlusToLNu2Jets_ext2":  16,
 }
+
 def run(sequence, datasets, options):
     process = AtUproot(
         options.outdir,
@@ -206,7 +222,10 @@ if __name__ == "__main__":
         os.makedirs(options.outdir)
     generate_report(options.outdir)
 
-    sequence = build_sequence(options.sequence_cfg, options.outdir)
+    sequence = build_sequence(
+        options.sequence_cfg, options.outdir, options.event_selection_cfg,
+        options.physics_object_cfg, options.trigger_cfg, options.weight_cfg,
+    )
     datasets = get_datasets(options.dataset_cfg)
     if options.sample is not None:
         if options.sample.lower() == "data":
@@ -221,17 +240,19 @@ if __name__ == "__main__":
                         if d.name in samples or d.parent in samples]
 
     # Pass any other options through to the datasets
-    for d in datasets:
-        d.systs = options.systs
+    #for d in datasets:
+    #    d.systs = options.systs
 
     if options.redraw:
         jobs = redraw(sequence, datasets, options)
     else:
         jobs = run(sequence, datasets, options)
-        if len(jobs)!=0:
+        if jobs is not None and len(jobs)!=0:
             jobs = [reduce(lambda x, y: x + y, [ssjobs
                 for ssjobs in sjobs
                 if not ssjobs is None
             ]) for sjobs in jobs]
+        else:
+            jobs = []
     if not options.nodraw:
         parallel_draw(jobs, options)
