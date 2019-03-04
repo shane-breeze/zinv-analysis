@@ -12,7 +12,7 @@ import Collectors
 
 event_tools = Readers.EventTools(
     name = "event_tools",
-    maxsize = int(12*1024**3), # 12 GB
+    maxsize = int(6*1024**3), # 6 GB
 )
 
 # Initialise readers and collectors
@@ -103,6 +103,10 @@ certified_lumi_checker = Readers.CertifiedLumiChecker(
 
 weight_xsection_lumi = Readers.WeightXsLumi(
     name = "weight_xsection_lumi",
+    data = False,
+)
+weight_pdf_scale = Readers.WeightPdfScale(
+    name = "weight_pdf_scale",
     data = False,
 )
 weight_pu = Readers.WeightPileup(
@@ -358,6 +362,21 @@ systematics_reader = Collectors.SystematicsReader(
     name = "systematics_reader",
     cfg = os.path.join(collpath, "Systematics_cfg.yaml"),
     drawing_cfg = os.path.join(drawpath, "config.yaml"),
+    split_samples = {
+        "DYJetsToLL": {
+            "DYJetsToEE": ["ev: ev.LeptonIsElectron"],
+            "DYJetsToMuMu": ["ev: ev.LeptonIsMuon"],
+            "DYJetsToTauLTauL": ["ev: ev.LeptonIsTau & (ev.nGenTauL==2)"],
+            "DYJetsToTauLTauH": ["ev: ev.LeptonIsTau & (ev.nGenTauL==1)"],
+            "DYJetsToTauHTauH": ["ev: ev.LeptonIsTau & (ev.nGenTauL==0)"],
+        },
+        "WJetsToLNu": {
+            "WJetsToENu": ["ev: ev.LeptonIsElectron"],
+            "WJetsToMuNu": ["ev: ev.LeptonIsMuon"],
+            "WJetsToTauLNu": ["ev: ev.LeptonIsTau & (ev.nGenTauL==1)"],
+            "WJetsToTauHNu": ["ev: ev.LeptonIsTau & (ev.nGenTauL==0)"],
+        },
+    },
 )
 systematics_collector = Collectors.SystematicsCollector(
     name = "systematics_collector",
@@ -421,6 +440,7 @@ sequence = [
     # # Weighters. The generally just apply to MC and that logic is dealt with by
     # # the ScribblerWrapper.
     (weight_xsection_lumi, NullCollector()),
+    (weight_pdf_scale, NullCollector()),
     (weight_pu, NullCollector()),
     (weight_met_trigger, NullCollector()),
     (weight_electrons, NullCollector()),

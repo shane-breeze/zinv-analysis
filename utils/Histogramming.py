@@ -6,6 +6,7 @@ import os
 import cPickle as pickle
 from Lambda import Lambda
 import itertools
+import operator
 
 class Histograms(object):
     def __init__(self):
@@ -46,7 +47,11 @@ class Histograms(object):
                 full_configs.append(new_config)
 
         self.string_to_func = {func: Lambda(func) for func in set(funcs)}
-        self.full_configs = full_configs
+        self.full_configs = sorted(
+            full_configs, key=operator.itemgetter(
+                "weightname", "dataset", "region", "process", "name",
+            ),
+        )
         return self
 
     def end(self):
@@ -63,7 +68,7 @@ class Histograms(object):
         dfs = []
         print("")
         for config in self.full_configs:
-            print(config["name"])
+            print(config["name"], config["dataset"], config["region"], config["process"], config["weightname"])
             weight = config["weight"].lower()
             if self.isdata and ("up" in weight or "down" in weight or "pdf" in weight or "scale" in weight):
                 continue

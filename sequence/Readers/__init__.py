@@ -20,6 +20,7 @@ from .TriggerChecker import TriggerChecker
 from .CertifiedLumiChecker import CertifiedLumiChecker
 
 from .WeightXsLumi import WeightXsLumi
+from .WeightPdfScale import WeightPdfScale
 from .WeightPileup import WeightPileup
 from .WeightMetTrigger import WeightMetTrigger
 from .WeightObjects import WeightObjects
