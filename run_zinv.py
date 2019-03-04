@@ -58,7 +58,8 @@ def parse_args():
     parser.add_argument("--profile", default=False, action='store_true',
                         help="Profile the code")
     parser.add_argument("--sample", default=None, type=str,
-                        help="Select some sample (comma delimited). Can selected from (data, mc and more)")
+                        help="Select some sample (comma delimited). Can "
+                        "selected from (data, mc and more)")
     parser.add_argument("--redraw", default=False, action='store_true',
                         help="Overrides most options. Runs over collectors "
                              "only to rerun the draw function on outdir")

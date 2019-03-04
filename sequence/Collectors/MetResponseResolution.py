@@ -11,7 +11,7 @@ import pandas as pd
 import cPickle as pickle
 
 from scipy.special import wofz
-from uncertainties import ufloat
+#from uncertainties import ufloat
 
 from drawing.dist_ratio import dist_ratio
 from drawing.dist_scatter_pull import dist_scatter_pull
