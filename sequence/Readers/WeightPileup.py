@@ -1,13 +1,16 @@
 import numpy as np
 import pandas as pd
+import operator
 
+from cachetools import cachedmethod
+from cachetools.keys import hashkey
+from functools import partial
 from numba import njit
-from cachetools.func import lru_cache
 
 from utils.NumbaFuncs import get_bin_indices, weight_numba
 
 def evaluate_pu(var, corrs):
-    @lru_cache(maxsize=32)
+    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_pu'))
     def fevaluate_pu(ev, evidx, nsig, source, var_):
         vals = corrs["nTrueInt"].values
         indices = get_bin_indices(getattr(ev, var_), vals, vals+1)
@@ -18,7 +21,11 @@ def evaluate_pu(var, corrs):
         down = (ev_corrs["corr_down"].values/nominal - 1.)*(source=="pileup")
         return weight_numba(nominal, nsig, up, down)
 
-    return lambda ev: fevaluate_pu(ev, ev.iblock, ev.nsig, ev.source, var)
+    def ret_func(ev):
+        source = ev.source if ev.source == "pileup" else ""
+        return fevaluate_pu(ev, ev.iblock, ev.nsig, source, var)
+
+    return ret_func
 
 class WeightPileup(object):
     def __init__(self, **kwargs):

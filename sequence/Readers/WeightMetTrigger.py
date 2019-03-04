@@ -1,10 +1,13 @@
 import numpy as np
 import pandas as pd
+import operator
 
-from numba import njit, float32
+from cachetools import cachedmethod
+from cachetools.keys import hashkey
 from functools import partial
+from numba import njit, float32
+
 from utils.NumbaFuncs import interp, weight_numba
-from cachetools.func import lru_cache
 
 def evaluate_met_trigger(cats, xcents, params):
     @njit
@@ -18,7 +21,7 @@ def evaluate_met_trigger(cats, xcents, params):
             output[iev] = interp(met[iev], xcents_[cat], incorr[cat])
         return output
 
-    @lru_cache(maxsize=32)
+    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_met_trigger'))
     def fevaluate_met_trigger(ev, evidx, nsig, source):
         nmuons = ev.MuonSelection(ev, 'pt').counts
         metnox = ev.METnoX_pt(ev)
@@ -36,7 +39,13 @@ def evaluate_met_trigger(cats, xcents, params):
 
         return weight_numba(wmet, nsig, up, down)
 
-    return lambda ev: fevaluate_met_trigger(ev, ev.iblock, ev.nsig, ev.source)
+    def ret_func(ev):
+        source = ev.source
+        if source not in ["metTrigStat", "metTrigSyst"]:
+            source = ''
+        return fevaluate_met_trigger(ev, ev.iblock, ev.nsig, source)
+
+    return ret_func
 
 class WeightMetTrigger(object):
     def __init__(self, **kwargs):

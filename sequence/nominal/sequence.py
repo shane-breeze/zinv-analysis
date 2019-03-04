@@ -10,6 +10,11 @@ drawpath = os.path.join(toppath, "drawing")
 import Readers
 import Collectors
 
+event_tools = Readers.EventTools(
+    name = "event_tools",
+    maxsize = int(6*1024**3), # 6 GB
+)
+
 # Initialise readers and collectors
 collection_creator = Readers.CollectionCreator(
     name = "collection_creator",
@@ -386,6 +391,8 @@ qcd_estimation_collector = Collectors.QcdEstimationCollector(
 )
 
 sequence = [
+    # Setup caching, nsig and source
+    (event_tools, NullCollector()),
     # Creates object collections accessible through the event variable. e.g.
     # event.Jet.pt rather than event.Jet_pt.
     (collection_creator, NullCollector()),

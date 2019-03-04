@@ -1,8 +1,11 @@
 import numpy as np
 import pandas as pd
 import awkward as awk
+import operator
 
-from cachetools.func import lru_cache
+from cachetools import cachedmethod
+from cachetools.keys import hashkey
+from functools import partial
 
 from utils.Lambda import Lambda
 from utils.NumbaFuncs import weight_numba, get_bin_mask, get_val_mask
@@ -11,7 +14,7 @@ dict_apply = np.vectorize(lambda d, x: d[x])
 func_apply = np.vectorize(lambda f, x: f(x))
 
 def evaluate_btagsf(df, attrs, h2f):
-    @lru_cache(maxsize=32)
+    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_btagsf'))
     def fevaluate_btagsf(ev, evidx, nsig, source, attrs_):
         jet_flavour = dict_apply(h2f, ev.Jet.hadronFlavour.content)
 

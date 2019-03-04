@@ -1,12 +1,16 @@
 import re
 import yaml
 import numpy as np
+import operator
 
-from cachetools.func import lru_cache
+from cachetools import cachedmethod
+from cachetools.keys import hashkey
+from functools import partial
+
 from utils.NumbaFuncs import any_numba
 
 def evaluate_triggers(triggers):
-    @lru_cache(maxsize=32)
+    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_triggers'))
     def fevaluate_triggers(ev, evidx, triggers_list):
         return any_numba(np.vstack([
             getattr(ev, trigger)

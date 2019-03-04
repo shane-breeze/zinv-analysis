@@ -1,7 +1,11 @@
 import numpy as np
+import operator
 
 from numba import njit, float32, int32
-from cachetools.func import lru_cache
+from cachetools import cachedmethod
+from cachetools.keys import hashkey
+from functools import partial
+
 from utils.Geometry import (BoundPhi, RadToCart2D, CartToRad2D,
                             LorTHPMToXYZE, LorXYZEToTHPM)
 
@@ -24,7 +28,7 @@ def evaluate_metnox(arg):
 
         return CartToRad2D(mex, mey)
 
-    @lru_cache(maxsize=32)
+    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_metnox'))
     def fevaluate_metnox(ev, evidx, nsig, source, arg_):
         return metnox_numba(
             ev.MET_ptShift(ev), ev.MET_phiShift(ev),
@@ -49,7 +53,7 @@ def evaluate_mindphi(njets):
                 dphi[iev] = np.nan
         return dphi
 
-    @lru_cache(maxsize=32)
+    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_mindphi'))
     def fevaluate_mindphi(ev, evidx, nsig, source, njets_):
         jphis = ev.JetSelection(ev, 'phi')
         return mindphi_numba(
@@ -62,7 +66,7 @@ def evaluate_met_dcalo():
     def met_dcalo_numba(pfmet, calomet, metnox):
         return np.abs(pfmet-calomet)/metnox
 
-    @lru_cache(maxsize=32)
+    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_met_dcalo'))
     def fevaluate_met_dcalo(ev, evidx, nsig, source):
         return met_dcalo_numba(
             ev.MET_ptShift(ev), ev.CaloMET_pt, ev.METnoX_pt(ev),
@@ -97,7 +101,7 @@ def evaluate_mtw():
 
         return mtw
 
-    @lru_cache(maxsize=32)
+    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_mtw'))
     def fevaluate_mtw(ev, evidx, nsig, source):
         mupts = ev.MuonSelection(ev, 'ptShift')
         epts = ev.ElectronSelection(ev, 'ptShift')
@@ -143,7 +147,7 @@ def evaluate_mll():
 
         return mll
 
-    @lru_cache(maxsize=32)
+    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_mll'))
     def fevaluate_mll(ev, evidx, nsig, source):
         mpts = ev.MuonSelection(ev, 'ptShift')
         epts = ev.ElectronSelection(ev, 'ptShift')
@@ -157,7 +161,13 @@ def evaluate_mll():
             ev.size,
         )
 
-    return lambda ev: fevaluate_mll(ev, ev.iblock, ev.nsig, ev.source)
+    def ret_func(ev):
+        source = ev.source
+        if source not in ["muonPtScale", "eleEnergyScale"]:
+            source = ''
+        return fevaluate_mll(ev, ev.iblock, ev.nsig, source)
+
+    return ret_func
 
 def evaluate_lepton_charge():
     @njit
@@ -173,7 +183,7 @@ def evaluate_lepton_charge():
 
         return charge
 
-    @lru_cache(maxsize=32)
+    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_lepton_charge'))
     def fevaluate_lepton_charge(ev, evidx, nsig, source):
         mcharge = ev.MuonSelection(ev, 'charge')
         echarge = ev.ElectronSelection(ev, 'charge')
@@ -182,7 +192,14 @@ def evaluate_lepton_charge():
             echarge.content, echarge.starts, echarge.stops,
             ev.size,
         )
-    return lambda ev: fevaluate_lepton_charge(ev, ev.iblock, ev.nsig, ev.source)
+
+    def ret_func(ev):
+        source = ev.source
+        if source not in ["muonPtScale", "eleEnergyScale"]:
+            source = ''
+        return fevaluate_lepton_charge(ev, ev.iblock, ev.nsig, ev.source)
+
+    return ret_func
 
 class EventFunctions(object):
     def __init__(self, **kwargs):

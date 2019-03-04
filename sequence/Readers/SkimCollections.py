@@ -1,29 +1,33 @@
 import yaml
 import numpy as np
 import awkward as awk
+import operator
 from numba import njit
-from cachetools.func import lru_cache
+
+from cachetools import cachedmethod
+from cachetools.keys import hashkey
+from functools import partial
 
 from utils.NumbaFuncs import all_numba
 from utils.Lambda import Lambda
 
-def evaluate_selection(objname, name, cutlist):
-    @lru_cache(maxsize=32)
-    def fevaluate_selection(ev, evidx, nsig, source, name_, objname_):
+def evaluate_skim(objname, name, cutlist):
+    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_skim'))
+    def fevaluate_skim(ev, evidx, nsig, source, name_, objname_):
         starts = getattr(ev, objname_).pt.starts
         stops = getattr(ev, objname_).pt.stops
         return awk.JaggedArray(
             starts, stops,
             all_numba(np.vstack([c(ev).content for c in cutlist]).T),
         )
-    return lambda ev: fevaluate_selection(ev, ev.iblock, ev.nsig, ev.source, name, objname)
+    return lambda ev: fevaluate_skim(ev, ev.iblock, ev.nsig, ev.source, name, objname)
 
 def evaluate_this_not_that(this, that):
     @njit
     def this_not_that_numba(this_, that_):
         return this_ & (~that_)
 
-    @lru_cache(maxsize=32)
+    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_this_not_that'))
     def fevaluate_this_not_that(ev, evidx, nsig, source, this_, that_):
         this_attr = getattr(ev, this_)(ev)
         that_attr = getattr(ev, that_)(ev)
@@ -51,10 +55,7 @@ class SkimCollections(object):
             incoll = subdict["original"]
             selections = [self.lambda_functions[s] for s in subdict["selections"]]
             name = "{}_{}Mask".format(incoll, outcoll)
-            setattr(
-                event, name,
-                evaluate_selection(incoll, name, selections),
-            )
+            setattr(event, name, evaluate_skim(incoll, name, selections))
 
         for outcoll, subdict in selection_functions.items():
             if "Veto" not in outcoll:

@@ -1,9 +1,11 @@
 import pandas as pd
 import numpy as np
-from numba import njit, float32
+import operator
 
+from cachetools import cachedmethod
+from cachetools.keys import hashkey
 from functools import partial
-from cachetools.func import lru_cache
+from numba import njit, float32
 
 from utils.NumbaFuncs import get_bin_mask, weight_numba
 from utils.Geometry import DeltaR2
@@ -66,7 +68,7 @@ def evaluate_prefiring_weight(funcs, jetmap, photmap, syst):
 
         return nonprefiring_prob, nonprefiring_prob_up, nonprefiring_prob_down
 
-    @lru_cache(maxsize=32)
+    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_prefiring_weight'))
     def fevaluate_prefiring_weight(ev, evidx, nsig, source):
         jet_mask = funcs["Jet"](ev)
         jet_eta = ev.Jet_eta[jet_mask]
@@ -94,7 +96,11 @@ def evaluate_prefiring_weight(funcs, jetmap, photmap, syst):
             (source=="prefiring")*probdown/prob,
         )
 
-    return lambda ev: fevaluate_prefiring_weight(ev, ev.iblock, ev.nsig, ev.source)
+    def ret_func(ev):
+        source = ev.source if ev.source == "prefiring" else ""
+        return fevaluate_prefiring_weight(ev, ev.iblock, ev.nsig, source)
+
+    return ret_func
 
 class WeightPreFiring(object):
     def __init__(self, **kwargs):

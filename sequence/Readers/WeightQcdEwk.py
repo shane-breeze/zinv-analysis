@@ -1,12 +1,15 @@
 import numpy as np
 import pandas as pd
+import operator
 
-from cachetools.func import lru_cache
+from cachetools import cachedmethod
+from cachetools.keys import hashkey
+from functools import partial
 
 from utils.NumbaFuncs import get_bin_indices, weight_numba
 
 def evaluate_qcdewk_weight():
-    @lru_cache(maxsize=32)
+    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_qcdewk_weight'))
     def fevaluate_qcdewk_weight(ev, evidx, nsig, source):
         central = ev.WeightQcdEwkNominal
         try:
@@ -26,6 +29,8 @@ class WeightQcdEwk(object):
     def begin(self, event):
         if event.config.dataset.isdata:
             return
+
+        event.WeightQcdEwk = evaluate_qcdewk_weight()
 
         self.variations = [""]\
                 + [n+"Up" for n in self.nuisances]\
@@ -88,8 +93,6 @@ class WeightQcdEwk(object):
             input_df.iloc[-1,:] = 1
         self.input_df = input_df.sort_index()
         #self.input_df = input_df.reset_index()
-
-        event.WeightQcdEwk = evaluate_qcdewk_weight()
 
     def event(self, event):
         if self.parent not in self.input_paths:

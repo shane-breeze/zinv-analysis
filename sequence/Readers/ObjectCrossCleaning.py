@@ -1,7 +1,10 @@
 import numpy as np
 import awkward as awk
+import operator
 
-from cachetools.func import lru_cache
+from cachetools import cachedmethod
+from cachetools.keys import hashkey
+from functools import partial
 from numba import njit, boolean
 from utils.Geometry import DeltaR2
 from utils.NumbaFuncs import all_numba
@@ -27,7 +30,7 @@ def evaluate_xclean_mask(obj1name, obj2names):
 
         return content
 
-    @lru_cache(maxsize=32)
+    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_xclean_mask'))
     def fevaluate_xclean_mask(ev, obj1name, obj2names, eidx, nsig, source):
         obj1 = getattr(ev, obj1name)
         masks = []

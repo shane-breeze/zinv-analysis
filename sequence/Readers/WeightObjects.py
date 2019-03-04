@@ -1,9 +1,12 @@
 import numpy as np
 import pandas as pd
 import awkward as awk
+import operator
 
+from cachetools import cachedmethod
+from cachetools.keys import hashkey
+from functools import partial
 from numba import njit, float32
-from cachetools.func import lru_cache
 
 from utils.Lambda import Lambda
 from utils.NumbaFuncs import weight_numba, get_bin_mask
@@ -29,7 +32,7 @@ def evaluate_object_weights(df, bins_vars, add_syst, name):
         unc_down = -1.*np.sqrt((wdkdownsum / wsum**2) + addsyst**2)
         return mean, unc_up, unc_down
 
-    @lru_cache(maxsize=32)
+    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_object_weights'))
     def fevaluate_object_weights(ev, evidx, nsig, source, name_):
         event_vars = [v(ev) for v in bins_vars]
         for v in event_vars:

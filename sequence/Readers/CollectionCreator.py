@@ -23,12 +23,6 @@ class CollectionCreator(object):
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
-    def begin(self, event):
-        event.nsig = 0
-        event.source = ''
-
     def event(self, event):
-        event.nsig = 0
-        event.source = ''
         for collection in self.collections:
             setattr(event, collection, Collection(collection, event))
