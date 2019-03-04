@@ -61,7 +61,9 @@ class Histograms(object):
 
     def event(self, event):
         dfs = []
+        print("")
         for config in self.full_configs:
+            print(config["name"])
             weight = config["weight"].lower()
             if self.isdata and ("up" in weight or "down" in weight or "pdf" in weight or "scale" in weight):
                 continue

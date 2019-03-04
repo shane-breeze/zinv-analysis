@@ -40,3 +40,420 @@ configs:
             - [-3.1416, 3.1416, 51]
         weights:
             - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    MET_pt:
+        categories:
+            - "all"
+        variables:
+            - "ev: ev.MET_pt"
+        bins:
+            - [0., 1500., 61]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    MET_phi:
+        categories:
+            - "all"
+        variables:
+            - "ev: ev.MET_phi"
+        bins:
+            - [-3.1416, 3.1416, 51]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    CaloMET_pt:
+        categories:
+            - "all"
+        variables:
+            - "ev: ev.CaloMET_pt"
+        bins:
+            - [0., 1500., 61]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    CaloMET_phi:
+        categories:
+            - "all"
+        variables:
+            - "ev: ev.CaloMET_phi"
+        bins:
+            - [-3.1416, 3.1416, 51]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    MET_dCaloMET:
+        categories:
+            - "all"
+        variables:
+            - "ev: ev.MET_dCaloMET(ev)"
+        bins:
+            - [0., 1., 51]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    MinDPhiJ1234METnoX:
+        categories:
+            - "all"
+        variables:
+            - "ev: ev.MinDPhiJ1234METnoX(ev)"
+        bins:
+            - [0., 3.1416, 51]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    MTW:
+        categories:
+            - "muon"
+            - "ele"
+        variables:
+            - "ev: ev.MTW(ev)"
+        bins:
+            - [0., 200., 51]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    MLL:
+        categories:
+            - "dimuon"
+            - "diele"
+            - "dielealt"
+        variables:
+            - "ev: ev.MLL(ev)"
+        bins:
+            - [65., 115., 51]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    nJetVeto:
+        categories:
+            - "all"
+        variables:
+            - "ev: ev.JetVeto(ev, 'eta').counts"
+        bins:
+            - [0., 10., 11]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    nJetSelection:
+        categories:
+            - "all"
+        variables:
+            - "ev: ev.JetSelection(ev, 'eta').counts"
+        bins:
+            - [0., 10., 11]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    LeadJetSelection_pt:
+        categories:
+            - "all"
+        variables:
+            - "ev: get_nth_object(ev.JetSelection(ev, 'ptShift'), 0, ev.size)"
+        bins:
+            - [0., 800., 41]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    LeadJetSelection_eta:
+        categories:
+            - "all"
+        variables:
+            - "ev: get_nth_object(ev.JetSelection(ev, 'eta'), 0, ev.size)"
+        bins:
+            - [-5., 5., 51]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    LeadJetSelection_phi:
+        categories:
+            - "all"
+        variables:
+            - "ev: get_nth_object(ev.JetSelection(ev, 'phi'), 0, ev.size)"
+        bins:
+            - [-3.1416, 3.1416, 51]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    LeadJetSelection_chHEF:
+        categories:
+            - "all"
+        variables:
+            - "ev: get_nth_object(ev.JetSelection(ev, 'chHEF'), 0, ev.size)"
+        bins:
+            - [0., 1., 51]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    SecondJetSelection_pt:
+        categories:
+            - "all"
+        variables:
+            - "ev: get_nth_object(ev.JetSelection(ev, 'ptShift'), 1, ev.size)"
+        bins:
+            - [0., 800., 41]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    SecondJetSelection_eta:
+        categories:
+            - "all"
+        variables:
+            - "ev: get_nth_object(ev.JetSelection(ev, 'eta'), 1, ev.size)"
+        bins:
+            - [-5., 5., 51]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    SecondJetSelection_phi:
+        categories:
+            - "all"
+        variables:
+            - "ev: get_nth_object(ev.JetSelection(ev, 'phi'), 1, ev.size)"
+        bins:
+            - [-3.1416, 3.1416, 51]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    nMuonVeto:
+        categories:
+            - "all"
+        variables:
+            - "ev: ev.MuonVeto(ev, 'eta').counts"
+        bins:
+            - [0., 5., 6]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    nMuonSelection:
+        categories:
+            - "all"
+        variables:
+            - "ev: ev.MuonSelection(ev, 'eta').counts"
+        bins:
+            - [0., 5., 6]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    LeadMuonSelection_pt:
+        categories:
+            - "muon"
+            - "dimuon"
+        variables:
+            - "ev: get_nth_object(ev.MuonSelection(ev, 'ptShift'), 0, ev.size)"
+        bins:
+            - [0., 1000., 51]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    LeadMuonSelection_eta:
+        categories:
+            - "muon"
+            - "dimuon"
+        variables:
+            - "ev: get_nth_object(ev.MuonSelection(ev, 'eta'), 0, ev.size)"
+        bins:
+            - [-5., 5., 51]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    LeadMuonSelection_phi:
+        categories:
+            - "muon"
+            - "dimuon"
+        variables:
+            - "ev: get_nth_object(ev.MuonSelection(ev, 'phi'), 0, ev.size)"
+        bins:
+            - [-3.1416, 3.1416, 51]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    SecondMuonSelection_pt:
+        categories:
+            - "dimuon"
+        variables:
+            - "ev: get_nth_object(ev.MuonSelection(ev, 'ptShift'), 1, ev.size)"
+        bins:
+            - [0., 1000., 51]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    SecondMuonSelection_eta:
+        categories:
+            - "dimuon"
+        variables:
+            - "ev: get_nth_object(ev.MuonSelection(ev, 'eta'), 1, ev.size)"
+        bins:
+            - [-5., 5., 51]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    SecondMuonSelection_phi:
+        categories:
+            - "dimuon"
+        variables:
+            - "ev: get_nth_object(ev.MuonSelection(ev, 'phi'), 1, ev.size)"
+        bins:
+            - [-3.1416, 3.1416, 51]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    nElectronVeto:
+        categories:
+            - "all"
+        variables:
+            - "ev: ev.ElectronVeto(ev, 'eta').counts"
+        bins:
+            - [0., 5., 6]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    nElectronSelection:
+        categories:
+            - "all"
+        variables:
+            - "ev: ev.ElectronSelection(ev, 'eta').counts"
+        bins:
+            - [0., 5., 6]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    LeadElectronSelection_pt:
+        categories:
+            - "ele"
+            - "diele"
+        variables:
+            - "ev: get_nth_object(ev.ElectronSelection(ev, 'ptShift'), 0, ev.size)"
+        bins:
+            - [0., 1000., 51]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    LeadElectronSelection_eta:
+        categories:
+            - "ele"
+            - "diele"
+        variables:
+            - "ev: get_nth_object(ev.ElectronSelection(ev, 'eta'), 0, ev.size)"
+        bins:
+            - [-5., 5., 51]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    LeadElectronSelection_phi:
+        categories:
+            - "ele"
+            - "diele"
+        variables:
+            - "ev: get_nth_object(ev.ElectronSelection(ev, 'phi'), 0, ev.size)"
+        bins:
+            - [-3.1416, 3.1416, 51]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    SecondElectronSelection_pt:
+        categories:
+            - "diele"
+        variables:
+            - "ev: get_nth_object(ev.ElectronSelection(ev, 'ptShift'), 1, ev.size)"
+        bins:
+            - [0., 1000., 51]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    SecondElectronSelection_eta:
+        categories:
+            - "diele"
+        variables:
+            - "ev: get_nth_object(ev.ElectronSelection(ev, 'eta'), 1, ev.size)"
+        bins:
+            - [-5., 5., 51]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    SecondElectronSelection_phi:
+        categories:
+            - "diele"
+        variables:
+            - "ev: get_nth_object(ev.ElectronSelection(ev, 'phi'), 1, ev.size)"
+        bins:
+            - [-3.1416, 3.1416, 51]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    nTauVeto:
+        categories:
+            - "all"
+        variables:
+            - "ev: ev.TauVeto(ev, 'eta').counts"
+        bins:
+            - [0., 5., 6]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    nTauSelectrion:
+        categories:
+            - "all"
+        variables:
+            - "ev: ev.TauSelection(ev, 'eta').counts"
+        bins:
+            - [0., 5., 6]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    LeadTauSelection_pt:
+        categories:
+            - "tau"
+            - "ditau"
+        variables:
+            - "ev: get_nth_object(ev.TauSelection(ev, 'ptShift'), 0, ev.size)"
+        bins:
+            - [0., 1000., 51]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    LeadTauSelection_eta:
+        categories:
+            - "tau"
+            - "ditau"
+        variables:
+            - "ev: get_nth_object(ev.TauSelection(ev, 'eta'), 0, ev.size)"
+        bins:
+            - [-5., 5., 51]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    LeadTauSelection_phi:
+        categories:
+            - "tau"
+            - "ditau"
+        variables:
+            - "ev: get_nth_object(ev.TauSelection(ev, 'phi'), 0, ev.size)"
+        bins:
+            - [-3.1416, 3.1416, 51]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    SecondTauSelection_pt:
+        categories:
+            - "ditau"
+        variables:
+            - "ev: get_nth_object(ev.TauSelection(ev, 'ptShift'), 1, ev.size)"
+        bins:
+            - [0., 1000., 51]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    SecondTauSelection_eta:
+        categories:
+            - "ditau"
+        variables:
+            - "ev: get_nth_object(ev.TauSelection(ev, 'eta'), 1, ev.size)"
+        bins:
+            - [-5., 5., 51]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    SecondTauSelection_phi:
+        categories:
+            - "ditau"
+        variables:
+            - "ev: get_nth_object(ev.TauSelection(ev, 'phi'), 1, ev.size)"
+        bins:
+            - [-3.1416, 3.1416, 51]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    nPhotonVeto:
+        categories:
+            - "all"
+        variables:
+            - "ev: ev.PhotonVeto(ev, 'eta').counts"
+        bins:
+            - [0., 5., 6]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    nPhotonSelection:
+        categories:
+            - "all"
+        variables:
+            - "ev: ev.PhotonSelection(ev, 'eta').counts"
+        bins:
+            - [0., 5., 6]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    nBJetVeto:
+        categories:
+            - "all"
+        variables:
+            - "ev: ev.JetBVeto(ev, 'eta').counts"
+        bins:
+            - [0., 5., 6]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]
+    PV_npvsGood:
+        categories:
+            - "all"
+        variables:
+            - "ev: ev.PV_npvsGood"
+        bins:
+            - [0., 100., 51]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}(ev)"]

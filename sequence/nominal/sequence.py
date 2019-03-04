@@ -12,7 +12,7 @@ import Collectors
 
 event_tools = Readers.EventTools(
     name = "event_tools",
-    maxsize = int(6*1024**3), # 6 GB
+    maxsize = int(12*1024**3), # 12 GB
 )
 
 # Initialise readers and collectors

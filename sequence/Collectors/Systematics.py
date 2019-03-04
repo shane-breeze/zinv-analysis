@@ -13,21 +13,21 @@ from drawing.dist_facet import dist_facet
 class SystematicsReader(HistReader):
     def begin(self, event):
         # Only run for variations defined in the event
-        self.histograms.configs = [
-            c for c in self.histograms.configs
-            if c["weightname"] in event.variations\
-            or not any(v in c["weightname"] for v in ["jes", "jer", "unclust", "eleEnergyScale", "muPtScale", "photonEnergyScale"])
-        ]
-        if "lhe" not in event.optsysts:
-            self.histograms.configs = [
-                c for c in self.histograms.configs
-                if not any(v in c["weightname"] for v in ["lhe"])
-            ]
-        else:
-            self.histograms.configs = [
-                c for c in self.histograms.configs
-                if any(v in c["weightname"] for v in ["lhe"])
-            ]
+        #self.histograms.configs = [
+        #    c for c in self.histograms.configs
+        #    if c["weightname"] in event.variation_sources\
+        #    or not any(v in c["weightname"] for v in ["jes", "jer", "unclust", "eleEnergyScale", "muPtScale", "photonEnergyScale"])
+        #]
+        #if "lhe" not in event.optsysts:
+        #    self.histograms.configs = [
+        #        c for c in self.histograms.configs
+        #        if not any(v in c["weightname"] for v in ["lhe"])
+        #    ]
+        #else:
+        #    self.histograms.configs = [
+        #        c for c in self.histograms.configs
+        #        if any(v in c["weightname"] for v in ["lhe"])
+        #    ]
         super(SystematicsReader, self).begin(event)
 
 class SystematicsCollector(HistCollector):
