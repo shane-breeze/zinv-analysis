@@ -29,16 +29,24 @@ class WeightProducer(object):
 
         self.lambda_functions = {
             f: Lambda(f)
-            for _, sdict in weights_dict.items()
-            for _, flist in sdict.items()
-            for f in flist
+            for _, labeldicts in weights_dict.items()
+            for _, regiondicts in labeldicts.items()
+            for f in regiondicts["Data"]
         }
+        self.lambda_functions.update({
+            f: Lambda(f)
+            for _, labeldicts in weights_dict.items()
+            for _, regiondicts in labeldicts.items()
+            for f in regiondicts["MC"]
+        })
 
-        for dataset, subdict in weights_dict.items():
-            weights = [self.lambda_functions[s] for s in subdict[data_or_mc]]
-            setattr(event, "Weight_{}".format(dataset), evaluate_weights(
-                dataset, weights,
-            ))
+        for dataset, labeldicts in weights_dict.items():
+            for label, regiondicts in labeldicts.items():
+                weights = [self.lambda_functions[s] for s in regiondicts[data_or_mc]]
+                weighter = evaluate_weights("_".join([dataset, label, data_or_mc]), weights)
+
+                for region in regiondicts["Regions"]:
+                    setattr(event, "Weight_{}_{}".format(dataset, region), weighter)
 
     def end(self):
         self.lambda_functions = None
