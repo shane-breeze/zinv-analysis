@@ -30,7 +30,13 @@ def get_datasets(path):
     datasets = []
     dataset_info_path = datasets_dict["path"]
     default = datasets_dict["default"]
-    for dataset in set(datasets_dict["datasets"]):
+
+    temp_datasets = []
+    for d in datasets_dict["datasets"]:
+        if d not in temp_datasets:
+            temp_datasets.append(d)
+
+    for dataset in temp_datasets:
         if isinstance(dataset, six.string_types):
             dataset_kwargs = _from_string(dataset, dataset_info_path, default)
         elif isinstance(dataset, dict):
