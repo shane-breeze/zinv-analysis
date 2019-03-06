@@ -215,9 +215,9 @@ weights:
                 - "ev: ev.WeightQcdEwk(ev)"
                 - "ev: ev.WeightPU(ev)"
                 - "ev: ev.WeightPreFiring(ev)"
-                - "ev: ev.WeightMETTrig(ev)"
                 - "ev: (ev.ElectronSelection(ev, 'WeighteleIdIsoTightSF')).prod()"
                 - "ev: (ev.ElectronSelection(ev, 'WeighteleRecoSF')).prod()"
+                - "ev: 1-(1-ev.ElectronSelection(ev, 'WeighteleTrigSF')).prod()"
                 - "ev: (1-ev.ElectronVetoNoSelection(ev, 'WeighteleIdIsoVetoSF')).prod()"
                 - "ev: (1-ev.ElectronVetoNoSelection(ev, 'WeighteleRecoSF')).prod()"
 variations:
