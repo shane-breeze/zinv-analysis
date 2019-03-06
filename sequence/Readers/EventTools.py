@@ -20,9 +20,9 @@ class EventTools(object):
         event._callable_cache["cache"] = LRUCache(self.maxsize, get_size)
 
     def event(self, event):
+        event.MET_pt
         event.nsig = 0
         event.source = ''
 
         # Remove anything from the previous event block
         event.cache.clear()
-

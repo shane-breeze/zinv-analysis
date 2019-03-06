@@ -36,6 +36,8 @@ class Histograms(object):
                 full_selection = config["selection"][:]
                 if parent in selection:
                     full_selection += selection[parent]
+                if self.isdata:
+                    full_selection = ["ev: ev.Is{}Triggered(ev)".format(config["dataset"])] + full_selection
 
                 funcs.extend([
                     f for f in config["variables"]+full_selection+[config["weight"]]
@@ -66,12 +68,10 @@ class Histograms(object):
 
     def event(self, event):
         dfs = []
-        print("")
         for config in self.full_configs:
-            print(config["name"], config["dataset"], config["region"], config["process"], config["weightname"])
             weight = config["weight"].lower()
-            if self.isdata and ("up" in weight or "down" in weight or "pdf" in weight or "scale" in weight):
-                continue
+            #if self.isdata and ("up" in weight or "down" in weight or "pdf" in weight or "scale" in weight):
+            #    continue
 
             event.nsig = config["nsig"]
             event.source = config["source"]
@@ -96,7 +96,11 @@ class Histograms(object):
             self.string_to_func[s](event)
             for s in config["selection"]
         ]) if len(config["selection"])>0 else np.ones(event.size, dtype=bool)
-        weight = self.string_to_func[config["weight"]](event)*selection
+        if self.isdata:
+            weight = selection.astype(float)
+        else:
+            weight = self.string_to_func[config["weight"]](event)*selection
+
         variables = []
         for idx, v in enumerate(config["variables"]):
             try:

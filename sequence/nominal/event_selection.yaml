@@ -1,9 +1,9 @@
 selections:
-    lumi_selection: "ev: ev.IsCertified"
-    trigger_selection: "ev: ev.IsTriggered(ev)"
-    trigger_met_selection: "ev: ev.IsMETTriggered(ev)"
-    trigger_singlemuon_selection: "ev: ev.IsSingleMuonTriggered(ev)"
-    trigger_singleele_selection: "ev: ev.IsSingleElectronTriggered(ev)"
+    lumi_selection: "ev: ev.IsCertified(ev)"
+#    trigger_selection: "ev: ev.IsTriggered(ev)"
+#    trigger_met_selection: "ev: ev.IsMETTriggered(ev)"
+#    trigger_singlemuon_selection: "ev: ev.IsSingleMuonTriggered(ev)"
+#    trigger_singleele_selection: "ev: ev.IsSingleElectronTriggered(ev)"
     filter_selection:
         "ev: (ev.Flag_goodVertices>0.5)
              & (ev.Flag_globalTightHalo2016Filter>0.5)
@@ -70,7 +70,7 @@ selections:
              & (ev.JetBVeto(ev, 'pt').counts == 0)"
     mtw_selection: "ev: (ev.MTW(ev) >= 30.) & (ev.MTW(ev) < 125.)"
     mll_selection: "ev: (ev.MLL(ev) >= 71.) & (ev.MLL(ev) < 111.)"
-    met_pf_selection: "ev: ev.METShift_pt(ev) > 100."
+    met_pf_selection: "ev: ev.MET_ptShift(ev) > 100."
     ngen_boson_selection:
         "ev: np.ones(ev.size, dtype=bool)
              if ev.config.dataset.parent not in 'EWKV2Jets'
@@ -78,7 +78,7 @@ selections:
 grouped_selections:
     data:
         - "lumi_selection"
-        - "trigger_selection"
+#        - "trigger_selection"
     mc:
         - "ngen_boson_selection"
     baseline:
@@ -124,6 +124,7 @@ grouped_selections:
         - "dphi_jet_met_selection"
         - "ele_1_selection"
         - "mtw_selection"
+        - "met_pf_selection"
     velectron:
         - "muon_0_selection"
         - "tau_0_selection"
