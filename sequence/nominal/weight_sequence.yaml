@@ -3,6 +3,31 @@ weights:
         Monojet:
             Regions:
                 - "Monojet"
+            Data:
+                - "ev: np.zeros(ev.size, dtype=float)"
+            MC:
+                - "ev: ev.WeightXsLumi(ev)"
+                - "ev: ev.WeightPdfVariations(ev)"
+                - "ev: ev.WeightFactorScale(ev)"
+                - "ev: ev.WeightRenormScale(ev)"
+                - "ev: ev.WeightFactorXRenormScale(ev)"
+                - "ev: ev.WeightQcdEwk(ev)"
+                - "ev: ev.WeightPU(ev)"
+                - "ev: ev.WeightPreFiring(ev)"
+                - "ev: ev.WeightMETTrig(ev)"
+                - "ev: (1-ev.ElectronVetoNoSelection(ev, 'WeighteleIdIsoVetoSF')).prod()"
+                - "ev: (1-ev.ElectronSelection(ev, 'WeighteleIdIsoTightSF')).prod()"
+                - "ev: (1-ev.ElectronVeto(ev, 'WeighteleRecoSF')).prod()"
+                - "ev: (1-ev.MuonVetoNoSelection(ev, 'WeightmuonIdLooseSF')).prod()"
+                - "ev: (1-ev.MuonVetoNoSelection(ev, 'WeightmuonIsoLooseSF')).prod()"
+                - "ev: (1-ev.MuonSelection(ev, 'WeightmuonIdTightSF')).prod()"
+                - "ev: (1-ev.MuonSelection(ev, 'WeightmuonIsoTightSF')).prod()"
+                - "ev: (1-ev.PhotonVeto(ev, 'WeightphotonIdLooseSF')).prod()"
+                - "ev: (1-ev.PhotonVeto(ev, 'WeightphotonPixelSeedVetoSF')).prod()"
+                - "ev: (1-ev.TauSelection(ev, 'WeighttauIdTightSF')).prod()"
+                - "ev: (1-ev.JetBVeto(ev, 'btagSF')).prod()"
+        MonojetQCD:
+            Regions:
                 - "MonojetQCD"
             Data:
                 - "ev: np.ones(ev.size, dtype=float)"
@@ -33,7 +58,6 @@ weights:
                 - "SingleMuonQCD"
                 - "SingleMuonPlus"
                 - "SingleMuonMinus"
-                - "DoubleMuon"
                 - "TripleMuon"
             Data:
                 - "ev: np.ones(ev.size, dtype=float)"
@@ -58,16 +82,11 @@ weights:
                 - "ev: (1-ev.PhotonVeto(ev, 'WeightphotonPixelSeedVetoSF')).prod()"
                 - "ev: (1-ev.TauSelection(ev, 'WeighttauIdTightSF')).prod()"
                 - "ev: (1-ev.JetBVeto(ev, 'btagSF')).prod()"
-        Electron:
+        DoubleMuon:
             Regions:
-                - "SingleElectron"
-                - "SingleElectronQCD"
-                - "SingleElectronPlus"
-                - "SingleElectronMinus"
-                - "DoubleElectron"
-                - "TripleElectron"
+                - "DoubleMuon"
             Data:
-                - "ev: np.ones(ev.size, dtype=float)"
+                - "ev: np.zeros(ev.size, dtype=float)"
             MC:
                 - "ev: ev.WeightXsLumi(ev)"
                 - "ev: ev.WeightPdfVariations(ev)"
@@ -78,37 +97,17 @@ weights:
                 - "ev: ev.WeightPU(ev)"
                 - "ev: ev.WeightPreFiring(ev)"
                 - "ev: ev.WeightMETTrig(ev)"
-                - "ev: (ev.ElectronSelection(ev, 'WeighteleIdIsoTightSF')).prod()"
-                - "ev: (ev.ElectronSelection(ev, 'WeighteleRecoSF')).prod()"
+                - "ev: (ev.MuonSelection(ev, 'WeightmuonIdTightSF')).prod()"
+                - "ev: (ev.MuonSelection(ev, 'WeightmuonIsoTightSF')).prod()"
                 - "ev: (1-ev.ElectronVetoNoSelection(ev, 'WeighteleIdIsoVetoSF')).prod()"
-                - "ev: (1-ev.ElectronVetoNoSelection(ev, 'WeighteleRecoSF')).prod()"
-                - "ev: (1-ev.MuonSelection(ev, 'WeightmuonIdTightSF')).prod()"
-                - "ev: (1-ev.MuonSelection(ev, 'WeightmuonIsoTightSF')).prod()"
+                - "ev: (1-ev.ElectronSelection(ev, 'WeighteleIdIsoTightSF')).prod()"
+                - "ev: (1-ev.ElectronVeto(ev, 'WeighteleRecoSF')).prod()"
                 - "ev: (1-ev.MuonVetoNoSelection(ev, 'WeightmuonIdLooseSF')).prod()"
                 - "ev: (1-ev.MuonVetoNoSelection(ev, 'WeightmuonIsoLooseSF')).prod()"
                 - "ev: (1-ev.PhotonVeto(ev, 'WeightphotonIdLooseSF')).prod()"
                 - "ev: (1-ev.PhotonVeto(ev, 'WeightphotonPixelSeedVetoSF')).prod()"
                 - "ev: (1-ev.TauSelection(ev, 'WeighttauIdTightSF')).prod()"
                 - "ev: (1-ev.JetBVeto(ev, 'btagSF')).prod()"
-        ElectronAlt:
-            Regions:
-                - "DoubleElectronAlt"
-            Data:
-                - "ev: np.ones(ev.size, dtype=float)"
-            MC:
-                - "ev: ev.WeightXsLumi(ev)"
-                - "ev: ev.WeightPdfVariations(ev)"
-                - "ev: ev.WeightFactorScale(ev)"
-                - "ev: ev.WeightRenormScale(ev)"
-                - "ev: ev.WeightFactorXRenormScale(ev)"
-                - "ev: ev.WeightQcdEwk(ev)"
-                - "ev: ev.WeightPU(ev)"
-                - "ev: ev.WeightPreFiring(ev)"
-                - "ev: ev.WeightMETTrig(ev)"
-                - "ev: (ev.ElectronSelection(ev, 'WeighteleIdIsoTightSF')).prod()"
-                - "ev: (ev.ElectronSelection(ev, 'WeighteleRecoSF')).prod()"
-                - "ev: (1-ev.ElectronVetoNoSelection(ev, 'WeighteleIdIsoVetoSF')).prod()"
-                - "ev: (1-ev.ElectronVetoNoSelection(ev, 'WeighteleRecoSF')).prod()"
         Tau:
             Regions:
                 - "SingleTau"
@@ -143,10 +142,35 @@ weights:
                 - "SingleMuonQCD"
                 - "SingleMuonPlus"
                 - "SingleMuonMinus"
-                - "DoubleMuon"
                 - "TripleMuon"
             Data:
                 - "ev: np.ones(ev.size, dtype=float)"
+            MC:
+                - "ev: ev.WeightXsLumi(ev)"
+                - "ev: ev.WeightPdfVariations(ev)"
+                - "ev: ev.WeightFactorScale(ev)"
+                - "ev: ev.WeightRenormScale(ev)"
+                - "ev: ev.WeightFactorXRenormScale(ev)"
+                - "ev: ev.WeightQcdEwk(ev)"
+                - "ev: ev.WeightPU(ev)"
+                - "ev: ev.WeightPreFiring(ev)"
+                - "ev: (ev.MuonSelection(ev, 'WeightmuonIdTightSF')).prod()"
+                - "ev: (ev.MuonSelection(ev, 'WeightmuonIsoTightSF')).prod()"
+                - "ev: 1-(1-ev.MuonSelection(ev, 'WeightmuonTrigSF')).prod()"
+                - "ev: (1-ev.ElectronVetoNoSelection(ev, 'WeighteleIdIsoVetoSF')).prod()"
+                - "ev: (1-ev.ElectronSelection(ev, 'WeighteleIdIsoTightSF')).prod()"
+                - "ev: (1-ev.ElectronVeto(ev, 'WeighteleRecoSF')).prod()"
+                - "ev: (1-ev.MuonVetoNoSelection(ev, 'WeightmuonIdLooseSF')).prod()"
+                - "ev: (1-ev.MuonVetoNoSelection(ev, 'WeightmuonIsoLooseSF')).prod()"
+                - "ev: (1-ev.PhotonVeto(ev, 'WeightphotonIdLooseSF')).prod()"
+                - "ev: (1-ev.PhotonVeto(ev, 'WeightphotonPixelSeedVetoSF')).prod()"
+                - "ev: (1-ev.TauSelection(ev, 'WeighttauIdTightSF')).prod()"
+                - "ev: (1-ev.JetBVeto(ev, 'btagSF')).prod()"
+        DoubleMuon:
+            Regions:
+                - "DoubleMuon"
+            Data:
+                - "ev: np.zeros(ev.size, dtype=float)"
             MC:
                 - "ev: ev.WeightXsLumi(ev)"
                 - "ev: ev.WeightPdfVariations(ev)"
@@ -175,10 +199,36 @@ weights:
                 - "SingleElectronQCD"
                 - "SingleElectronPlus"
                 - "SingleElectronMinus"
-                - "DoubleElectron"
                 - "TripleElectron"
             Data:
                 - "ev: np.ones(ev.size, dtype=float)"
+            MC:
+                - "ev: ev.WeightXsLumi(ev)"
+                - "ev: ev.WeightPdfVariations(ev)"
+                - "ev: ev.WeightFactorScale(ev)"
+                - "ev: ev.WeightRenormScale(ev)"
+                - "ev: ev.WeightFactorXRenormScale(ev)"
+                - "ev: ev.WeightQcdEwk(ev)"
+                - "ev: ev.WeightPU(ev)"
+                - "ev: ev.WeightPreFiring(ev)"
+                - "ev: (ev.ElectronSelection(ev, 'WeighteleIdIsoTightSF')).prod()"
+                - "ev: (ev.ElectronSelection(ev, 'WeighteleRecoSF')).prod()"
+                - "ev: 1-(1-ev.ElectronSelection(ev, 'WeighteleTrigSF')).prod()"
+                - "ev: (1-ev.ElectronVetoNoSelection(ev, 'WeighteleIdIsoVetoSF')).prod()"
+                - "ev: (1-ev.ElectronVetoNoSelection(ev, 'WeighteleRecoSF')).prod()"
+                - "ev: (1-ev.MuonSelection(ev, 'WeightmuonIdTightSF')).prod()"
+                - "ev: (1-ev.MuonSelection(ev, 'WeightmuonIsoTightSF')).prod()"
+                - "ev: (1-ev.MuonVetoNoSelection(ev, 'WeightmuonIdLooseSF')).prod()"
+                - "ev: (1-ev.MuonVetoNoSelection(ev, 'WeightmuonIsoLooseSF')).prod()"
+                - "ev: (1-ev.PhotonVeto(ev, 'WeightphotonIdLooseSF')).prod()"
+                - "ev: (1-ev.PhotonVeto(ev, 'WeightphotonPixelSeedVetoSF')).prod()"
+                - "ev: (1-ev.TauSelection(ev, 'WeighttauIdTightSF')).prod()"
+                - "ev: (1-ev.JetBVeto(ev, 'btagSF')).prod()"
+        DoubleElectron:
+            Regions:
+                - "DoubleElectron"
+            Data:
+                - "ev: np.zeros(ev.size, dtype=float)"
             MC:
                 - "ev: ev.WeightXsLumi(ev)"
                 - "ev: ev.WeightPdfVariations(ev)"
