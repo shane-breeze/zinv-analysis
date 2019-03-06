@@ -7,10 +7,7 @@ class Collection(object):
     def __getattr__(self, attr):
         if attr in ["name", "event", "ref_name"]:
             raise AttributeError("{} should be defined but isn't".format(attr))
-        try:
-            return getattr(self.event, self.name+"_"+attr)
-        except KeyError:
-            raise AttributeError("{} not in event".format(attr))
+        return getattr(self.event, self.name+"_"+attr)
 
     def __repr__(self):
         return "{}(name = {!r}, ref_name = {!r})".format(
