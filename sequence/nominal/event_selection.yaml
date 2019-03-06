@@ -70,7 +70,7 @@ selections:
              & (ev.JetBVeto(ev, 'pt').counts == 0)"
     mtw_selection: "ev: (ev.MTW(ev) >= 30.) & (ev.MTW(ev) < 125.)"
     mll_selection: "ev: (ev.MLL(ev) >= 71.) & (ev.MLL(ev) < 111.)"
-    met_pf_selection: "ev: ev.METShift_pt(ev) > 100."
+    met_pf_selection: "ev: ev.MET_ptShift(ev) > 100."
     ngen_boson_selection:
         "ev: np.ones(ev.size, dtype=bool)
              if ev.config.dataset.parent not in 'EWKV2Jets'
