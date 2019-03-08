@@ -7,16 +7,14 @@ from cachetools import cachedmethod
 from cachetools.keys import hashkey
 from functools import partial
 
-from utils.NumbaFuncs import any_numba
-
 def evaluate_triggers(triggers):
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_triggers'))
     def fevaluate_triggers(ev, evidx, triggers_list):
-        return any_numba(np.vstack([
+        return reduce(operator.or_, [
             getattr(ev, trigger)
             for trigger in triggers_list
             if ev.hasbranch(trigger)
-        ]).T)
+        ])
     return lambda ev: fevaluate_triggers(ev, ev.iblock, tuple(triggers))
 
 class TriggerChecker(object):

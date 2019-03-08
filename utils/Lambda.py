@@ -32,7 +32,28 @@ class Lambda(object):
         """
         if not hasattr(self, "lambda_function"):
             self.begin()
-        #try:
         return self.lambda_function(*args, **kwargs)
-        #except Exception as e:
-        #    raise AttributeError(e, self.function)
+
+    def __add__(self, other):
+        sargs, sformula = self.function.split(":")
+        oargs, oformula = other.function.split(":")
+
+        if sargs != oargs:
+            raise TypeError(
+                "Cannot merge arguments: {} and {}".format(sargs, oargs)
+            )
+
+        new_function = "{}: ({}) & ({})".format(sargs, sformula, oformula)
+        return Lambda(new_function)
+
+    def __mul__(self, other):
+        sargs, sformula = self.function.split(":")
+        oargs, oformula = other.function.split(":")
+
+        if sargs != oargs:
+            raise TypeError(
+                "Cannot merge arguments: {} and {}".format(sargs, oargs)
+            )
+
+        new_function = "{}: ({}) * ({})".format(sargs, sformula, oformula)
+        return Lambda(new_function)

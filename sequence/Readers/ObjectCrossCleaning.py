@@ -7,7 +7,6 @@ from cachetools.keys import hashkey
 from functools import partial
 from numba import njit, boolean
 from utils.Geometry import DeltaR2
-from utils.NumbaFuncs import all_numba
 
 def evaluate_xclean_mask(obj1name, obj2names):
     @njit
@@ -44,7 +43,7 @@ def evaluate_xclean_mask(obj1name, obj2names):
             ))
         return awk.JaggedArray(
             obj1.eta.starts, obj1.eta.stops,
-            all_numba(np.vstack(masks).T),
+            reduce(operator.and_, masks),
         )
 
     return lambda ev: fevaluate_xclean_mask(

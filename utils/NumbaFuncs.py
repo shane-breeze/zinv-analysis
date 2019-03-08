@@ -83,38 +83,16 @@ def interpolate(x, xp, fp):
     return result
 
 @njit
-def argnonzero(a):
-    result = -1*np.ones(a.shape[0], dtype=int32)
-    for idx in range(a.shape[0]):
-        for pos in range(a.shape[1]):
-            if a[idx, pos]:
-                result[idx] = pos
-                break
+def index_nonzero(x, size):
+    result = np.zeros((x.shape[0], size), dtype=int32)
+    for iev in range(x.shape[0]):
+        pos = 0
+        for idx in range(x.shape[1]):
+            if x[iev,idx]:
+                assert pos < size
+                result[iev,pos] = idx
+                pos += 1
     return result
-
-@njit
-def all_numba(input):
-    nev = input.shape[0]
-    output = np.ones(nev, dtype=boolean)
-    for iev in range(nev):
-        output[iev] = np.all(input[iev,:])
-    return output
-
-@njit
-def any_numba(input):
-    nev = input.shape[0]
-    output = np.zeros(nev, dtype=boolean)
-    for iev in range(nev):
-        output[iev] = np.any(input[iev,:])
-    return output
-
-@njit
-def prod_numba(input):
-    nev = input.shape[0]
-    output = np.ones(nev, dtype=float64)
-    for iev in range(nev):
-        output[iev] = np.prod(input[iev,:])
-    return output
 
 @njit
 def weight_numba(nominal, nsig, up, down):

@@ -7,12 +7,11 @@ from cachetools.keys import hashkey
 from functools import partial
 
 from utils.Lambda import Lambda
-from utils.NumbaFuncs import all_numba
 
 def evaluate_selection(name, cutlist):
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_selection'))
     def fevaluate_selection(ev, evidx, nsig, source, name_):
-        return all_numba(np.vstack([c(ev) for c in cutlist]).T)
+        return reduce(operator.add, cutlist)(ev)
     return lambda ev: fevaluate_selection(ev, ev.iblock, ev.nsig, ev.source, name)
 
 class SelectionProducer(object):
