@@ -4,7 +4,7 @@ import awkward as awk
 import re
 
 from numba import njit, vectorize, float32, float64
-from utils.NumbaFuncs import get_bin_mask, event_to_object_var, interpolate, argnonzero
+from utils.NumbaFuncs import get_bin_mask, event_to_object_var, interpolate, index_nonzero
 from utils.Geometry import RadToCart2D, CartToRad2D
 
 @vectorize([float32(float32,float32,float32,float32,float32),
@@ -88,7 +88,8 @@ class JecVariations(object):
                 event.Jet.pt.starts, event.Jet.pt.stops,
             ), self.jers["rho_low"].values, self.jers["rho_high"].values,
         )
-        df = self.jers.iloc[argnonzero(mask)]
+        indices = index_nonzero(mask, 1)[:,0]
+        df = self.jers.iloc[indices]
         params = df[["param0", "param1", "param2", "param3"]].values
         ptbounds = df[["pt_low", "pt_high"]].values
         event.Jet_ptResolution = awk.JaggedArray(
@@ -104,7 +105,8 @@ class JecVariations(object):
             event.Jet.eta.content,
             self.jersfs["eta_low"].values, self.jersfs["eta_high"].values,
         )
-        ressfs = self.jersfs.iloc[argnonzero(mask)][["corr", "corr_down", "corr_up"]].values
+        indices = index_nonzero(mask, 1)[:,0]
+        ressfs = self.jersfs.iloc[indices][["corr", "corr_down", "corr_up"]].values
         jersfs = np.ones_like(event.Jet.pt.content, dtype=float)
         jersfs_up = np.ones_like(event.Jet.pt.content, dtype=float)
         jersfs_down = np.ones_like(event.Jet.pt.content, dtype=float)
@@ -159,7 +161,7 @@ class JecVariations(object):
             event.Jet.eta.content,
             df["eta_low"].values, df["eta_high"].values,
         )
-        indices = np.array([np.nonzero(x) for x in mask]).ravel()
+        indices = index_nonzero(mask, 1)[:,0]
 
         pt = np.array(list(df.iloc[indices]["pt"].values))
         corr_up = np.array(list(df.iloc[indices]["corr_up"].values))

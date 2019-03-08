@@ -6,13 +6,12 @@ from cachetools import cachedmethod
 from cachetools.keys import hashkey
 from functools import partial
 
-from utils.NumbaFuncs import prod_numba
 from utils.Lambda import Lambda
 
 def evaluate_weights(name, weights):
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_weights'))
     def fevaluate_weights(ev, evidx, nsig, source, name_):
-        return prod_numba(np.vstack([w(ev) for w in weights]).T)
+        return reduce(operator.mul, weights)(ev)
     return lambda ev: fevaluate_weights(ev, ev.iblock, ev.nsig, ev.source, name)
 
 class WeightProducer(object):

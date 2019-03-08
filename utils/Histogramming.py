@@ -12,7 +12,7 @@ class Histograms(object):
     def __init__(self):
         self.histograms = None
         self.configs = []
-        self.string_to_func = {}
+        self.lambda_functions = {}
         self.binning = {}
 
     def extend(self, configs):
@@ -28,9 +28,12 @@ class Histograms(object):
     def begin(self, event, parents, selection):
         self.isdata = event.config.dataset.isdata
 
-        funcs = []
         full_configs = []
         for config in self.configs:
+            for v in config["variables"]:
+                if v not in self.lambda_functions:
+                    self.lambda_functions[v] = Lambda(v)
+
             # deal with multiple processes per dataset
             for parent in parents:
                 full_selection = config["selection"][:]
@@ -39,16 +42,12 @@ class Histograms(object):
                 if self.isdata:
                     full_selection = ["ev: ev.Is{}Triggered(ev)".format(config["dataset"])] + full_selection
 
-                funcs.extend([
-                    f for f in config["variables"]+full_selection+[config["weight"]]
-                ])
-
                 new_config = copy.deepcopy(config)
                 new_config["process"] = parent
-                new_config["selection"] = full_selection
+                new_config["selection"] = reduce(operator.add, [Lambda(s) for s in full_selection])
+                new_config["weight"] = Lambda(config["weight"])
                 full_configs.append(new_config)
 
-        self.string_to_func = {func: Lambda(func) for func in set(funcs)}
         self.full_configs = sorted(
             full_configs, key=operator.itemgetter(
                 "weightname", "dataset", "region", "process", "name",
@@ -58,7 +57,10 @@ class Histograms(object):
 
     def end(self):
         self.clear_empties()
-        self.string_to_func = {}
+        self.lambda_functions = None
+        for c in self.configs:
+            del c["weight"]
+            del c["selection"]
         return self
 
     def clear_empties(self):
@@ -69,7 +71,7 @@ class Histograms(object):
     def event(self, event):
         dfs = []
         for config in self.full_configs:
-            weight = config["weight"].lower()
+            #weight = config["weight"].lower()
             #if self.isdata and ("up" in weight or "down" in weight or "pdf" in weight or "scale" in weight):
             #    continue
 
@@ -92,19 +94,16 @@ class Histograms(object):
         return self
 
     def generate_dataframe(self, event, config):
-        selection = reduce(lambda x,y: x&y, [
-            self.string_to_func[s](event)
-            for s in config["selection"]
-        ]) if len(config["selection"])>0 else np.ones(event.size, dtype=bool)
+        selection = config["selection"](event)
         if self.isdata:
             weight = selection.astype(float)
         else:
-            weight = self.string_to_func[config["weight"]](event)*selection
+            weight = config["weight"](event)*selection
 
         variables = []
         for idx, v in enumerate(config["variables"]):
             try:
-                variables.append(self.string_to_func[v](event))
+                variables.append(self.lambda_functions[v](event))
             except AttributeError:
                 temp = np.empty(ev.size, dtype=float)
                 temp[:] = np.nan
