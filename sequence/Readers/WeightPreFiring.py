@@ -7,7 +7,7 @@ from cachetools.keys import hashkey
 from functools import partial
 from numba import njit, float32
 
-from utils.NumbaFuncs import get_bin_mask, weight_numba
+from utils.NumbaFuncs import get_bin_mask, weight_numba, index_nonzero
 from utils.Geometry import DeltaR2
 from utils.Lambda import Lambda
 
@@ -133,6 +133,6 @@ def get_efficiencies(event, obj, selection, effmap):
         getattr(event, "{}_ptShift".format(obj))(event)[selection].content,
         effmap["ylow"].values, effmap["yupp"].values,
     )
-    indices = np.array([np.nonzero(x)[0] for x in mask]).ravel()
+    indices = index_nonzero(mask, 1)[:,0]
     df = effmap.iloc[indices]
     return df["content"].values, df["error"].values

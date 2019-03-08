@@ -235,7 +235,7 @@ weight_btags = Readers.WeightBTagging(
     operating_point = "medium",
     threshold = 0.8484,
     measurement_types = {"b": "comb", "c": "comb", "udsg": "incl"},
-    calibration_file = datapath+"/btagging/CSVv2_Moriond17_B_H.csv",
+    calibration_file = datapath+"/btagging/CSVv2_Moriond17_B_H_params.csv",
     data = False,
 )
 

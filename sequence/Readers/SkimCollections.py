@@ -8,7 +8,6 @@ from cachetools import cachedmethod
 from cachetools.keys import hashkey
 from functools import partial
 
-from utils.NumbaFuncs import all_numba
 from utils.Lambda import Lambda
 
 def evaluate_skim(objname, name, cutlist):
@@ -18,7 +17,7 @@ def evaluate_skim(objname, name, cutlist):
         stops = getattr(ev, objname_).pt.stops
         return awk.JaggedArray(
             starts, stops,
-            all_numba(np.vstack([c(ev).content for c in cutlist]).T),
+            reduce(operator.add, cutlist)(ev).content,
         )
     return lambda ev: fevaluate_skim(ev, ev.iblock, ev.nsig, ev.source, name, objname)
 

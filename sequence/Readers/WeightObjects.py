@@ -9,7 +9,7 @@ from functools import partial
 from numba import njit, float32
 
 from utils.Lambda import Lambda
-from utils.NumbaFuncs import weight_numba, get_bin_mask
+from utils.NumbaFuncs import weight_numba, get_bin_mask, index_nonzero
 
 def evaluate_object_weights(df, bins_vars, add_syst, name):
     @njit
@@ -20,12 +20,11 @@ def evaluate_object_weights(df, bins_vars, add_syst, name):
         wdkdownsum = np.zeros_like(objattr, dtype=float32)
 
         for idx in range(objattr.shape[0]):
-            lower = nweight*idx
-            higher = nweight*(idx+1)
-            wsum[idx] = w[lower:higher].sum()
-            wksum[idx] = (w[lower:higher]*k[lower:higher]).sum()
-            wdkupsum[idx] = ((w[lower:higher]*dkup[lower:higher])**2).sum()
-            wdkdownsum[idx] = ((w[lower:higher]*dkdown[lower:higher])**2).sum()
+            for subidx in range(nweight*idx, nweight*(idx+1)):
+                wsum[idx] += w[subidx]
+                wksum[idx] += w[subidx]*k[subidx]
+                wdkupsum[idx] += (w[subidx]*dkup[subidx])**2
+                wdkdownsum[idx] += (w[subidx]*dkdown[subidx])**2
 
         mean = wksum / wsum
         unc_up = np.sqrt((wdkupsum / wsum**2) + addsyst**2)
@@ -40,13 +39,15 @@ def evaluate_object_weights(df, bins_vars, add_syst, name):
 
         # Select bin from reference table
         mask = np.ones((event_vars[0].content.shape[0], df.shape[0]), dtype=bool)
+        nweight = df["weight"].unique().shape[0]
         for idx in range(len(event_vars)):
             mask = mask & get_bin_mask(
                 event_vars[idx].content,
                 df["bin{}_low".format(idx)].values,
                 df["bin{}_upp".format(idx)].values,
             )
-        indices = np.array([np.nonzero(x)[0] for x in mask]).ravel()
+
+        indices = index_nonzero(mask, nweight).ravel()
         dfw = df.iloc[indices]
 
         sf, sfup, sfdown = weighted_mean_numba(

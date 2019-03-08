@@ -3,15 +3,30 @@ import pandas as pd
 import awkward as awk
 import operator
 
+from numba import njit, float32, int32
 from cachetools import cachedmethod
 from cachetools.keys import hashkey
 from functools import partial
 
 from utils.Lambda import Lambda
-from utils.NumbaFuncs import weight_numba, get_bin_mask, get_val_mask
+from utils.NumbaFuncs import weight_numba, get_bin_mask, get_val_mask, index_nonzero
 
 dict_apply = np.vectorize(lambda d, x: d[x])
-func_apply = np.vectorize(lambda f, x: f(x))
+
+def btag_formula(x, df):
+    @njit
+    def btag_formula_numba(x_, eqtype, xlow, xhigh, p0, p1, p2, p3, p4, p5, p6):
+        xtest = np.minimum(np.maximum(x_, xlow), xhigh)
+        sf = np.ones_like(xtest, dtype=float32)
+        sf[eqtype==0] = (p0*((1+(p1*xtest))/(1+(p2*xtest))) + p3)[eqtype==0]
+        sf[eqtype==1] = ((p0 + p1*xtest + p2*xtest**2 + p3*xtest**3)*(1 + (p4 + p5*xtest + p6*xtest**2)))[eqtype==1]
+        sf[eqtype==2] = ((p0 + p1/(xtest**2) + p2*xtest)*(1 + (p4 + p5*xtest + p6*xtest**2)))[eqtype==2]
+        return sf
+    return btag_formula_numba(
+        x, df["eqtype"].values, df["xlow"].values, df["xhigh"].values,
+        df["p0"].values, df["p1"].values, df["p2"].values, df["p3"].values,
+        df["p4"].values, df["p5"].values, df["p6"].values,
+    )
 
 def evaluate_btagsf(df, attrs, h2f):
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_btagsf'))
@@ -37,15 +52,15 @@ def evaluate_btagsf(df, attrs, h2f):
             mask = mask & mask_attr
 
         # Create indices from mask
-        indices = np.array([np.nonzero(x)[0] for x in mask])
+        indices = index_nonzero(mask, 3)
         idx_central = indices[:,0]
         idx_down = indices[:,1]
         idx_up = indices[:,2]
 
         jpt = ev.Jet.ptShift(ev)
-        sf = func_apply(df.iloc[idx_central]["lambda_formula"].values, jpt.content)
-        sf_up = func_apply(df.iloc[idx_up]["lambda_formula"].values, jpt.content)
-        sf_down = func_apply(df.iloc[idx_down]["lambda_formula"].values, jpt.content)
+        sf = btag_formula(jpt.content, df.iloc[idx_central])
+        sf_up = btag_formula(jpt.content, df.iloc[idx_up])
+        sf_down = btag_formula(jpt.content, df.iloc[idx_down])
 
         sf_up = (source=="btagSF")*(sf_up/sf-1.)
         sf_down = (source=="btagSF")*(sf_down/sf-1.)
@@ -66,8 +81,18 @@ class WeightBTagging(object):
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
-        df = pd.read_csv(self.calibration_file, sep=',\s*')
-        df["formula"] = df["formula"].apply(lambda f: "x: "+f.replace('"', ''))
+        df = pd.read_csv(self.calibration_file, sep=',\s+')
+        params = np.vstack(df["params"].apply(lambda x: eval(x[1:-1])))
+        df["eqtype"] = params[:,0]
+        df["xlow"] = params[:,1]
+        df["xhigh"] = params[:,2]
+        df["p0"] = params[:,3]
+        df["p1"] = params[:,4]
+        df["p2"] = params[:,5]
+        df["p3"] = params[:,6]
+        df["p4"] = params[:,7]
+        df["p5"] = params[:,8]
+        df["p6"] = params[:,9]
 
         op_num = self.ops[self.operating_point]
         df = df.loc[(df["CSVv2;OperatingPoint"] == op_num)]\
@@ -80,11 +105,12 @@ class WeightBTagging(object):
 
         self.calibrations = df[[
             "sysType", "measurementType", "jetFlavor", "etaMin", "etaMax",
-            "ptMin", "ptMax", "discrMin", "discrMax", "formula",
+            "ptMin", "ptMax", "discrMin", "discrMax", "eqtype", "xlow", "xhigh",
+            "p0", "p1", "p2", "p3", "p4", "p5", "p6",
         ]].sort_values(["sysType"]).reset_index(drop=True)
 
     def begin(self, event):
-        self.calibrations["lambda_formula"] = self.calibrations["formula"].apply(Lambda)
+        #self.calibrations["lambda_formula"] = self.calibrations["formula"].apply(Lambda)
         attrs = [("eta", "eta"), ("ptShift", "pt")]
         if self.operating_point == "reshaping":
             attrs.append(("btagCSVV2", "discr"))
