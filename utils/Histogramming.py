@@ -46,6 +46,9 @@ class Histograms(object):
                 new_config = copy.deepcopy(config)
                 new_config["process"] = parent
                 new_config["selection"] = full_selection
+                if self.isdata:
+                    new_config["nsig"] = 0.
+                    new_config["source"] = ''
                 full_configs.append(new_config)
 
         self.string_to_func = {func: Lambda(func) for func in set(funcs)}
@@ -70,8 +73,8 @@ class Histograms(object):
         dfs = []
         for config in self.full_configs:
             weight = config["weight"].lower()
-            #if self.isdata and ("up" in weight or "down" in weight or "pdf" in weight or "scale" in weight):
-            #    continue
+            if self.isdata and ("up" in weight or "down" in weight):
+                continue
 
             event.nsig = config["nsig"]
             event.source = config["source"]

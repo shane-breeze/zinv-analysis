@@ -32,6 +32,7 @@ datasets:
     - WJetsToLNu_Pt-400To600_ext1
     - WJetsToLNu_Pt-600ToInf
     - WJetsToLNu_Pt-600ToInf_ext1
+    - TTJets_Inclusive
     - ZJetsToNuNu_Pt-0To50
     - ZJetsToNuNu_Pt-50To100
     - ZJetsToNuNu_Pt-100To250
@@ -56,7 +57,6 @@ datasets:
     - G1Jet_Pt-400To650_ext1
     - G1Jet_Pt-650ToInf
     - G1Jet_Pt-650ToInf_ext1
-    - TTJets_Inclusive
     - QCD_Pt-15To30
     - QCD_Pt-30To50
     - QCD_Pt-50To80

@@ -115,7 +115,9 @@ configs:
         bins:
             - [65., 115., 51]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["",                   0,   "",               "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["eleEnergyScaleUp",   1.,  "eleEnergyScale", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["eleEnergyScaleDown", -1., "eleEnergyScale", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
     nJetVeto:
         categories:
             - "all"
