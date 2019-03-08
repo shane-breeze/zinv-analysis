@@ -74,8 +74,8 @@ class Histograms(object):
     def event(self, event):
         dfs = []
         for config in self.full_configs:
-            weight = config["weight"].lower()
-            if self.isdata and ("up" in weight or "down" in weight):
+            weightname = config["weightname"].lower()
+            if self.isdata and ("up" in weightname or "down" in weightname):
                 continue
 
             event.nsig = config["nsig"]
