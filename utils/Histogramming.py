@@ -18,7 +18,9 @@ def numba_histogram(event_attrs, mins, maxs, weights):
 
     for iev, idx in enumerate(indices):
         if idx >= 0:
-            hist[int(idx)] += weights[iev]
+            w = weights[iev]
+            if w != 0.:
+                hist[int(idx)] += weights[iev]
 
     return hist
 
@@ -61,8 +63,13 @@ class Histograms(object):
                 if self.isdata:
                     new_config["nsig"] = 0.
                     new_config["source"] = ''
-                new_config["selection"] = reduce(operator.add, [Lambda(s) for s in full_selection])
-                new_config["weight"] = Lambda(config["weight"])
+                function = reduce(operator.add, [Lambda(s) for s in full_selection])
+                self.lambda_functions[function.function] = function
+                new_config["selection"] = function.function
+
+                function = Lambda(config["weight"])
+                self.lambda_functions[function.function] = function
+                new_config["weight"] = function.function
                 full_configs.append(new_config)
 
         self.full_configs = sorted(
@@ -75,9 +82,6 @@ class Histograms(object):
     def end(self):
         self.clear_empties()
         self.lambda_functions = None
-        for c in self.configs:
-            del c["weight"]
-            del c["selection"]
         return self
 
     def clear_empties(self):
@@ -111,11 +115,11 @@ class Histograms(object):
         return self
 
     def generate_dataframe(self, event, config):
-        selection = config["selection"](event)
+        selection = self.lambda_functions[config["selection"]](event)
         if self.isdata:
             weight = selection.astype(float)
         else:
-            weight = config["weight"](event)*selection
+            weight = self.lambda_functions[config["weight"]](event)*selection
 
         variables = []
         for idx, v in enumerate(config["variables"]):
@@ -170,25 +174,6 @@ class Histograms(object):
 
     def make_dense_df(self, df):
         pass
-
-    def create_onedim_hists(self, bins, counts, yields, variance):
-        counts_1d = counts.T.ravel()
-        counts_1d = counts_1d.reshape((counts_1d.shape[0],1))
-        yields_1d = yields.T.ravel()
-        yields_1d = yields_1d.reshape((yields_1d.shape[0],1))
-        variance_1d = variance.T.ravel()
-        variance_1d = variance_1d.reshape((variance_1d.shape[0],1))
-
-        tbins = bins[::-1]
-        bin_idxs = itertools.product(*[range(len(bin)-1) for bin in tbins])
-        bins_1d = np.array([
-            reduce(lambda x,y: x+y, [
-                [tbins[dim][sub_bin_idx], tbins[dim][sub_bin_idx+1]]
-                for dim, sub_bin_idx in enumerate(bin_idx)
-            ])
-            for bin_idx in bin_idxs
-        ])
-        return np.hstack([bins_1d, counts_1d, yields_1d, variance_1d])
 
     def merge(self, other):
         if self.histograms.shape[0] == 0:

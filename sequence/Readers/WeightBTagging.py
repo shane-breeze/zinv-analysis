@@ -8,7 +8,6 @@ from cachetools import cachedmethod
 from cachetools.keys import hashkey
 from functools import partial
 
-from utils.Lambda import Lambda
 from utils.NumbaFuncs import weight_numba, get_bin_indices
 
 dict_apply = np.vectorize(lambda d, x: d[x])
@@ -108,7 +107,6 @@ class WeightBTagging(object):
         ]].sort_values(["sysType"]).reset_index(drop=True)
 
     def begin(self, event):
-        #self.calibrations["lambda_formula"] = self.calibrations["formula"].apply(Lambda)
         attrs = [("eta", "eta"), ("ptShift", "pt")]
         if self.operating_point == "reshaping":
             attrs.append(("btagCSVV2", "discr"))
