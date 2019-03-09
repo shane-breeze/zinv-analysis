@@ -4,7 +4,7 @@ import awkward as awk
 import re
 
 from numba import njit, vectorize, float32, float64
-from utils.NumbaFuncs import get_bin_mask, event_to_object_var, interpolate, index_nonzero
+from utils.NumbaFuncs import get_bin_indices, event_to_object_var, interpolate
 from utils.Geometry import RadToCart2D, CartToRad2D
 
 @vectorize([float32(float32,float32,float32,float32,float32),
@@ -79,16 +79,13 @@ class JecVariations(object):
             self.do_jes_correction(event, source)
 
     def do_jet_pt_resolution(self, event):
-        mask = get_bin_mask(
-            event.Jet.eta.content,
-            self.jers["eta_low"].values, self.jers["eta_high"].values,
-        ) & get_bin_mask(
-            event_to_object_var(
-                event.fixedGridRhoFastjetAll,
-                event.Jet.pt.starts, event.Jet.pt.stops,
-            ), self.jers["rho_low"].values, self.jers["rho_high"].values,
-        )
-        indices = index_nonzero(mask, 1)[:,0]
+        indices = get_bin_indices(
+            [event.Jet.eta.content,
+             event_to_object_var(event.fixedGridRhoFastjetAll, event.Jet.pt.starts, event.Jet.pt.stops)],
+            [self.jers["eta_low"].values, self.jers["rho_low"].values],
+            [self.jers["eta_high"].values, self.jers["rho_high"].values],
+            1,
+        )[:,0]
         df = self.jers.iloc[indices]
         params = df[["param0", "param1", "param2", "param3"]].values
         ptbounds = df[["pt_low", "pt_high"]].values
@@ -101,11 +98,12 @@ class JecVariations(object):
         )
 
     def do_jer_correction(self, event):
-        mask = get_bin_mask(
-            event.Jet.eta.content,
-            self.jersfs["eta_low"].values, self.jersfs["eta_high"].values,
-        )
-        indices = index_nonzero(mask, 1)[:,0]
+        indices = get_bin_indices(
+            [event.Jet.eta.content],
+            [self.jersfs["eta_low"].values],
+            [self.jersfs["eta_high"].values],
+            1,
+        )[:,0]
         ressfs = self.jersfs.iloc[indices][["corr", "corr_down", "corr_up"]].values
         jersfs = np.ones_like(event.Jet.pt.content, dtype=float)
         jersfs_up = np.ones_like(event.Jet.pt.content, dtype=float)
@@ -157,11 +155,12 @@ class JecVariations(object):
     def do_jes_correction(self, event, source):
         df = self.jesuncs[self.jesuncs["source"]==source]
 
-        mask = get_bin_mask(
-            event.Jet.eta.content,
-            df["eta_low"].values, df["eta_high"].values,
-        )
-        indices = index_nonzero(mask, 1)[:,0]
+        indices = get_bin_indices(
+            [event.Jet.eta.content],
+            [df["eta_low"].values],
+            [df["eta_high"].values],
+            1,
+        )[:,0]
 
         pt = np.array(list(df.iloc[indices]["pt"].values))
         corr_up = np.array(list(df.iloc[indices]["corr_up"].values))

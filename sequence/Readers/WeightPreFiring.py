@@ -7,7 +7,7 @@ from cachetools.keys import hashkey
 from functools import partial
 from numba import njit, float32
 
-from utils.NumbaFuncs import get_bin_mask, weight_numba, index_nonzero
+from utils.NumbaFuncs import weight_numba, get_bin_indices
 from utils.Geometry import DeltaR2
 from utils.Lambda import Lambda
 
@@ -126,13 +126,12 @@ def get_maps(path):
     return df
 
 def get_efficiencies(event, obj, selection, effmap):
-    mask = get_bin_mask(
-        getattr(event, "{}_eta".format(obj))[selection].content,
-        effmap["xlow"].values, effmap["xupp"].values,
-    ) & get_bin_mask(
-        getattr(event, "{}_ptShift".format(obj))(event)[selection].content,
-        effmap["ylow"].values, effmap["yupp"].values,
-    )
-    indices = index_nonzero(mask, 1)[:,0]
+    indices = get_bin_indices(
+        [getattr(event, "{}_eta".format(obj))[selection].content,
+         getattr(event, "{}_ptShift".format(obj))(event)[selection].content.astype(np.float32)],
+        [effmap["xlow"].values, effmap["ylow"].values],
+        [effmap["xupp"].values, effmap["yupp"].values],
+        1,
+    )[:,0]
     df = effmap.iloc[indices]
     return df["content"].values, df["error"].values

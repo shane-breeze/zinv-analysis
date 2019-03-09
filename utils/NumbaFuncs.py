@@ -1,41 +1,25 @@
 import numpy as np
-from numba import njit, boolean, int32, float64
+from numba import njit, boolean, int32, float32, float64
 
 @njit
-def get_val_indices(vals, refs):
-    idxs = -1*np.ones_like(vals, dtype=int32)
-    for iev, val in enumerate(vals):
-        for idx, ref in enumerate(refs):
-            if val == ref:
-                idxs[iev] = idx
-                break
-    return idxs
+def get_bin_indices(vars, mins, maxs, size):
+    result = -1*np.ones((vars[0].shape[0], size), dtype=int32)
+    for iev in range(vars[0].shape[0]):
+        pos = 0
+        for ib in range(mins[0].shape[0]):
+            accept = True
+            for idx in range(len(vars)):
+                if not (mins[idx][ib] <= vars[idx][iev] < maxs[idx][ib]):
+                    accept = False
 
-@njit
-def get_bin_indices(vals, mins, maxs):
-    idxs = -1*np.ones_like(vals, dtype=int32)
-    for iev, val in enumerate(vals):
-        for ib, (bin_min, bin_max) in enumerate(zip(mins, maxs)):
-            if bin_min <= val < bin_max:
-                idxs[iev] = ib
-                break
-    return idxs
+            if accept:
+                assert pos < size
+                result[iev,pos] = ib
+                pos += 1
 
-@njit
-def get_val_mask(vals, refs):
-    mask = np.zeros((vals.shape[0], refs.shape[0]), dtype=boolean)
-    for iev, val in enumerate(vals):
-        for idx, ref in enumerate(refs):
-            mask[iev, idx] = (val == ref)
-    return mask
+        #assert pos == size
 
-@njit
-def get_bin_mask(vals, mins, maxs):
-    mask = np.zeros((vals.shape[0], mins.shape[0]), dtype=boolean)
-    for iev, val in enumerate(vals):
-        for ib, (bin_min, bin_max) in enumerate(zip(mins, maxs)):
-            mask[iev, ib] = (bin_min <= val < bin_max)
-    return mask
+    return result
 
 @njit
 def get_nth_sorted_object_indices(n, pts, starts, stops):
@@ -57,7 +41,7 @@ def get_event_object_idx(contents, starts, stops):
 
 @njit
 def event_to_object_var(variable, starts, stops):
-    new_obj_var = np.zeros(stops[-1], dtype=float64)
+    new_obj_var = np.zeros(stops[-1], dtype=float32)
     for idx, (start, stop) in enumerate(zip(starts, stops)):
         for subidx in range(start, stop):
             new_obj_var[subidx] = variable[idx]
@@ -80,18 +64,6 @@ def interpolate(x, xp, fp):
     result = np.zeros_like(x, dtype=float64)
     for idx in range(x.shape[0]):
         result[idx] = interp(x[idx], xp[idx,:], fp[idx,:])
-    return result
-
-@njit
-def index_nonzero(x, size):
-    result = np.zeros((x.shape[0], size), dtype=int32)
-    for iev in range(x.shape[0]):
-        pos = 0
-        for idx in range(x.shape[1]):
-            if x[iev,idx]:
-                assert pos < size
-                result[iev,pos] = idx
-                pos += 1
     return result
 
 @njit

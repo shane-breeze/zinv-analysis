@@ -105,11 +105,13 @@ class WeightQcdEwk(object):
                     np.zeros(event.size),
                 )
         else:
-            corrections = self.input_df.iloc[get_bin_indices(
-                event.GenPartBoson_pt,
-                self.input_df.index.get_level_values("bin_min").values,
-                self.input_df.index.get_level_values("bin_max").values,
-            )]
+            indices = get_bin_indices(
+                [event.GenPartBoson_pt],
+                [self.input_df.index.get_level_values("bin_min").values],
+                [self.input_df.index.get_level_values("bin_max").values],
+                1,
+            )[:,0]
+            corrections = self.input_df.iloc[indices]
             event.WeightQcdEwkNominal = corrections[""].values
             for variation in self.variations[1:]:
                 setattr(
