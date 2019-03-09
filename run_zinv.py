@@ -95,16 +95,16 @@ def generate_report(outdir):
 
 vmem_dict = {
     # 500,000 events per block:
-    "DYJetsToLL_Pt-0To50":         8,
+    "DYJetsToLL_Pt-0To50":         10,
     "DYJetsToLL_Pt-50To100":       10,
-    "DYJetsToLL_Pt-50To100_ext1":  10,
+    "DYJetsToLL_Pt-50To100_ext1":  12,
     "DYJetsToLL_Pt-100To250":      8,
     "DYJetsToLL_Pt-100To250_ext1": 10,
     "DYJetsToLL_Pt-100To250_ext2": 10,
     "DYJetsToLL_Pt-100To250_ext3": 12,
     "DYJetsToLL_Pt-250To400_ext1": 8,
     "DYJetsToLL_Pt-250To400_ext2": 8,
-    "DYJetsToLL_Pt-250To400_ext3": 12,
+    "DYJetsToLL_Pt-250To400_ext3": 14,
     "DYJetsToLL_Pt-400To650":      8,
     "DYJetsToLL_Pt-400To650_ext1": 8,
     "DYJetsToLL_Pt-400To650_ext2": 8,
