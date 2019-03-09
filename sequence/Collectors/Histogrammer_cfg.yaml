@@ -45,7 +45,7 @@ configs:
         categories:
             - "all"
         variables:
-            - "ev: ev.MET_pt"
+            - "ev: ev.MET_ptShift(ev)"
         bins:
             - [0., 1500., 61]
         weights:
@@ -54,7 +54,7 @@ configs:
         categories:
             - "all"
         variables:
-            - "ev: ev.MET_phi"
+            - "ev: ev.MET_phiShift(ev)"
         bins:
             - [-3.1416, 3.1416, 51]
         weights:

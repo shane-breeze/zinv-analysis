@@ -9,7 +9,7 @@ from cachetools.keys import hashkey
 from functools import partial
 
 from utils.Lambda import Lambda
-from utils.NumbaFuncs import weight_numba, get_bin_mask, get_val_mask, index_nonzero
+from utils.NumbaFuncs import weight_numba, get_bin_indices
 
 dict_apply = np.vectorize(lambda d, x: d[x])
 
@@ -37,22 +37,20 @@ def evaluate_btagsf(df, attrs, h2f):
         mask = np.ones((jet_flavour.shape[0], df.shape[0]), dtype=bool)
 
         # Flavour mask
-        flav_bins = get_val_mask(jet_flavour, df["jetFlavor"].values)
-        mask = mask & flav_bins
+        event_attrs = [jet_flavour.astype(np.float32)]
+        mins = [df["jetFlavor"].values.astype(np.float32)]
+        maxs = [(df["jetFlavor"].values+1).astype(np.float32)]
 
         for jet_attr, df_attr in attrs_:
             obj_attr = getattr(ev.Jet, jet_attr)
             if callable(obj_attr):
                 obj_attr = obj_attr(ev)
-            mask_attr = get_bin_mask(
-                obj_attr.content,
-                df[df_attr+"Min"].values,
-                df[df_attr+"Max"].values,
-            )
-            mask = mask & mask_attr
+            event_attrs.append(obj_attr.content.astype(np.float32))
+            mins.append(df[df_attr+"Min"].values.astype(np.float32))
+            maxs.append(df[df_attr+"Max"].values.astype(np.float32))
 
         # Create indices from mask
-        indices = index_nonzero(mask, 3)
+        indices = get_bin_indices(event_attrs, mins, maxs, 3)
         idx_central = indices[:,0]
         idx_down = indices[:,1]
         idx_up = indices[:,2]

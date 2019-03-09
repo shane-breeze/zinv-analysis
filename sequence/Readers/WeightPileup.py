@@ -12,8 +12,10 @@ from utils.NumbaFuncs import get_bin_indices, weight_numba
 def evaluate_pu(var, corrs):
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_pu'))
     def fevaluate_pu(ev, evidx, nsig, source, var_):
-        vals = corrs["nTrueInt"].values
-        indices = get_bin_indices(getattr(ev, var_), vals, vals+1)
+        mins = corrs["nTrueInt"].values.astype(np.float32)
+        maxs = mins[:]+1
+        maxs[-1] = np.inf
+        indices = get_bin_indices([getattr(ev, var_)], [mins], [maxs], 1)[:,0]
         ev_corrs = corrs.iloc[indices]
 
         nominal = ev_corrs["corr"].values
@@ -37,5 +39,5 @@ class WeightPileup(object):
 
 def read_file(path, overflow_bins=[]):
     df = pd.read_table(path, sep='\s+')[["nTrueInt", "corr", "corr_down", "corr_up"]]
-    df.loc[df["nTrueInt"]==df["nTrueInt"].max(), "nTrueInt"] = np.inf
+    #df.loc[df["nTrueInt"]==df["nTrueInt"].max(), "nTrueInt"] = np.inf
     return df

@@ -9,7 +9,7 @@ from functools import partial
 from numba import njit, float32
 
 from utils.Lambda import Lambda
-from utils.NumbaFuncs import weight_numba, get_bin_mask, index_nonzero
+from utils.NumbaFuncs import weight_numba, get_bin_indices
 
 def evaluate_object_weights(df, bins_vars, add_syst, name):
     @njit
@@ -37,17 +37,12 @@ def evaluate_object_weights(df, bins_vars, add_syst, name):
         for v in event_vars:
             v.content[np.isnan(v.content)] = 0.
 
-        # Select bin from reference table
-        mask = np.ones((event_vars[0].content.shape[0], df.shape[0]), dtype=bool)
-        nweight = df["weight"].unique().shape[0]
-        for idx in range(len(event_vars)):
-            mask = mask & get_bin_mask(
-                event_vars[idx].content,
-                df["bin{}_low".format(idx)].values,
-                df["bin{}_upp".format(idx)].values,
-            )
-
-        indices = index_nonzero(mask, nweight).ravel()
+        indices = get_bin_indices(
+            [event_vars[idx].content.astype(np.float32) for idx in range(len(event_vars))],
+            [df["bin{}_low".format(idx)].values.astype(np.float32) for idx in range(len(event_vars))],
+            [df["bin{}_upp".format(idx)].values.astype(np.float32) for idx in range(len(event_vars))],
+            df["weight"].unique().shape[0],
+        ).ravel()
         dfw = df.iloc[indices]
 
         sf, sfup, sfdown = weighted_mean_numba(
