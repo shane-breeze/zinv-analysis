@@ -5,6 +5,7 @@ weights:
                 - "Monojet"
             Data:
                 - "ev: np.zeros(ev.size, dtype=float)"
+                - "ev: ev.IsTriggered(ev)"
             MC:
                 - "ev: ev.WeightXsLumi(ev)"
                 - "ev: ev.WeightPdfVariations(ev)"
@@ -30,7 +31,7 @@ weights:
             Regions:
                 - "MonojetQCD"
             Data:
-                - "ev: np.ones(ev.size, dtype=float)"
+                - "ev: ev.IsTriggered(ev)"
             MC:
                 - "ev: ev.WeightXsLumi(ev)"
                 - "ev: ev.WeightPdfVariations(ev)"
@@ -60,7 +61,7 @@ weights:
                 - "SingleMuonMinus"
                 - "TripleMuon"
             Data:
-                - "ev: np.ones(ev.size, dtype=float)"
+                - "ev: ev.IsTriggered(ev)"
             MC:
                 - "ev: ev.WeightXsLumi(ev)"
                 - "ev: ev.WeightPdfVariations(ev)"
@@ -87,6 +88,7 @@ weights:
                 - "DoubleMuon"
             Data:
                 - "ev: np.zeros(ev.size, dtype=float)"
+                - "ev: ev.IsTriggered(ev)"
             MC:
                 - "ev: ev.WeightXsLumi(ev)"
                 - "ev: ev.WeightPdfVariations(ev)"
@@ -113,7 +115,7 @@ weights:
                 - "SingleTau"
                 - "DoubleTau"
             Data:
-                - "ev: np.ones(ev.size, dtype=float)"
+                - "ev: ev.IsTriggered(ev)"
             MC:
                 - "ev: ev.WeightXsLumi(ev)"
                 - "ev: ev.WeightPdfVariations(ev)"
@@ -144,7 +146,7 @@ weights:
                 - "SingleMuonMinus"
                 - "TripleMuon"
             Data:
-                - "ev: np.ones(ev.size, dtype=float)"
+                - "ev: ev.IsTriggered(ev)"
             MC:
                 - "ev: ev.WeightXsLumi(ev)"
                 - "ev: ev.WeightPdfVariations(ev)"
@@ -171,6 +173,7 @@ weights:
                 - "DoubleMuon"
             Data:
                 - "ev: np.zeros(ev.size, dtype=float)"
+                - "ev: ev.IsTriggered(ev)"
             MC:
                 - "ev: ev.WeightXsLumi(ev)"
                 - "ev: ev.WeightPdfVariations(ev)"
@@ -201,7 +204,7 @@ weights:
                 - "SingleElectronMinus"
                 - "TripleElectron"
             Data:
-                - "ev: np.ones(ev.size, dtype=float)"
+                - "ev: ev.IsTriggered(ev)"
             MC:
                 - "ev: ev.WeightXsLumi(ev)"
                 - "ev: ev.WeightPdfVariations(ev)"
@@ -229,6 +232,7 @@ weights:
                 - "DoubleElectron"
             Data:
                 - "ev: np.zeros(ev.size, dtype=float)"
+                - "ev: ev.IsTriggered(ev)"
             MC:
                 - "ev: ev.WeightXsLumi(ev)"
                 - "ev: ev.WeightPdfVariations(ev)"
@@ -255,7 +259,7 @@ weights:
             Regions:
                 - "DoubleElectronAlt"
             Data:
-                - "ev: np.ones(ev.size, dtype=float)"
+                - "ev: ev.IsTriggered(ev)"
             MC:
                 - "ev: ev.WeightXsLumi(ev)"
                 - "ev: ev.WeightPdfVariations(ev)"
