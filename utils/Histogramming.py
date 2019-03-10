@@ -9,21 +9,6 @@ from Lambda import Lambda
 import itertools
 import operator
 
-from .NumbaFuncs import get_bin_indices
-
-@nb.njit
-def numba_histogram(event_attrs, mins, maxs, weights):
-    hist = np.zeros_like(mins[0], dtype=np.float32)
-    indices = get_bin_indices(event_attrs, mins, maxs, 1)[:,0]
-
-    for iev, idx in enumerate(indices):
-        if idx >= 0:
-            w = weights[iev]
-            if w != 0.:
-                hist[int(idx)] += weights[iev]
-
-    return hist
-
 class Histograms(object):
     def __init__(self):
         self.histograms = None
@@ -133,28 +118,20 @@ class Histograms(object):
         weights1 = weight
         weights2 = weight**2
 
+        variables = np.transpose(np.array(variables))
         bins = [np.array(b) for b in config["bins"]]
-        mins = [b[:-1] for b in bins]
-        maxs = [b[1:] for b in bins]
 
-        mins = np.meshgrid(*mins)
-        maxs = np.meshgrid(*maxs)
         hist_bins = bins
-        hist_counts = numba_histogram(variables, mins, maxs, np.ones_like(weights1))
-        hist_yields = numba_histogram(variables, mins, maxs, weights1)
-        hist_variance = numba_histogram(variables, mins, maxs, weights2)
+        hist_counts, _ = np.histogramdd(variables, bins)
+        hist_yields, _ = np.histogramdd(variables, bins, weights=weights1)
+        hist_variance, _ = np.histogramdd(variables, bins, weights=weights2)
 
+        data = self.create_onedim_hists(
+            hist_bins, hist_counts, hist_yields, hist_variance,
+        )
         bin_names = [["bin{}_low".format(idx), "bin{}_upp".format(idx)]
                      for idx in reversed(list(range(len(hist_bins))))]
         bin_names = reduce(lambda x,y: x+y, bin_names)
-        bin_names = ["bin0_low", "bin0_upp"]
-        data = {
-            "count": hist_counts,
-            "yield": hist_yields,
-            "variance": hist_variance
-        }
-        data.update({"bin{}_low".format(idx): mins[idx] for idx in range(len(mins))})
-        data.update({"bin{}_upp".format(idx): mins[idx] for idx in range(len(maxs))})
         df = pd.DataFrame(data, columns=bin_names+["count", "yield", "variance"])
 
         df["dataset"] = config["dataset"]
@@ -174,6 +151,25 @@ class Histograms(object):
 
     def make_dense_df(self, df):
         pass
+
+    def create_onedim_hists(self, bins, counts, yields, variance):
+        counts_1d = counts.T.ravel()
+        counts_1d = counts_1d.reshape((counts_1d.shape[0],1))
+        yields_1d = yields.T.ravel()
+        yields_1d = yields_1d.reshape((yields_1d.shape[0],1))
+        variance_1d = variance.T.ravel()
+        variance_1d = variance_1d.reshape((variance_1d.shape[0],1))
+
+        tbins = bins[::-1]
+        bin_idxs = itertools.product(*[range(len(bin)-1) for bin in tbins])
+        bins_1d = np.array([
+            reduce(lambda x,y: x+y, [
+                [tbins[dim][sub_bin_idx], tbins[dim][sub_bin_idx+1]]
+                for dim, sub_bin_idx in enumerate(bin_idx)
+            ])
+            for bin_idx in bin_idxs
+        ])
+        return np.hstack([bins_1d, counts_1d, yields_1d, variance_1d])
 
     def merge(self, other):
         if self.histograms.shape[0] == 0:
