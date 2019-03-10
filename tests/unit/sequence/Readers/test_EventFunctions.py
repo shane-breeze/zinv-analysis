@@ -20,11 +20,6 @@ def event():
 def module():
     return EventFunctions()
 
-@pytest.fixture()
-def module_begin(event, module):
-    module.begin(event)
-    return module
-
 def test_metnox(event, module):
     module.begin(event)
 
