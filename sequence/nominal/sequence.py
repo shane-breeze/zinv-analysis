@@ -281,7 +281,6 @@ selection_producer = Readers.SelectionProducer(
 
 weight_producer = Readers.WeightProducer(
     name = "weight_producer",
-    data = False,
 )
 
 hist_reader = Collectors.HistReader(

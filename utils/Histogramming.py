@@ -40,8 +40,8 @@ class Histograms(object):
                 full_selection = config["selection"][:]
                 if parent in selection:
                     full_selection += selection[parent]
-                if self.isdata:
-                    full_selection = ["ev: ev.Is{}Triggered(ev)".format(config["dataset"])] + full_selection
+                #if self.isdata:
+                #    full_selection = ["ev: ev.Is{}Triggered(ev)".format(config["dataset"])] + full_selection
 
                 new_config = copy.deepcopy(config)
                 new_config["process"] = parent
@@ -78,9 +78,6 @@ class Histograms(object):
         dfs = []
         for config in self.full_configs:
             weightname = config["weightname"].lower()
-            if self.isdata and ("up" in weightname or "down" in weightname):
-                continue
-
             event.nsig = config["nsig"]
             event.source = config["source"]
             df = self.generate_dataframe(event, config)
@@ -101,10 +98,7 @@ class Histograms(object):
 
     def generate_dataframe(self, event, config):
         selection = self.lambda_functions[config["selection"]](event)
-        if self.isdata:
-            weight = selection.astype(float)
-        else:
-            weight = self.lambda_functions[config["weight"]](event)*selection
+        weight = self.lambda_functions[config["weight"]](event)*selection
 
         variables = []
         for idx, v in enumerate(config["variables"]):

@@ -40,6 +40,7 @@ selections:
         "ev: (ev.MuonSelection(ev, 'pt').counts == ev.MuonVeto(ev, 'pt').counts)
              & (ev.MuonVeto(ev, 'pt').counts == 3)"
     lepton_p1_charge: "ev: ev.LeptonCharge(ev) == 1"
+    lepton_zero_charge: "ev: ev.LeptonCharge(ev) == 0"
     lepton_m1_charge: "ev: ev.LeptonCharge(ev) == -1"
     ele_0_selection:
         "ev: (ev.ElectronSelection(ev, 'pt').counts == ev.ElectronVeto(ev, 'pt').counts)
@@ -117,6 +118,7 @@ grouped_selections:
         - "dphi_jet_met_selection"
         - "muon_2_selection"
         - "mll_selection"
+        - "lepton_zero_charge"
     triplemuon:
         - "dphi_jet_met_selection"
         - "muon_3_selection"
@@ -140,11 +142,13 @@ grouped_selections:
         - "dphi_jet_met_selection"
         - "ele_2_selection"
         - "mll_selection"
+        - "lepton_zero_charge"
     doubleelectronalt:
         - "filter_selection"
         - "met_low_selection"
         - "jet_selection"
         - "ele_2_selection"
+        - "lepton_zero_charge"
     tripleelectron:
         - "dphi_jet_met_selection"
         - "ele_3_selection"
