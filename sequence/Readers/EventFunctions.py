@@ -161,13 +161,7 @@ def evaluate_mll():
             ev.size,
         )
 
-    def ret_func(ev):
-        source = ev.source
-        if source not in ["muonPtScale", "eleEnergyScale"]:
-            source = ''
-        return fevaluate_mll(ev, ev.iblock, ev.nsig, source)
-
-    return ret_func
+    return lambda ev: fevaluate_mll(ev, ev.iblock, ev.nsig, ev.source)
 
 def evaluate_lepton_charge():
     @njit
@@ -193,13 +187,7 @@ def evaluate_lepton_charge():
             ev.size,
         )
 
-    def ret_func(ev):
-        source = ev.source
-        if source not in ["muonPtScale", "eleEnergyScale"]:
-            source = ''
-        return fevaluate_lepton_charge(ev, ev.iblock, ev.nsig, ev.source)
-
-    return ret_func
+    return lambda ev: fevaluate_lepton_charge(ev, ev.iblock, ev.nsig, ev.source)
 
 class EventFunctions(object):
     def __init__(self, **kwargs):
