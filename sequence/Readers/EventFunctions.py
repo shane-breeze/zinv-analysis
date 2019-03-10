@@ -88,11 +88,11 @@ def evaluate_mtw():
         for iev, (msta, msto, esta, esto) in enumerate(zip(
             mustarts, mustops, elestarts, elestops
         )):
-            if msto-msta == 1:
+            if msto-msta == 1 and esto-esta == 0:
                 mtw[iev] = mtw_numba(
                     met[iev]*mupt[msta], mephi[iev]-muphi[msta],
                 )
-            elif esto-esta == 1:
+            elif esto-esta == 1 and msto-msta == 0:
                 mtw[iev] = mtw_numba(
                     met[iev]*elept[esta], mephi[iev]-elephi[esta],
                 )
@@ -126,7 +126,7 @@ def evaluate_mll():
         for iev, (msta, msto, esta, esto) in enumerate(zip(
             mstas, mstos, estas, estos,
         )):
-            if msto - msta == 2:
+            if msto - msta == 2 and esto - esta == 0:
                 x1, y1, z1, e1 = LorTHPMToXYZE(
                     mpt[msta], meta[msta], mphi[msta], mmass[msta],
                 )
@@ -134,7 +134,7 @@ def evaluate_mll():
                     mpt[msta+1], meta[msta+1], mphi[msta+1], mmass[msta+1],
                 )
                 mll[iev] = LorXYZEToTHPM(x1+x2, y1+y2, z1+z2, e1+e2)[-1]
-            elif esto - esta == 2:
+            elif esto - esta == 2 and msto - msta == 0:
                 x1, y1, z1, e1 = LorTHPMToXYZE(
                     ept[esta], eeta[esta], ephi[esta], emass[esta],
                 )
