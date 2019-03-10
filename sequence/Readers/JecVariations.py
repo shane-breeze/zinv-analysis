@@ -148,9 +148,9 @@ class JecVariations(object):
         if self.apply_jer_corrections:
             event.Jet_ptCorrected = event.Jet_pt*event.Jet_JECjerSF
             met, mephi = met_shift(event)
-            event.Jet_pt = event.Jet_ptCorrected
-            event.MET_pt = met
-            event.MET_phi = mephi
+            event.Jet_pt = event.Jet_ptCorrected[:,:]
+            event.MET_pt = met[:]
+            event.MET_phi = mephi[:]
 
     def do_jes_correction(self, event, source):
         df = self.jesuncs[self.jesuncs["source"]==source]
