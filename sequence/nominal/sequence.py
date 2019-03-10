@@ -42,7 +42,7 @@ jec_variations = Readers.JecVariations(
     jer_sf_file = datapath + "/jecs/Spring16_25nsV10a_MC_SF_AK4PFchs.txt",
     jer_file = datapath + "/jecs/Spring16_25nsV10_MC_PtResolution_AK4PFchs.txt",
     apply_jer_corrections = True,
-    jes_regex = "jes(?P<source>.*)(Up|Down)",
+    jes_regex = "jes(?P<source>.*)",
     unclust_threshold = 15.,
     data = False,
 )

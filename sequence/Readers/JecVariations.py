@@ -80,8 +80,8 @@ class JecVariations(object):
 
     def do_jet_pt_resolution(self, event):
         indices = get_bin_indices(
-            [event.Jet.eta.content,
-             event_to_object_var(event.fixedGridRhoFastjetAll, event.Jet.pt.starts, event.Jet.pt.stops)],
+            [event.Jet_eta.content,
+             event_to_object_var(event.fixedGridRhoFastjetAll, event.Jet_pt.starts, event.Jet_pt.stops)],
             [self.jers["eta_low"].values, self.jers["rho_low"].values],
             [self.jers["eta_high"].values, self.jers["rho_high"].values],
             1,
@@ -90,39 +90,39 @@ class JecVariations(object):
         params = df[["param0", "param1", "param2", "param3"]].values
         ptbounds = df[["pt_low", "pt_high"]].values
         event.Jet_ptResolution = awk.JaggedArray(
-            event.Jet.pt.starts, event.Jet.pt.stops,
+            event.Jet_pt.starts, event.Jet_pt.stops,
             jer_formula(
-                np.minimum(np.maximum(event.Jet.pt.content, ptbounds[:,0]), ptbounds[:,1]),
+                np.minimum(np.maximum(event.Jet_pt.content, ptbounds[:,0]), ptbounds[:,1]),
                 params[:,0], params[:,1], params[:,2], params[:,3],
             ),
         )
 
     def do_jer_correction(self, event):
         indices = get_bin_indices(
-            [event.Jet.eta.content],
+            [event.Jet_eta.content],
             [self.jersfs["eta_low"].values],
             [self.jersfs["eta_high"].values],
             1,
         )[:,0]
         ressfs = self.jersfs.iloc[indices][["corr", "corr_down", "corr_up"]].values
-        jersfs = np.ones_like(event.Jet.pt.content, dtype=float)
-        jersfs_up = np.ones_like(event.Jet.pt.content, dtype=float)
-        jersfs_down = np.ones_like(event.Jet.pt.content, dtype=float)
+        jersfs = np.ones_like(event.Jet_pt.content, dtype=float)
+        jersfs_up = np.ones_like(event.Jet_pt.content, dtype=float)
+        jersfs_down = np.ones_like(event.Jet_pt.content, dtype=float)
 
         # match gen jets
-        gidx = event.Jet.genJetIdx
-        gsize = event.GenJet.pt.counts
+        gidx = event.Jet_genJetIdx
+        gsize = event.GenJet_pt.counts
         mask = (gidx>=0) & (gidx<gsize)
-        indices = (event.GenJet.pt.starts+gidx[mask]).content
-        gpt_matched = event.GenJet.pt.content[indices]
+        indices = (event.GenJet_pt.starts+gidx[mask]).content
+        gpt_matched = event.GenJet_pt.content[indices]
 
-        gen_var = 1.-gpt_matched/event.Jet.pt[mask].content
+        gen_var = 1.-gpt_matched/event.Jet_pt[mask].content
         jersfs[mask.content] = 1. + (ressfs[mask.content,0]-1.)*gen_var
         jersfs_up[mask.content] = 1. + (ressfs[mask.content,1]-1.)*gen_var
         jersfs_down[mask.content] = 1. + (ressfs[mask.content,2]-1.)*gen_var
 
         # unmatched gen jets
-        gaus_var = np.random.normal(0., event.Jet.ptResolution[gidx<0].content)
+        gaus_var = np.random.normal(0., event.Jet_ptResolution[gidx<0].content)
         ressfs_mod = ressfs[(gidx<0).content]**2-1.
         ressfs_mod[ressfs_mod<0.] = 0.
         jersfs[(gidx<0).content] = 1. + gaus_var*np.sqrt(ressfs_mod[:,0])
@@ -135,7 +135,7 @@ class JecVariations(object):
         jersfs_down[jersfs_down<0.] = 0.
 
         # write to event
-        starts, stops = event.Jet.pt.starts, event.Jet.pt.stops
+        starts, stops = event.Jet_pt.starts, event.Jet_pt.stops
         event.Jet_JECjerSF = awk.JaggedArray(starts, stops, jersfs)
         event.Jet_JECjerSFUp = awk.JaggedArray(
             starts, stops,
@@ -156,7 +156,7 @@ class JecVariations(object):
         df = self.jesuncs[self.jesuncs["source"]==source]
 
         indices = get_bin_indices(
-            [event.Jet.eta.content],
+            [event.Jet_eta.content],
             [df["eta_low"].values],
             [df["eta_high"].values],
             1,
@@ -166,8 +166,8 @@ class JecVariations(object):
         corr_up = np.array(list(df.iloc[indices]["corr_up"].values))
         corr_down = np.array(list(df.iloc[indices]["corr_down"].values))
 
-        corr_up = interpolate(event.Jet.pt.content, pt, corr_up)
-        corr_down = interpolate(event.Jet.pt.content, pt, corr_down)
+        corr_up = interpolate(event.Jet_pt.content, pt, corr_up)
+        corr_down = interpolate(event.Jet_pt.content, pt, corr_down)
 
         setattr(event, "Jet_JECjes{}Up".format(source), awk.JaggedArray(
             starts, stops, corr_up,
@@ -178,7 +178,7 @@ class JecVariations(object):
 
 def read_table(path, underflow_cols=[], overflow_cols=[], csv=False):
     if not csv:
-        df = pd.read_table(path, sep='\s+')
+        df = pd.read_csv(path, sep='\s+')
     else:
         df = pd.read_csv(path, sep=',')
 
