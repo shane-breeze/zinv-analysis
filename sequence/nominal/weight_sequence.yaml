@@ -4,7 +4,7 @@ weights:
             Regions:
                 - "Monojet"
             Data:
-                - "ev: np.zeros(ev.size, dtype=float)"
+                - "ev: np.zeros(ev.size, dtype=np.float32)"
                 - "ev: ev.IsTriggered(ev)"
             MC:
                 - "ev: ev.WeightXsLumi(ev)"
@@ -87,7 +87,7 @@ weights:
             Regions:
                 - "DoubleMuon"
             Data:
-                - "ev: np.zeros(ev.size, dtype=float)"
+                - "ev: np.zeros(ev.size, dtype=np.float32)"
                 - "ev: ev.IsTriggered(ev)"
             MC:
                 - "ev: ev.WeightXsLumi(ev)"
@@ -172,7 +172,7 @@ weights:
             Regions:
                 - "DoubleMuon"
             Data:
-                - "ev: np.zeros(ev.size, dtype=float)"
+                - "ev: np.zeros(ev.size, dtype=np.float32)"
                 - "ev: ev.IsTriggered(ev)"
             MC:
                 - "ev: ev.WeightXsLumi(ev)"
@@ -231,7 +231,7 @@ weights:
             Regions:
                 - "DoubleElectron"
             Data:
-                - "ev: np.zeros(ev.size, dtype=float)"
+                - "ev: np.zeros(ev.size, dtype=np.float32)"
                 - "ev: ev.IsTriggered(ev)"
             MC:
                 - "ev: ev.WeightXsLumi(ev)"

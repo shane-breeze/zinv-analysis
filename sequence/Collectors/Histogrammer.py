@@ -162,7 +162,7 @@ class HistCollector(object):
 
             # Create args list for post-processing drawing
             bins = binning[categories[3]][0]
-            with open(filepath+".pkl", 'w') as f:
+            with open(filepath+".pkl", 'wb') as f:
                 pickle.dump((df_group, bins, filepath, self.cfg), f)
             args.append((dist_ratio, (df_group, bins, filepath, self.cfg)))
         return args

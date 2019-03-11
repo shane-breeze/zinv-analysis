@@ -1,6 +1,5 @@
 import copy
 import numpy as np
-import numba as nb
 import pandas as pd
 import os
 import itertools
@@ -128,7 +127,7 @@ class Histograms(object):
         )
         bin_names = [["bin{}_low".format(idx), "bin{}_upp".format(idx)]
                      for idx in reversed(list(range(len(hist_bins))))]
-        bin_names = reduce(lambda x,y: x+y, bin_names)
+        bin_names = reduce(operator.add, bin_names)
         df = pd.DataFrame(data, columns=bin_names+["count", "yield", "variance"])
 
         df["dataset"] = config["dataset"]
@@ -160,7 +159,7 @@ class Histograms(object):
         tbins = bins[::-1]
         bin_idxs = itertools.product(*[list(range(len(bin)-1)) for bin in tbins])
         bins_1d = np.array([
-            reduce(lambda x,y: x+y, [
+            reduce(operator.add, [
                 [tbins[dim][sub_bin_idx], tbins[dim][sub_bin_idx+1]]
                 for dim, sub_bin_idx in enumerate(bin_idx)
             ])
@@ -184,12 +183,12 @@ class Histograms(object):
             os.makedirs(outdir)
 
         path = os.path.join(outdir, "results.pkl")
-        with open(path, 'w') as f:
+        with open(path, 'wb') as f:
             pickle.dump((self.binning, self.histograms), f, protocol=pickle.HIGHEST_PROTOCOL)
         return self
 
     def reload(self, outdir):
         path = os.path.join(outdir, "results.pkl")
-        with open(path, 'r') as f:
+        with open(path, 'rb') as f:
             self.binning, self.histograms = pickle.load(f)
         return self

@@ -44,7 +44,7 @@ class TriggerChecker(object):
                 setattr(
                     event,
                     "Is{}Triggered".format(dataset),
-                    lambda ev: np.ones(ev.size, dtype=float),
+                    lambda ev: np.ones(ev.size, dtype=np.float32),
                 )
         else:
             for dataset, trigger_list in trigger_dict.items():

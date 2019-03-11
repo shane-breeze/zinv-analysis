@@ -244,8 +244,8 @@ def parallel_draw(jobs, options):
     if len(jobs)==0:
         return
     jobs = [job for subjobs in jobs for job in subjobs]
-    jobs = [jobs[i:i+len(jobs)/100+1]
-            for i in range(0, len(jobs), len(jobs)/100+1)]
+    jobs = [jobs[i:i+len(jobs)//100+1]
+            for i in range(0, len(jobs), len(jobs)//100+1)]
 
     parallel = build_parallel(
         options.mode,

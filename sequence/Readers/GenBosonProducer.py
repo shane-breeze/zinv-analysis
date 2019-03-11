@@ -1,6 +1,6 @@
 import awkward as awk
 import numpy as np
-from numba import njit, boolean, int32, float32
+import numba as nb
 from functools import partial
 
 from . import Collection
@@ -21,7 +21,7 @@ class GenBosonProducer(object):
         nb_mask = ((np.abs(pdgs)==11) | (np.abs(pdgs)==12) | (np.abs(pdgs)==13)\
                    | (np.abs(pdgs)==14) | (np.abs(pdgs)==15) | (np.abs(pdgs)==16)\
                    | (np.abs(pdgs)==23) | (np.abs(pdgs)==24)) & (motheridx==0)
-        nbosons = np.zeros_like(pdgs.content, dtype=int)
+        nbosons = np.zeros_like(pdgs.content, dtype=np.int32)
         nbosons[(nb_mask & (np.abs(pdgs)<20)).content] = 1
         nbosons[(nb_mask & (np.abs(pdgs)>=20)).content] = 2
         nbosons = awk.JaggedArray(pdgs.starts, pdgs.stops, nbosons)
@@ -68,17 +68,17 @@ def create_genpart_boson(ev, gp_mask, gdl_idx):
         ev.GenDressedLepton.pt.stops,
     )
 
-@njit
+@nb.njit
 def create_genpart_boson_jit(
     gps_pt, gps_eta, gps_phi, gps_mass, gps_gdidx, gps_starts, gps_stops,
     gds_pt, gds_eta, gds_phi, gds_mass, gds_starts, gds_stops,
 ):
 
     nev = gps_stops.shape[0]
-    pts = np.zeros(nev, dtype=float32)
-    etas = np.zeros(nev, dtype=float32)
-    phis = np.zeros(nev, dtype=float32)
-    masss = np.zeros(nev, dtype=float32)
+    pts = np.zeros(nev, dtype=np.float32)
+    etas = np.zeros(nev, dtype=np.float32)
+    phis = np.zeros(nev, dtype=np.float32)
+    masss = np.zeros(nev, dtype=np.float32)
 
     for iev, (gps_start, gps_stop, gds_start, gds_stop) in enumerate(zip(
         gps_starts, gps_stops, gds_starts, gds_stops,
@@ -124,12 +124,12 @@ def genpart_matched_dressedlepton(ev, gpmask):
         ev.GenDressedLepton.pdgId.stops,
     )
 
-@njit
+@nb.njit
 def genpart_matched_dressedlepton_jit(
     gps_pdg, gps_eta, gps_phi, gps_starts, gps_stops,
     gds_pdg, gds_eta, gds_phi, gds_starts, gds_stops,
 ):
-    indices = -1*np.ones(gps_pdg.shape[0], dtype=int32)
+    indices = -1*np.ones(gps_pdg.shape[0], dtype=np.int32)
     for iev, (gps_start, gps_stop, gds_start, gds_stop) in enumerate(zip(
         gps_starts, gps_stops, gds_starts, gds_stops,
     )):

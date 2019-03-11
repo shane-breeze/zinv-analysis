@@ -16,7 +16,7 @@ def main():
     options = parse_args()
 
     path = options.input
-    with open(path, 'r') as f:
+    with open(path, 'rb') as f:
         args = pickle.load(f)
 
     module_name, function_name = options.drawer.split(":")

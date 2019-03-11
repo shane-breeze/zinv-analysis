@@ -7,8 +7,8 @@ datapath = os.path.join(toppath, "data")
 collpath = os.path.join(toppath, "sequence", "Collectors")
 drawpath = os.path.join(toppath, "drawing")
 
-import Readers
-import Collectors
+from sequence import Readers
+from sequence import Collectors
 
 event_tools = Readers.EventTools(
     name = "event_tools",
@@ -419,26 +419,26 @@ sequence = [
     # be placed near the start
     (selection_producer, NullCollector()),
     (weight_producer, NullCollector()),
-    # # Try to keep GenPart branch stuff before everything else. It's quite big
-    # # and is deleted after use. Don't want to add the memory consumption of
-    # # this with all other branches
+    # Try to keep GenPart branch stuff before everything else. It's quite big
+    # and is deleted after use. Don't want to add the memory consumption of
+    # this with all other branches
     (gen_boson_producer, NullCollector()),
     (lhe_part_assigner, NullCollector()),
     (gen_part_assigner, NullCollector()),
     (jec_variations, NullCollector()),
     (object_functions, NullCollector()),
     (event_functions, NullCollector()),
-    # # Cross cleaning must be placed after the veto and selection collections
-    # # are created. They update the selection flags produced in skim_collections
+    # Cross cleaning must be placed after the veto and selection collections
+    # are created. They update the selection flags produced in skim_collections
     (skim_collections, NullCollector()),
     (tau_cross_cleaning, NullCollector()),
     (jet_cross_cleaning, NullCollector()),
-    # # Readers which create a mask for the event. Doesn't apply it, just stores
-    # # the mask as an array of booleans
+    # Readers which create a mask for the event. Doesn't apply it, just stores
+    # the mask as an array of booleans
     (trigger_checker, NullCollector()),
     (certified_lumi_checker, NullCollector()),
-    # # Weighters. The generally just apply to MC and that logic is dealt with by
-    # # the ScribblerWrapper.
+    # Weighters. The generally just apply to MC and that logic is dealt with by
+    # the ScribblerWrapper.
     (weight_xsection_lumi, NullCollector()),
     (weight_pdf_scale, NullCollector()),
     (weight_pu, NullCollector()),
@@ -452,7 +452,7 @@ sequence = [
     (weight_prefiring, NullCollector()),
     # Add collectors (with accompanying readers) at the end so that all
     # event attributes are available to them
-    (hist_reader, hist_collector),
+    #(hist_reader, hist_collector),
     #(hist2d_reader, hist2d_collector),
     #(gen_stitching_reader, gen_stitching_collector),
     #(met_response_resolution_reader, met_response_resolution_collector),

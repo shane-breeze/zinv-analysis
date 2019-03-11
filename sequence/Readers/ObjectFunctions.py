@@ -1,14 +1,14 @@
 import numpy as np
+import numba as nb
 import awkward as awk
 import operator
-from numba import njit, float32
 from cachetools import cachedmethod
 from cachetools.keys import hashkey
 from functools import partial
 
 from utils.Geometry import RadToCart2D, CartToRad2D
 
-@njit
+@nb.njit
 def pt_shift_numba(pt, nsig, up, down):
     return pt*(1 + (nsig>=0)*nsig*up - (nsig<0)*nsig*down)
 
@@ -72,7 +72,7 @@ def photon_pt_shift():
     return ret_func
 
 def met_shift(arg):
-    @njit
+    @nb.njit
     def met_shift_numba(
         met, mephi, jpt, jptcorr, jphi, jstarts, jstops, metuncx, metuncy, nsig,
     ):

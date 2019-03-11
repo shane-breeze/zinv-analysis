@@ -1,6 +1,6 @@
 import numpy as np
+import numba as nb
 import operator
-from numba import njit
 from cachetools import cachedmethod
 from cachetools.keys import hashkey
 from functools import partial
@@ -8,9 +8,9 @@ from functools import partial
 from utils.NumbaFuncs import weight_numba
 
 def evaluate_pdf_variations():
-    @njit
+    @nb.njit
     def rel_stddev(nominal, pdfs, starts, stops):
-        rel_err = np.zeros_like(nominal)
+        rel_err = np.zeros_like(nominal, dtype=np.float32)
         for iev, (start, stop) in enumerate(zip(starts, stops)):
             rel_err[iev] = np.std(pdfs[start:stop]*nominal[iev])/nominal[iev]
         return rel_err
@@ -26,7 +26,7 @@ def evaluate_pdf_variations():
             )
             weight = weight_numba(1., nsig, pdf_relstddev, -pdf_relstddev)
         else:
-            weight = np.ones(ev.size, dtype=float)
+            weight = np.ones(ev.size, dtype=np.float32)
         return weight
 
     def ret_func(ev):
@@ -43,7 +43,7 @@ def evaluate_scale_variations(name, positions):
             down = ev.LHEScaleWeight[:,positions[1]]
             weight = weight_numba(1., nsig, up, down)
         else:
-            weight = np.ones(ev.size, dtype=float)
+            weight = np.ones(ev.size, dtype=np.float32)
         return weight
 
     def ret_func(ev):

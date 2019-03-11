@@ -1,12 +1,12 @@
 import yaml
 import numpy as np
+import numba as nb
 import awkward as awk
 import operator
-from numba import njit
 
 from cachetools import cachedmethod
 from cachetools.keys import hashkey
-from functools import partial
+from functools import partial, reduce
 
 from utils.Lambda import Lambda
 
@@ -22,7 +22,7 @@ def evaluate_skim(objname, name, cutlist):
     return lambda ev: fevaluate_skim(ev, ev.iblock, ev.nsig, ev.source, name, objname)
 
 def evaluate_this_not_that(this, that):
-    @njit
+    @nb.njit
     def this_not_that_numba(this_, that_):
         return this_ & (~that_)
 
