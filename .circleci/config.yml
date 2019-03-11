@@ -20,10 +20,8 @@ jobs:
     steps:
       - checkout
       - run:
-          name: setups and install dependencies
-          command: |
-              source setup.sh
-              pip install --user -r requirements.txt
+          name: install dependencies
+          command: pip install --user -r requirements.txt
 
       # run tests!
       # this example uses Django's built-in test-runner

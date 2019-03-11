@@ -31,10 +31,10 @@ def module():
         unclust_threshold = 15.,
     )
 
-def test_jec_variations_begin(module, event):
-    module.begin(event)
-    assert all(t in ["Total", "AbsoluteStat"] for t in module.jes_sources)
-    assert all(t in ["Total", "AbsoluteStat"] for t in event.JetSources)
+#def test_jec_variations_begin(module, event):
+#    module.begin(event)
+#    assert all(t in ["Total", "AbsoluteStat"] for t in module.jes_sources)
+#    assert all(t in ["Total", "AbsoluteStat"] for t in event.JetSources)
 
 #def test_jec_variations_event_empty(module, event):
 #    jet_pt = awk.JaggedArray(
