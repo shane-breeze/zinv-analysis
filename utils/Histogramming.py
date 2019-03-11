@@ -5,12 +5,8 @@ import pandas as pd
 import os
 import itertools
 import operator
+import pickle
 from functools import reduce
-
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
 
 from .Lambda import Lambda
 

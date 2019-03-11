@@ -7,11 +7,7 @@ import gzip
 import cProfile
 from io import StringIO, BytesIO
 import pstats
-
-try:
-    import cPickle as pickle
-except:
-    import pickle
+import pickle
 
 ##__________________________________________________________________||
 parser = argparse.ArgumentParser()

@@ -8,11 +8,7 @@ import copy
 import re
 import numpy as np
 import pandas as pd
-
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
+import pickle
 
 from scipy.special import wofz
 #from uncertainties import ufloat

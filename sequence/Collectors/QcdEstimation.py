@@ -1,8 +1,7 @@
 import numpy as np
 import os
 import copy
-try: import cPickle as pickle
-except ImportError: import pickle
+import pickle
 
 from .Systematics import SystematicsReader, SystematicsCollector
 from drawing.dist_facet import dist_facet

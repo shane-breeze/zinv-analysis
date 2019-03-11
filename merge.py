@@ -2,11 +2,7 @@ import argparse
 import os
 import pandas as pd
 import re
-
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
+import pickle
 
 def parse_args():
     parser = argparse.ArgumentParser()

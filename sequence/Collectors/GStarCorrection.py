@@ -1,9 +1,5 @@
 import os
-
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
+import pickle
 
 from .Histogrammer import HistReader, HistCollector
 from drawing.dist_multicomp_v2 import dist_multicomp_v2

@@ -3,6 +3,7 @@ import copy
 import numpy as np
 import oyaml as yaml
 import pandas as pd
+import pickle
 from array import array
 from tabulate import tabulate as tab
 
@@ -11,9 +12,6 @@ from scipy.interpolate import UnivariateSpline
 
 import ROOT
 ROOT.gROOT.SetBatch(True)
-
-try: import cPickle as pickle
-except ImportError: import pickle
 
 import logging
 logging.basicConfig()

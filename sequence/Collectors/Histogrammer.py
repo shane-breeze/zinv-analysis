@@ -3,12 +3,8 @@ import operator
 import yaml
 import numpy as np
 import pandas as pd
+import pickle
 pi = np.pi + 1e-10
-
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
 
 from drawing.dist_ratio import dist_ratio
 from utils.Histogramming import Histograms

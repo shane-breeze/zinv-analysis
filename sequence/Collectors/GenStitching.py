@@ -2,8 +2,7 @@ import copy
 import os
 import operator
 import re
-try: import cPickle as pickle
-except ImportError: import pickle
+import pickle
 
 from drawing.dist_stitch import dist_stitch
 from utils.Histogramming import Histograms

@@ -2,8 +2,7 @@ import numpy as np
 import os
 import operator
 import copy
-try: import cPickle as pickle
-except ImportError: import pickle
+import pickle
 
 from utils.Histogramming import Histograms
 from .Histogrammer import Config, HistReader, HistCollector

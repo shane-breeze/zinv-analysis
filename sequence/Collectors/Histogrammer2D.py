@@ -1,10 +1,6 @@
 import os
 import copy
-
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
+import pickle
 
 from .Histogrammer import Config, HistReader, HistCollector
 from drawing.dist_2d import dist_2d
