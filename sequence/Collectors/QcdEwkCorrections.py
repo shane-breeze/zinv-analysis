@@ -6,7 +6,7 @@ try: import cPickle as pickle
 except ImportError: import pickle
 
 from drawing.dist_comp import dist_comp
-from Histogrammer import HistReader, HistCollector, Config
+from .Histogrammer import HistReader, HistCollector, Config
 
 class QcdEwkCorrectionsReader(HistReader):
     def __init__(self, **kwargs):

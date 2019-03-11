@@ -205,7 +205,7 @@ def dist_scatter_pull(df, bins, variations, filepath, cfg):
     axbot.set_xlabel(cfg.xlabel, fontsize='large')
     axbot.set_ylabel("Pull", fontsize='large')
 
-    ylim = max(map(abs, axbot.get_ylim()))
+    ylim = max(list(map(abs, axbot.get_ylim())))
     ylim = ylim if ylim>1.1 else 1.1
     axbot.set_ylim(-ylim, ylim)
     axbot.axhline(-1, ls='--', color='grey', lw=1)

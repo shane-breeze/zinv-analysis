@@ -8,7 +8,7 @@ except ImportError: import pickle
 from drawing.dist_stitch import dist_stitch
 from utils.Histogramming import Histograms
 
-from Histogrammer import Config, HistReader, HistCollector
+from .Histogrammer import Config, HistReader, HistCollector
 
 class GenStitchingReader(HistReader):
     def begin(self, event):

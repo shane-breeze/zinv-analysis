@@ -1,8 +1,8 @@
 from __future__ import print_function
 import yaml
 import os
-from xsection import xsdict
-from datasets import datasets_dict
+from .xsection import xsdict
+from .datasets import datasets_dict
 
 input_path = "/vols/cms/ZinvWidth/NanoAOD/201806_Jun/data/{}/info.yaml"
 for parent, names in datasets_dict.items():

@@ -2,6 +2,7 @@
 import os
 import sys
 import warnings
+from functools import reduce
 warnings.filterwarnings('ignore')
 
 from atuproot.atuproot_main import AtUproot
@@ -244,7 +245,7 @@ def parallel_draw(jobs, options):
         return
     jobs = [job for subjobs in jobs for job in subjobs]
     jobs = [jobs[i:i+len(jobs)/100+1]
-            for i in xrange(0, len(jobs), len(jobs)/100+1)]
+            for i in range(0, len(jobs), len(jobs)/100+1)]
 
     parallel = build_parallel(
         options.mode,

@@ -335,7 +335,7 @@ def create_shape_datacard(df_obs, df_rate, df_nuis, params, filename, name):
     dc += tab([
         ["bin"] + list(df_rate["region"]),
         ["process"] + list(df_rate["process"]),
-        ["process"] + map(int, list(df_rate["proc"])),
+        ["process"] + list(map(int, list(df_rate["proc"]))),
         ["rate"] + [-1]*df_rate.shape[0],
     ], [], tablefmt="plain") + "\n" + "-"*80 + "\n"
 

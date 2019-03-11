@@ -7,6 +7,7 @@ from cachetools.keys import hashkey
 from functools import partial
 from numba import njit, boolean
 from utils.Geometry import DeltaR2
+from functools import reduce
 
 def evaluate_xclean_mask(obj1name, obj2names):
     @njit

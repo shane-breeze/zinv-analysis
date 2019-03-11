@@ -48,6 +48,6 @@ class CertifiedLumiChecker(object):
 def read_json(path):
     with open(path, 'r') as f:
         data = json.load(f)
-    runs = np.array(sorted(map(int, data.keys())))
+    runs = np.array(sorted(map(int, list(data.keys()))))
     lumis = [np.array(data[str(r)], dtype=int) for r in runs]
     return runs, lumis

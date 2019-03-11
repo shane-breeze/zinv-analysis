@@ -1,4 +1,4 @@
-from Histogrammer import HistReader, HistCollector
+from .Histogrammer import HistReader, HistCollector
 
 TriggerEfficiencyReader = HistReader
 

@@ -4,7 +4,7 @@ import copy
 try: import cPickle as pickle
 except ImportError: import pickle
 
-from Systematics import SystematicsReader, SystematicsCollector
+from .Systematics import SystematicsReader, SystematicsCollector
 from drawing.dist_facet import dist_facet
 
 QcdEstimationReader = copy.deepcopy(SystematicsReader)
@@ -59,7 +59,7 @@ class QcdEstimationCollector(SystematicsCollector):
         sorter = list(df["key"].unique())
         sorter.remove("nominal")
         sorter.insert(0, "nominal")
-        sorter_idx = dict(zip(sorter, range(len(sorter))))
+        sorter_idx = dict(list(zip(sorter, range(len(sorter)))))
         df["key_rank"] = df["key"].map(sorter_idx)
         df = df.sort_values(["bin0_low", "key_rank"], ascending=True)
         df = df.drop("key_rank", axis=1)\

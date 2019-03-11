@@ -131,7 +131,7 @@ def read_input(path, histname):
                    for idx in range(start_idx, len(lines))
                    if "# END HISTO1D" in lines[idx])
 
-    data = np.array([map(float, l.split()) for l in lines[start_idx+2: end_idx]])
+    data = np.array([list(map(float, l.split())) for l in lines[start_idx+2: end_idx]])
 
     bin_min, bin_max = data[:,0], data[:,1]
     correction = data[:,2]

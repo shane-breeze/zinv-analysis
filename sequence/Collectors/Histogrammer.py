@@ -3,8 +3,12 @@ import operator
 import yaml
 import numpy as np
 import pandas as pd
-import cPickle as pickle
 pi = np.pi + 1e-10
+
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 
 from drawing.dist_ratio import dist_ratio
 from utils.Histogramming import Histograms
@@ -78,7 +82,7 @@ class HistReader(object):
 
     def begin(self, event):
         parent = event.config.dataset.parent
-        self.parents = self.split_samples[parent].keys() \
+        self.parents = list(self.split_samples[parent].keys()) \
                        if parent in self.split_samples \
                        else [parent]
         selection = self.split_samples[parent] \

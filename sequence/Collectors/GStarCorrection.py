@@ -5,7 +5,7 @@ try:
 except ImportError:
     import pickle
 
-from Histogrammer import HistReader, HistCollector
+from .Histogrammer import HistReader, HistCollector
 from drawing.dist_multicomp_v2 import dist_multicomp_v2
 
 class GStarCorrectionReader(HistReader):

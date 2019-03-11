@@ -1,13 +1,20 @@
 import copy
 import numpy as np
 import numba as nb
-np.random.seed(123456)
 import pandas as pd
 import os
-import cPickle as pickle
-from Lambda import Lambda
 import itertools
 import operator
+from functools import reduce
+
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
+
+from .Lambda import Lambda
+
+np.random.seed(123456)
 
 class Histograms(object):
     def __init__(self):
@@ -155,7 +162,7 @@ class Histograms(object):
         variance_1d = variance_1d.reshape((variance_1d.shape[0],1))
 
         tbins = bins[::-1]
-        bin_idxs = itertools.product(*[range(len(bin)-1) for bin in tbins])
+        bin_idxs = itertools.product(*[list(range(len(bin)-1)) for bin in tbins])
         bins_1d = np.array([
             reduce(lambda x,y: x+y, [
                 [tbins[dim][sub_bin_idx], tbins[dim][sub_bin_idx+1]]
