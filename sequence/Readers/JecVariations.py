@@ -1,19 +1,19 @@
 import numpy as np
+import numba as nb
 import pandas as pd
 import awkward as awk
 import re
 
-from numba import njit, vectorize, float32, float64
 from utils.NumbaFuncs import get_bin_indices, event_to_object_var, interpolate
 from utils.Geometry import RadToCart2D, CartToRad2D
 
-@vectorize([float32(float32,float32,float32,float32,float32),
-            float64(float64,float64,float64,float64,float64)])
+@nb.vectorize([nb.float32(nb.float32,nb.float32,nb.float32,nb.float32,nb.float32),
+               nb.float64(nb.float64,nb.float64,nb.float64,nb.float64,nb.float64)])
 def jer_formula(x, p0, p1, p2, p3):
     return np.sqrt(p0*np.abs(p0)/(x*x)+p1*p1*np.power(x,p3)+p2*p2)
 
 def met_shift(ev):
-    @njit
+    @nb.njit
     def met_shift_numba(met, mephi, jpt, jptshift, jphi, jstarts, jstops):
         jpx_old, jpy_old = RadToCart2D(jpt, jphi)
         jpx_new, jpy_new = RadToCart2D(jptshift, jphi)
@@ -105,9 +105,9 @@ class JecVariations(object):
             1,
         )[:,0]
         ressfs = self.jersfs.iloc[indices][["corr", "corr_down", "corr_up"]].values
-        jersfs = np.ones_like(event.Jet_pt.content, dtype=float)
-        jersfs_up = np.ones_like(event.Jet_pt.content, dtype=float)
-        jersfs_down = np.ones_like(event.Jet_pt.content, dtype=float)
+        jersfs = np.ones_like(event.Jet_pt.content, dtype=np.float32)
+        jersfs_up = np.ones_like(event.Jet_pt.content, dtype=np.float32)
+        jersfs_down = np.ones_like(event.Jet_pt.content, dtype=np.float32)
 
         # match gen jets
         gidx = event.Jet_genJetIdx

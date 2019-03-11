@@ -1,19 +1,19 @@
 import numpy as np
+import numba as nb
 import pandas as pd
 import operator
 
 from cachetools import cachedmethod
 from cachetools.keys import hashkey
 from functools import partial
-from numba import njit, float32
 
 from utils.NumbaFuncs import interp, weight_numba
 
 def evaluate_met_trigger(cats, xcents, params):
-    @njit
+    @nb.njit
     def met_trigger_numba(cats_, xcents_, incorr, nmuons, met):
         nev = met.shape[0]
-        output = np.ones(nev, dtype=float32)
+        output = np.ones(nev, dtype=np.float32)
         for iev in range(nev):
             if nmuons[iev] not in cats_:
                 continue

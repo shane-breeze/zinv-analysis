@@ -1,4 +1,5 @@
 import numpy as np
+import numba as nb
 import pandas as pd
 import awkward as awk
 import operator
@@ -6,18 +7,17 @@ import operator
 from cachetools import cachedmethod
 from cachetools.keys import hashkey
 from functools import partial
-from numba import njit, float32
 
 from utils.Lambda import Lambda
 from utils.NumbaFuncs import weight_numba, get_bin_indices
 
 def evaluate_object_weights(df, bins_vars, add_syst, name):
-    @njit
+    @nb.njit
     def weighted_mean_numba(objattr, w, k, dkup, dkdown, addsyst, nweight):
-        wsum = np.zeros_like(objattr, dtype=float32)
-        wksum = np.zeros_like(objattr, dtype=float32)
-        wdkupsum = np.zeros_like(objattr, dtype=float32)
-        wdkdownsum = np.zeros_like(objattr, dtype=float32)
+        wsum = np.zeros_like(objattr, dtype=np.float32)
+        wksum = np.zeros_like(objattr, dtype=np.float32)
+        wdkupsum = np.zeros_like(objattr, dtype=np.float32)
+        wdkdownsum = np.zeros_like(objattr, dtype=np.float32)
 
         for idx in range(objattr.shape[0]):
             for subidx in range(nweight*idx, nweight*(idx+1)):

@@ -20,8 +20,6 @@ categories:
         - ["SingleElectron", "DoubleElectronAlt"]
     tau:
         - ["MET", "SingleTau"]
-    ditau:
-        - ["MET", "DoubleTau"]
 configs:
     METnoX_pt:
         categories:
@@ -31,7 +29,7 @@ configs:
         bins:
             - [0., 1500., 61]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     METnoX_phi:
         categories:
             - "all"
@@ -40,7 +38,7 @@ configs:
         bins:
             - [-3.1416, 3.1416, 51]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     MET_pt:
         categories:
             - "all"
@@ -49,7 +47,7 @@ configs:
         bins:
             - [0., 1500., 61]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     MET_phi:
         categories:
             - "all"
@@ -58,7 +56,7 @@ configs:
         bins:
             - [-3.1416, 3.1416, 51]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     CaloMET_pt:
         categories:
             - "all"
@@ -67,7 +65,7 @@ configs:
         bins:
             - [0., 1500., 61]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     CaloMET_phi:
         categories:
             - "all"
@@ -76,7 +74,7 @@ configs:
         bins:
             - [-3.1416, 3.1416, 51]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     MET_dCaloMET:
         categories:
             - "all"
@@ -85,7 +83,7 @@ configs:
         bins:
             - [0., 1., 51]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     MinDPhiJ1234METnoX:
         categories:
             - "all"
@@ -94,7 +92,7 @@ configs:
         bins:
             - [0., 3.1416, 51]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     MTW:
         categories:
             - "muon"
@@ -104,7 +102,7 @@ configs:
         bins:
             - [0., 200., 51]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     MLL:
         categories:
             - "dimuon"
@@ -115,9 +113,9 @@ configs:
         bins:
             - [65., 115., 51]
         weights:
-            - ["",                   0,   "",               "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
-            - ["eleEnergyScaleUp",   1.,  "eleEnergyScale", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
-            - ["eleEnergyScaleDown", -1., "eleEnergyScale", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["",                   0,   "",               "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
+            - ["eleEnergyScaleUp",   1.,  "eleEnergyScale", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
+            - ["eleEnergyScaleDown", -1., "eleEnergyScale", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     nJetVeto:
         categories:
             - "all"
@@ -126,7 +124,7 @@ configs:
         bins:
             - [0., 10., 11]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     nJetSelection:
         categories:
             - "all"
@@ -135,7 +133,7 @@ configs:
         bins:
             - [0., 10., 11]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     LeadJetSelection_pt:
         categories:
             - "all"
@@ -144,7 +142,7 @@ configs:
         bins:
             - [0., 800., 41]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     LeadJetSelection_eta:
         categories:
             - "all"
@@ -153,7 +151,7 @@ configs:
         bins:
             - [-5., 5., 51]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     LeadJetSelection_phi:
         categories:
             - "all"
@@ -162,7 +160,7 @@ configs:
         bins:
             - [-3.1416, 3.1416, 51]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     LeadJetSelection_chHEF:
         categories:
             - "all"
@@ -171,7 +169,7 @@ configs:
         bins:
             - [0., 1., 51]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     SecondJetSelection_pt:
         categories:
             - "all"
@@ -180,7 +178,7 @@ configs:
         bins:
             - [0., 800., 41]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     SecondJetSelection_eta:
         categories:
             - "all"
@@ -189,7 +187,7 @@ configs:
         bins:
             - [-5., 5., 51]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     SecondJetSelection_phi:
         categories:
             - "all"
@@ -198,7 +196,7 @@ configs:
         bins:
             - [-3.1416, 3.1416, 51]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     nMuonVeto:
         categories:
             - "all"
@@ -207,7 +205,7 @@ configs:
         bins:
             - [0., 5., 6]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     nMuonSelection:
         categories:
             - "all"
@@ -216,7 +214,7 @@ configs:
         bins:
             - [0., 5., 6]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     LeadMuonSelection_pt:
         categories:
             - "muon"
@@ -226,7 +224,7 @@ configs:
         bins:
             - [0., 1000., 51]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     LeadMuonSelection_eta:
         categories:
             - "muon"
@@ -236,7 +234,7 @@ configs:
         bins:
             - [-5., 5., 51]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     LeadMuonSelection_phi:
         categories:
             - "muon"
@@ -246,7 +244,7 @@ configs:
         bins:
             - [-3.1416, 3.1416, 51]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     SecondMuonSelection_pt:
         categories:
             - "dimuon"
@@ -255,7 +253,7 @@ configs:
         bins:
             - [0., 1000., 51]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     SecondMuonSelection_eta:
         categories:
             - "dimuon"
@@ -264,7 +262,7 @@ configs:
         bins:
             - [-5., 5., 51]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     SecondMuonSelection_phi:
         categories:
             - "dimuon"
@@ -273,7 +271,7 @@ configs:
         bins:
             - [-3.1416, 3.1416, 51]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     nElectronVeto:
         categories:
             - "all"
@@ -282,7 +280,7 @@ configs:
         bins:
             - [0., 5., 6]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     nElectronSelection:
         categories:
             - "all"
@@ -291,7 +289,7 @@ configs:
         bins:
             - [0., 5., 6]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     LeadElectronSelection_pt:
         categories:
             - "ele"
@@ -301,7 +299,7 @@ configs:
         bins:
             - [0., 1000., 51]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     LeadElectronSelection_eta:
         categories:
             - "ele"
@@ -311,7 +309,7 @@ configs:
         bins:
             - [-5., 5., 51]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     LeadElectronSelection_phi:
         categories:
             - "ele"
@@ -321,7 +319,7 @@ configs:
         bins:
             - [-3.1416, 3.1416, 51]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     SecondElectronSelection_pt:
         categories:
             - "diele"
@@ -330,7 +328,7 @@ configs:
         bins:
             - [0., 1000., 51]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     SecondElectronSelection_eta:
         categories:
             - "diele"
@@ -339,7 +337,7 @@ configs:
         bins:
             - [-5., 5., 51]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     SecondElectronSelection_phi:
         categories:
             - "diele"
@@ -348,7 +346,7 @@ configs:
         bins:
             - [-3.1416, 3.1416, 51]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     nTauVeto:
         categories:
             - "all"
@@ -357,7 +355,7 @@ configs:
         bins:
             - [0., 5., 6]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     nTauSelection:
         categories:
             - "all"
@@ -366,64 +364,34 @@ configs:
         bins:
             - [0., 5., 6]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     LeadTauSelection_pt:
         categories:
             - "tau"
-            - "ditau"
         variables:
             - "ev: get_nth_object(ev.TauSelection(ev, 'ptShift'), 0, ev.size)"
         bins:
             - [0., 1000., 51]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     LeadTauSelection_eta:
         categories:
             - "tau"
-            - "ditau"
         variables:
             - "ev: get_nth_object(ev.TauSelection(ev, 'eta'), 0, ev.size)"
         bins:
             - [-5., 5., 51]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     LeadTauSelection_phi:
         categories:
             - "tau"
-            - "ditau"
         variables:
             - "ev: get_nth_object(ev.TauSelection(ev, 'phi'), 0, ev.size)"
         bins:
             - [-3.1416, 3.1416, 51]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
-    SecondTauSelection_pt:
-        categories:
-            - "ditau"
-        variables:
-            - "ev: get_nth_object(ev.TauSelection(ev, 'ptShift'), 1, ev.size)"
-        bins:
-            - [0., 1000., 51]
-        weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
-    SecondTauSelection_eta:
-        categories:
-            - "ditau"
-        variables:
-            - "ev: get_nth_object(ev.TauSelection(ev, 'eta'), 1, ev.size)"
-        bins:
-            - [-5., 5., 51]
-        weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
-    SecondTauSelection_phi:
-        categories:
-            - "ditau"
-        variables:
-            - "ev: get_nth_object(ev.TauSelection(ev, 'phi'), 1, ev.size)"
-        bins:
-            - [-3.1416, 3.1416, 51]
-        weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     nPhotonVeto:
         categories:
             - "all"
@@ -432,7 +400,7 @@ configs:
         bins:
             - [0., 5., 6]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     nPhotonSelection:
         categories:
             - "all"
@@ -441,7 +409,7 @@ configs:
         bins:
             - [0., 5., 6]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     nBJetVeto:
         categories:
             - "all"
@@ -450,7 +418,7 @@ configs:
         bins:
             - [0., 5., 6]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     PV_npvsGood:
         categories:
             - "all"
@@ -459,4 +427,4 @@ configs:
         bins:
             - [0., 100., 51]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}(ev)"]
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]

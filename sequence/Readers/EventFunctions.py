@@ -1,7 +1,7 @@
 import numpy as np
+import numba as nb
 import operator
 
-from numba import njit, float32, int32
 from cachetools import cachedmethod
 from cachetools.keys import hashkey
 from functools import partial
@@ -10,7 +10,7 @@ from utils.Geometry import (BoundPhi, RadToCart2D, CartToRad2D,
                             LorTHPMToXYZE, LorXYZEToTHPM)
 
 def evaluate_metnox(arg):
-    @njit
+    @nb.njit
     def metnox_numba(
         met, mephi,
         mupt, muphi, mustarts, mustops,
@@ -40,9 +40,9 @@ def evaluate_metnox(arg):
     return lambda ev: fevaluate_metnox(ev, ev.iblock, ev.nsig, ev.source, arg)
 
 def evaluate_mindphi(njets):
-    @njit
+    @nb.njit
     def mindphi_numba(jphi, jstarts, jstops, njets_, mephi):
-        dphi = np.zeros_like(mephi, dtype=float32)
+        dphi = np.zeros_like(mephi, dtype=np.float32)
         for iev, (start, stops) in enumerate(zip(jstarts, jstops)):
             delta = min(njets_, stops-start)
             if delta>0:
@@ -62,7 +62,7 @@ def evaluate_mindphi(njets):
     return lambda ev: fevaluate_mindphi(ev, ev.iblock, ev.nsig, ev.source, njets)
 
 def evaluate_met_dcalo():
-    @njit
+    @nb.njit
     def met_dcalo_numba(pfmet, calomet, metnox):
         return np.abs(pfmet-calomet)/metnox
 
@@ -74,17 +74,17 @@ def evaluate_met_dcalo():
     return lambda ev: fevaluate_met_dcalo(ev, ev.iblock, ev.nsig, ev.source)
 
 def evaluate_mtw():
-    @njit
+    @nb.njit
     def mtw_numba(ptprod, dphi):
         return np.sqrt(2*ptprod*(1-np.cos(dphi)))
 
-    @njit
+    @nb.njit
     def event_mtw_numba(
         met, mephi,
         mupt, muphi, mustarts, mustops,
         elept, elephi, elestarts, elestops,
     ):
-        mtw = np.zeros_like(met, dtype=float32)
+        mtw = np.zeros_like(met, dtype=np.float32)
         for iev, (msta, msto, esta, esto) in enumerate(zip(
             mustarts, mustops, elestarts, elestops
         )):
@@ -116,13 +116,13 @@ def evaluate_mtw():
     return lambda ev: fevaluate_mtw(ev, ev.iblock, ev.nsig, ev.source)
 
 def evaluate_mll():
-    @njit
+    @nb.njit
     def event_mll_numba(
         mpt, meta, mphi, mmass, mstas, mstos,
         ept, eeta, ephi, emass, estas, estos,
         evsize,
     ):
-        mll = np.zeros(evsize, dtype=float32)
+        mll = np.zeros(evsize, dtype=np.float32)
         for iev, (msta, msto, esta, esto) in enumerate(zip(
             mstas, mstos, estas, estos,
         )):
@@ -164,9 +164,9 @@ def evaluate_mll():
     return lambda ev: fevaluate_mll(ev, ev.iblock, ev.nsig, ev.source)
 
 def evaluate_lepton_charge():
-    @njit
+    @nb.njit
     def lepton_charge_numba(mcharge, mstas, mstos, echarge, estas, estos, evsize):
-        charge = np.zeros(evsize, dtype=int32)
+        charge = np.zeros(evsize, dtype=np.int32)
         for iev, (msta, msto, esta, esto) in enumerate(zip(
             mstas, mstos, estas, estos,
         )):

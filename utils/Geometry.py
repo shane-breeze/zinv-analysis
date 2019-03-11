@@ -1,40 +1,39 @@
 import numpy as np
-from numpy import pi
-from numba import njit, vectorize
+import numba as nb
 
-@vectorize
+@nb.vectorize
 def BoundPhi(phi):
-    if phi >= pi:
-        phi -= 2*pi
-    elif phi < -pi:
-        phi += 2*pi
+    if phi >= np.pi:
+        phi -= 2*np.pi
+    elif phi < -np.pi:
+        phi += 2*np.pi
     return phi
 
-@njit
+@nb.njit
 def DeltaR2(deta, dphi):
     return deta**2 + BoundPhi(dphi)**2
 
-@njit
+@nb.njit
 def RadToCart2D(r, phi):
     return r*np.cos(phi), r*np.sin(phi)
 
-@njit
+@nb.njit
 def CartToRad2D(x, y):
     return np.sqrt(x**2+y**2), BoundPhi(np.arctan2(y, x))
 
-@njit
+@nb.njit
 def PartCoorToCart3D(pt, eta, phi):
     x, y = RadToCart2D(pt, phi)
     z = pt*np.sinh(eta)
     return x, y, z
 
-@njit
+@nb.njit
 def CartToPartCoor3D(x, y, z):
     pt, phi = CartToRad2D(x, y)
     eta = np.arctanh(z/np.sqrt(z**2+pt**2))
     return pt, eta, phi
 
-@njit
+@nb.njit
 def LorTHPMToXYZE(t, h, p, m):
     x = t*np.cos(p)
     y = t*np.sin(p)
@@ -42,7 +41,7 @@ def LorTHPMToXYZE(t, h, p, m):
     e = np.sqrt(m**2 + t**2 + z**2)
     return x, y, z, e
 
-@njit
+@nb.njit
 def LorXYZEToTHPM(x, y, z, e):
     t = np.sqrt(x**2+y**2)
     h = np.arctanh(z/np.sqrt(t**2+z**2)) if z!=0. else 0.

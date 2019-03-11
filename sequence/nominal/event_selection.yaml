@@ -134,6 +134,7 @@ grouped_selections:
         - "dphi_jet_met_inv_selection"
         - "ele_1_selection"
         - "mtw_selection"
+        - "met_pf_selection"
     singleelectronplus:
         - "lepton_p1_charge"
     singleelectronminus:
@@ -158,9 +159,6 @@ grouped_selections:
     vtau:
         - "muon_0_selection"
         - "ele_0_selection"
-    doubletau:
-        - "dphi_jet_met_selection"
-        - "tau_2_selection"
 cutflows:
     None:
         Data: []
@@ -280,22 +278,26 @@ cutflows:
             - "data"
             - "baseline"
             - "vbaseline"
+            - "singleelectron"
             - "singleelectronplus"
             - "velectron"
         MC:
             - "mc"
             - "baseline"
+            - "singleelectron"
             - "singleelectronplus"
     SingleElectronMinus:
         Data:
             - "data"
             - "baseline"
             - "vbaseline"
+            - "singleelectron"
             - "singleelectronminus"
             - "velectron"
         MC:
             - "mc"
             - "baseline"
+            - "singleelectron"
             - "singleelectronminus"
     DoubleElectron:
         Data:
@@ -337,14 +339,3 @@ cutflows:
             - "mc"
             - "baseline"
             - "singletau"
-    DoubleTau:
-        Data:
-            - "data"
-            - "baseline"
-            - "vbaseline"
-            - "doubletau"
-            - "vtau"
-        MC:
-            - "mc"
-            - "baseline"
-            - "doubletau"

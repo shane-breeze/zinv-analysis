@@ -1,19 +1,19 @@
 import numpy as np
+import numba as nb
 import awkward as awk
 import operator
 
 from cachetools import cachedmethod
 from cachetools.keys import hashkey
 from functools import partial
-from numba import njit, boolean
 from utils.Geometry import DeltaR2
 
 def evaluate_xclean_mask(obj1name, obj2names):
-    @njit
+    @nb.njit
     def xclean_mask_numba(
         etas1, phis1, starts1, stops1, etas2, phis2, starts2, stops2,
     ):
-        content = np.ones(stops1[-1], dtype=boolean)
+        content = np.ones(stops1[-1], dtype=np.bool8)
         for iev, (start1, stop1, start2, stop2) in enumerate(zip(
             starts1, stops1, starts2, stops2,
         )):

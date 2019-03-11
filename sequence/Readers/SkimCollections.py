@@ -2,7 +2,6 @@ import yaml
 import numpy as np
 import awkward as awk
 import operator
-from numba import njit
 
 from cachetools import cachedmethod
 from cachetools.keys import hashkey
@@ -22,18 +21,11 @@ def evaluate_skim(objname, name, cutlist):
     return lambda ev: fevaluate_skim(ev, ev.iblock, ev.nsig, ev.source, name, objname)
 
 def evaluate_this_not_that(this, that):
-    @njit
-    def this_not_that_numba(this_, that_):
-        return this_ & (~that_)
-
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_this_not_that'))
     def fevaluate_this_not_that(ev, evidx, nsig, source, this_, that_):
         this_attr = getattr(ev, this_)(ev)
         that_attr = getattr(ev, that_)(ev)
-        return awk.JaggedArray(
-            this_attr.starts, this_attr.stops,
-            this_not_that_numba(this_attr.content, that_attr.content),
-        )
+        return this_attr & (~that_attr)
     return lambda ev: fevaluate_this_not_that(ev, ev.iblock, ev.nsig, ev.source, this, that)
 
 class SkimCollections(object):
