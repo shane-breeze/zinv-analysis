@@ -1,9 +1,9 @@
 import numpy as np
+import numba as nb
 import pandas as pd
 import awkward as awk
 import operator
 
-from numba import njit, float32, int32
 from cachetools import cachedmethod
 from cachetools.keys import hashkey
 from functools import partial
@@ -13,10 +13,10 @@ from utils.NumbaFuncs import weight_numba, get_bin_indices
 dict_apply = np.vectorize(lambda d, x: d[x])
 
 def btag_formula(x, df):
-    @njit
+    @nb.njit
     def btag_formula_numba(x_, eqtype, xlow, xhigh, p0, p1, p2, p3, p4, p5, p6):
         xtest = np.minimum(np.maximum(x_, xlow), xhigh)
-        sf = np.ones_like(xtest, dtype=float32)
+        sf = np.ones_like(xtest, dtype=np.float32)
         sf[eqtype==0] = (p0*((1+(p1*xtest))/(1+(p2*xtest))) + p3)[eqtype==0]
         sf[eqtype==1] = ((p0 + p1*xtest + p2*xtest**2 + p3*xtest**3)*(1 + (p4 + p5*xtest + p6*xtest**2)))[eqtype==1]
         sf[eqtype==2] = ((p0 + p1/(xtest**2) + p2*xtest)*(1 + (p4 + p5*xtest + p6*xtest**2)))[eqtype==2]
@@ -33,7 +33,7 @@ def evaluate_btagsf(df, attrs, h2f):
         jet_flavour = dict_apply(h2f, ev.Jet.hadronFlavour.content)
 
         # Create mask
-        mask = np.ones((jet_flavour.shape[0], df.shape[0]), dtype=bool)
+        mask = np.ones((jet_flavour.shape[0], df.shape[0]), dtype=np.bool8)
 
         # Flavour mask
         event_attrs = [jet_flavour.astype(np.float32)]
@@ -95,7 +95,7 @@ class WeightBTagging(object):
         df = df.loc[(df["CSVv2;OperatingPoint"] == op_num)]\
                 .reset_index(drop=True)
 
-        mask = np.zeros(df.shape[0], dtype=bool)
+        mask = np.zeros(df.shape[0], dtype=np.bool8)
         for flav, mtype in self.measurement_types.items():
             mask = mask | ((df["measurementType"]==mtype) & (df["jetFlavor"]==self.flavours[flav]))
         df = df.loc[mask]

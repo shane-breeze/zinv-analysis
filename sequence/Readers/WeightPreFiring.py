@@ -1,25 +1,25 @@
 import pandas as pd
 import numpy as np
+import numba as nb
 import operator
 
 from cachetools import cachedmethod
 from cachetools.keys import hashkey
 from functools import partial
-from numba import njit, float32
 
 from utils.NumbaFuncs import weight_numba, get_bin_indices
 from utils.Geometry import DeltaR2
 from utils.Lambda import Lambda
 
 def evaluate_prefiring_weight(funcs, jetmap, photmap, syst):
-    @njit
+    @nb.njit
     def prob_nonprefiring_numba(
         pho_eta, pho_phi, pho_p, pho_perr, pho_stas, pho_stos,
         jet_eta, jet_phi, jet_p, jet_perr, jet_stas, jet_stos,
     ):
-        nonprefiring_prob = np.ones(pho_stas.shape[0], dtype=float32)
-        nonprefiring_prob_up = np.ones(pho_stas.shape[0], dtype=float32)
-        nonprefiring_prob_down = np.ones(pho_stas.shape[0], dtype=float32)
+        nonprefiring_prob = np.ones(pho_stas.shape[0], dtype=np.float32)
+        nonprefiring_prob_up = np.ones(pho_stas.shape[0], dtype=np.float32)
+        nonprefiring_prob_down = np.ones(pho_stas.shape[0], dtype=np.float32)
 
         for iev, (psta, psto, jsta, jsto) in enumerate(zip(pho_stas, pho_stos,
                                                            jet_stas, jet_stos)):

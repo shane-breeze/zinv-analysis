@@ -5,7 +5,6 @@ import operator
 from cachetools import cachedmethod
 from cachetools.keys import hashkey
 from functools import partial
-from numba import njit
 
 from utils.NumbaFuncs import get_bin_indices, weight_numba
 

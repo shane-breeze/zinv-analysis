@@ -1,6 +1,5 @@
 import copy
 import numpy as np
-import numba as nb
 np.random.seed(123456)
 import pandas as pd
 import os
@@ -28,9 +27,15 @@ class Histograms(object):
 
     def begin(self, event, parents, selection):
         self.isdata = event.config.dataset.isdata
+        datamc = "Data" if self.isdata else "MC"
 
         full_configs = []
         for config in self.configs:
+            weight = config["weight"].format(
+                dataset=config["dataset"], cutflow=config["region"],
+                datamc=datamc,
+            )
+
             for v in config["variables"]:
                 if v not in self.lambda_functions:
                     self.lambda_functions[v] = Lambda(v)
@@ -52,7 +57,7 @@ class Histograms(object):
                 self.lambda_functions[function.function] = function
                 new_config["selection"] = function.function
 
-                function = Lambda(config["weight"])
+                function = Lambda(weight)
                 self.lambda_functions[function.function] = function
                 new_config["weight"] = function.function
                 full_configs.append(new_config)

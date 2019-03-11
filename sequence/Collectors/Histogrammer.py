@@ -53,8 +53,6 @@ class HistReader(object):
                 if "additional_selection" in config:
                     selection.extend(config["additional_selection"])
                 for weightname, nsig, source, weight in config["weights"]:
-                    weight = weight.format(dataset=dataset, cutflow=cutflow)
-
                     configs.append({
                         "name": name,
                         "dataset": dataset,

@@ -45,7 +45,7 @@ class WeightProducer(object):
                 weighter = evaluate_weights("_".join([dataset, label, data_or_mc]), weights)
 
                 for region in regiondicts["Regions"]:
-                    setattr(event, "Weight_{}_{}".format(dataset, region), weighter)
+                    setattr(event, "Weight_{}_{}_{}".format(dataset, region, data_or_mc), weighter)
 
     def end(self):
         self.lambda_functions = None

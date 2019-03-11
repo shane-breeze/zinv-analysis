@@ -4,7 +4,7 @@ import numba as nb
 def get_bin_indices(vars, mins, maxs, size):
     @nb.njit
     def get_multibin_indices(vars_, mins_, maxs_, size_):
-        result = -1*np.ones((vars_[0].shape[0], size_), dtype=nb.int32)
+        result = -1*np.ones((vars_[0].shape[0], size_), dtype=np.int32)
         for iev in range(vars_[0].shape[0]):
             pos = 0
             for ib in range(mins_[0].shape[0]):
@@ -24,7 +24,7 @@ def get_bin_indices(vars, mins, maxs, size):
 
     @nb.njit
     def get_1dbin_indices(var_, min_, max_, size_):
-        result = -1*np.ones((var_.shape[0], size_), dtype=nb.int32)
+        result = -1*np.ones((var_.shape[0], size_), dtype=np.int32)
         for iev in range(var_.shape[0]):
             pos = 0
             for ib in range(min_.shape[0]):
@@ -44,7 +44,7 @@ def get_bin_indices(vars, mins, maxs, size):
 
 @nb.njit
 def get_nth_sorted_object_indices(n, pts, starts, stops):
-    idxs = -1*np.ones_like(starts, dtype=nb.int32)
+    idxs = -1*np.ones_like(starts, dtype=np.int32)
     for iev, (start, stop) in enumerate(zip(starts, stops)):
         if n < stop-start:
             idxs[iev] = start + np.argsort(pts[start:stop])[::-1][n]
@@ -52,8 +52,8 @@ def get_nth_sorted_object_indices(n, pts, starts, stops):
 
 @nb.njit
 def get_event_object_idx(contents, starts, stops):
-    evidx = -1*np.ones_like(contents, dtype=nb.int32)
-    obidx = -1*np.ones_like(contents, dtype=nb.int32)
+    evidx = -1*np.ones_like(contents, dtype=np.int32)
+    obidx = -1*np.ones_like(contents, dtype=np.int32)
     for idx, (start, stop) in enumerate(zip(starts, stops)):
         evidx[start:stop] = idx
         for subidx in range(start, stop):
@@ -62,7 +62,7 @@ def get_event_object_idx(contents, starts, stops):
 
 @nb.njit
 def event_to_object_var(variable, starts, stops):
-    new_obj_var = np.zeros(stops[-1], dtype=nb.float32)
+    new_obj_var = np.zeros(stops[-1], dtype=np.float32)
     for idx, (start, stop) in enumerate(zip(starts, stops)):
         for subidx in range(start, stop):
             new_obj_var[subidx] = variable[idx]
@@ -82,7 +82,7 @@ def interp(x, xp, fp):
 
 @nb.njit
 def interpolate(x, xp, fp):
-    result = np.zeros_like(x, dtype=np.float64)
+    result = np.zeros_like(x, dtype=np.float32)
     for idx in range(x.shape[0]):
         result[idx] = interp(x[idx], xp[idx,:], fp[idx,:])
     return result
@@ -97,7 +97,7 @@ def histogramdd_numba(event_attrs, mins, maxs, weights):
     ndim = len(event_attrs)
     nev = event_attrs[0].shape[0]
     nib = mins[0].shape[0]
-    hist = np.zeros(nib, dtype=nb.float32)
+    hist = np.zeros(nib, dtype=np.float32)
 
     for iev in range(nev):
         for ib in range(nib):
@@ -113,7 +113,7 @@ def histogramdd_numba(event_attrs, mins, maxs, weights):
 
 @nb.njit
 def histogram1d_numba(attr, min_, max_, weights):
-    hist = np.zeros(min_.shape[0], dtype=nb.float32)
+    hist = np.zeros(min_.shape[0], dtype=np.float32)
 
     for iev, x in enumerate(attr):
         for ib, (mn, mx) in enumerate(zip(min_, max_)):

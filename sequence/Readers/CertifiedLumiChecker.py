@@ -1,16 +1,16 @@
 import json
 import operator
 import numpy as np
-from numba import njit, boolean
+import numba as nb
 from cachetools import cachedmethod
 from cachetools.keys import hashkey
 from functools import partial
 
 def evaluate_certified_lumi(cert_runs, cert_lumis):
-    @njit
+    @nb.njit
     def is_certified_lumi(runs, lumis, cert_runs_, cert_lumis_):
         nev = runs.shape[0]
-        is_certified = np.ones(nev, dtype=boolean)
+        is_certified = np.ones(nev, dtype=np.bool8)
 
         for iev in range(nev):
             # run not in list, skip
@@ -49,5 +49,5 @@ def read_json(path):
     with open(path, 'r') as f:
         data = json.load(f)
     runs = np.array(sorted(map(int, data.keys())))
-    lumis = [np.array(data[str(r)], dtype=int) for r in runs]
+    lumis = [np.array(data[str(r)], dtype=np.int32) for r in runs]
     return runs, lumis
