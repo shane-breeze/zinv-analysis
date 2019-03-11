@@ -169,6 +169,9 @@ class JecVariations(object):
         corr_up = interpolate(event.Jet_pt.content, pt, corr_up)
         corr_down = interpolate(event.Jet_pt.content, pt, corr_down)
 
+        starts = event.Jet_pt.starts
+        stops = event.Jet_pt.stops
+
         setattr(event, "Jet_JECjes{}Up".format(source), awk.JaggedArray(
             starts, stops, corr_up,
         ))
