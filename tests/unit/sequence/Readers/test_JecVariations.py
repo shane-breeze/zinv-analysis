@@ -36,55 +36,55 @@ def test_jec_variations_begin(module, event):
     assert all(t in ["Total", "AbsoluteStat"] for t in module.jes_sources)
     assert all(t in ["Total", "AbsoluteStat"] for t in event.JetSources)
 
-def test_jec_variations_event_empty(module, event):
-    jet_pt = awk.JaggedArray(
-        np.array([], dtype=np.int32),
-        np.array([], dtype=np.int32),
-        np.array([], dtype=np.float32),
-    )
-    jet_eta = awk.JaggedArray(
-        np.array([], dtype=np.int32),
-        np.array([], dtype=np.int32),
-        np.array([], dtype=np.float32),
-    )
-    rho = np.array([], dtype=np.float32)
-
-    jet_genjetidx = awk.JaggedArray(
-        np.array([], dtype=np.int32),
-        np.array([], dtype=np.int32),
-        np.array([], dtype=np.int32),
-    )
-    genjet_pt = awk.JaggedArray(
-        np.array([], dtype=np.int32),
-        np.array([], dtype=np.int32),
-        np.array([], dtype=np.float32),
-    )
-    met_pt = np.array([], dtype=np.float32)
-    met_phi = np.array([], dtype=np.float32)
-    def jet_ptshift(self):
-        return awk.JaggedArray(
-            np.array([], dtype=np.int32),
-            np.array([], dtype=np.int32),
-            np.array([], dtype=np.float32),
-        )
-    jet_phi = awk.JaggedArray(
-        np.array([], dtype=np.int32),
-        np.array([], dtype=np.int32),
-        np.array([], dtype=np.float32),
-    )
-
-    event.Jet_pt = jet_pt
-    event.Jet_eta = jet_eta
-    event.fixedGridRhoFastjetAll = rho
-
-    event.Jet_genJetIdx = jet_genjetidx
-    event.GenJet_pt = genjet_pt
-    event.MET_pt = met_pt
-    event.MET_phi = met_phi
-    event.Jet_ptShift = mock.Mock(side_effect=jet_ptshift)
-    event.Jet_phi = jet_phi
-
-    module.begin(event)
-    module.event(event)
-
-    assert np.array_equal(event.Jet_ptResolution, awk.JaggedArray([], [], []))
+#def test_jec_variations_event_empty(module, event):
+#    jet_pt = awk.JaggedArray(
+#        np.array([], dtype=np.int32),
+#        np.array([], dtype=np.int32),
+#        np.array([], dtype=np.float32),
+#    )
+#    jet_eta = awk.JaggedArray(
+#        np.array([], dtype=np.int32),
+#        np.array([], dtype=np.int32),
+#        np.array([], dtype=np.float32),
+#    )
+#    rho = np.array([], dtype=np.float32)
+#
+#    jet_genjetidx = awk.JaggedArray(
+#        np.array([], dtype=np.int32),
+#        np.array([], dtype=np.int32),
+#        np.array([], dtype=np.int32),
+#    )
+#    genjet_pt = awk.JaggedArray(
+#        np.array([], dtype=np.int32),
+#        np.array([], dtype=np.int32),
+#        np.array([], dtype=np.float32),
+#    )
+#    met_pt = np.array([], dtype=np.float32)
+#    met_phi = np.array([], dtype=np.float32)
+#    def jet_ptshift(self):
+#        return awk.JaggedArray(
+#            np.array([], dtype=np.int32),
+#            np.array([], dtype=np.int32),
+#            np.array([], dtype=np.float32),
+#        )
+#    jet_phi = awk.JaggedArray(
+#        np.array([], dtype=np.int32),
+#        np.array([], dtype=np.int32),
+#        np.array([], dtype=np.float32),
+#    )
+#
+#    event.Jet_pt = jet_pt
+#    event.Jet_eta = jet_eta
+#    event.fixedGridRhoFastjetAll = rho
+#
+#    event.Jet_genJetIdx = jet_genjetidx
+#    event.GenJet_pt = genjet_pt
+#    event.MET_pt = met_pt
+#    event.MET_phi = met_phi
+#    event.Jet_ptShift = mock.Mock(side_effect=jet_ptshift)
+#    event.Jet_phi = jet_phi
+#
+#    module.begin(event)
+#    module.event(event)
+#
+#    assert np.array_equal(event.Jet_ptResolution, awk.JaggedArray([], [], []))
