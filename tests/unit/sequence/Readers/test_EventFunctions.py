@@ -20,11 +20,6 @@ def event():
 def module():
     return EventFunctions()
 
-@pytest.fixture()
-def module_begin(event, module):
-    module.begin(event)
-    return module
-
 def test_metnox(event, module):
     module.begin(event)
 
@@ -212,5 +207,33 @@ def test_mll(event, module):
     assert np.allclose(
         event.MLL(event),
         np.array([np.nan, 305.8701498, 75.21169786, np.nan], dtype=np.float32),
+        rtol=1e-6, equal_nan=True,
+    )
+
+def test_lepton_charge(event, module):
+    module.begin(event)
+    event.size = 4
+
+    def muon_selection(self, attr):
+        assert attr == 'charge'
+        return awk.JaggedArray(
+            np.array([0, 0, 1, 1], dtype=np.int32),
+            np.array([0, 1, 1, 2], dtype=np.int32),
+            np.array([1, -1], dtype=np.int32),
+        )
+    def ele_selection(self, attr):
+        assert attr == 'charge'
+        return awk.JaggedArray(
+            np.array([0, 0, 0, 1], dtype=np.int32),
+            np.array([0, 0, 1, 2], dtype=np.int32),
+            np.array([-1, 1], dtype=np.int32),
+        )
+
+    event.MuonSelection = mock.Mock(side_effect=muon_selection)
+    event.ElectronSelection = mock.Mock(side_effect=ele_selection)
+
+    assert np.allclose(
+        event.LeptonCharge(event),
+        np.array([0, 1, -1, 0], dtype=np.int32),
         rtol=1e-6, equal_nan=True,
     )
