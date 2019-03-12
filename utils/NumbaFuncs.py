@@ -112,13 +112,25 @@ def histogramdd_numba(event_attrs, mins, maxs, weights):
     return hist
 
 @nb.njit
-def histogram1d_numba(attr, min_, max_, weights):
-    hist = np.zeros(min_.shape[0], dtype=np.float32)
+def compute_bin(x, bin_edges):
+    n = bin_edges.shape[0] - 1
+    a_min = bin_edges[0]
+    a_max = bin_edges[-1]
 
-    for iev, x in enumerate(attr):
-        for ib, (mn, mx) in enumerate(zip(min_, max_)):
-            if mn <= x < mx:
-                hist[ib] += weights[iev]
-                break
+    if x == a_max:
+        return n - 1
+
+    bin = int(n * (x - a_min) / (a_max - a_min))
+    bin = -1 if bin < 0 else n if bin >= n else bin
+    return bin+1
+
+@nb.njit
+def histogram1d_numba(attr, bins, weights):
+    hist = np.zeros(bins.shape[0]+1, dtype=np.float32)
+
+    for a, w in zip(attr, weights):
+        bin = compute_bin(a, bins)
+        if bin is not None:
+            hist[int(bin)] += w
 
     return hist
