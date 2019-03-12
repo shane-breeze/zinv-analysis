@@ -30,8 +30,9 @@ def met_shift(ev, unclust_energy):
 
         return CartToRad2D(mex, mey)
     return met_shift_numba(
-        ev.MET_pt, ev.MET_phi, ev.Jet_pt.content, ev.Jet_ptCorrected.content,
-        ev.Jet_phi.content, ev.Jet_pt.starts, ev.Jet_pt.stops,
+        ev.MET_ptJESOnly, ev.MET_phiJESOnly, ev.Jet_ptJESOnly.content,
+        ev.Jet_pt.content, ev.Jet_phi.content,
+        ev.Jet_pt.starts, ev.Jet_pt.stops,
     )
 
 class JecVariations(object):
@@ -149,9 +150,12 @@ class JecVariations(object):
             np.divide(jersfs_down, jersfs, out=np.ones_like(jersfs), where=(jersfs!=0.))-1.,
         )
         if self.apply_jer_corrections:
-            event.Jet_ptCorrected = event.Jet_pt*event.Jet_JECjerSF
+            event.Jet_ptJESOnly = event.Jet_pt[:,:]
+            event.MET_ptJESOnly = event.MET_pt[:]
+            event.MET_phiJESOnly = event.MET_phi[:]
+
+            event.Jet_pt = (event.Jet_pt*event.Jet_JECjerSF)[:,:]
             met, mephi = met_shift(event, self.unclust_threshold)
-            event.Jet_pt = event.Jet_ptCorrected[:,:]
             event.MET_pt = met[:]
             event.MET_phi = mephi[:]
 
@@ -169,11 +173,11 @@ class JecVariations(object):
         corr_up = np.array(list(df.iloc[indices]["corr_up"].values))
         corr_down = np.array(list(df.iloc[indices]["corr_down"].values))
 
-        corr_up = interpolate(event.Jet_pt.content, pt, corr_up)
-        corr_down = interpolate(event.Jet_pt.content, pt, corr_down)
+        corr_up = interpolate(event.Jet_ptJESOnly.content, pt, corr_up)
+        corr_down = interpolate(event.Jet_ptJESOnly.content, pt, corr_down)
 
-        starts = event.Jet_pt.starts
-        stops = event.Jet_pt.stops
+        starts = event.Jet_eta.starts
+        stops = event.Jet_eta.stops
 
         setattr(event, "Jet_JECjes{}Up".format(source), awk.JaggedArray(
             starts, stops, corr_up,
