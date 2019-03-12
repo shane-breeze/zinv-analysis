@@ -8,6 +8,8 @@ from Lambda import Lambda
 import itertools
 import operator
 
+from .NumbaFuncs import histogram1d_numba
+
 class Histograms(object):
     def __init__(self):
         self.histograms = None
@@ -121,17 +123,33 @@ class Histograms(object):
         bins = [np.array(b) for b in config["bins"]]
 
         hist_bins = bins
-        hist_counts, _ = np.histogramdd(variables, bins)
-        hist_yields, _ = np.histogramdd(variables, bins, weights=weights1)
-        hist_variance, _ = np.histogramdd(variables, bins, weights=weights2)
+        #hist_counts, _ = np.histogramdd(variables, bins)
+        #hist_yields, _ = np.histogramdd(variables, bins, weights=weights1)
+        #hist_variance, _ = np.histogramdd(variables, bins, weights=weights2)
+        hist_counts = histogram1d_numba(variables[0], bins[0][1:-1], np.ones_like(weights1))
+        hist_yields = histogram1d_numba(variables[0], bins[0][1:-1], weights1)
+        hist_variance = histogram1d_numba(variables[0], bins[0][1:-1], weights2)
 
-        data = self.create_onedim_hists(
-            hist_bins, hist_counts, hist_yields, hist_variance,
-        )
+        #data = self.create_onedim_hists(
+        #    hist_bins, hist_counts, hist_yields, hist_variance,
+        #)
         bin_names = [["bin{}_low".format(idx), "bin{}_upp".format(idx)]
                      for idx in reversed(list(range(len(hist_bins))))]
         bin_names = reduce(lambda x,y: x+y, bin_names)
-        df = pd.DataFrame(data, columns=bin_names+["count", "yield", "variance"])
+        #df = pd.DataFrame(data, columns=bin_names+["count", "yield", "variance"])
+
+        mins = [b[:-1] for b in bins]
+        maxs = [b[1:] for b in bins]
+        mins = np.meshgrid(*mins)
+        maxs = np.meshgrid(*maxs)
+
+        df = pd.DataFrame({
+            "bin0_low": mins[0],
+            "bin0_upp": maxs[0],
+            "count": hist_counts,
+            "yield": hist_yields,
+            "variance": hist_variance,
+        }, columns=bin_names+["count", "yield", "variance"])
 
         df["dataset"] = config["dataset"]
         df["region"] = config["region"]
