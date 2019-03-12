@@ -12,23 +12,27 @@ from utils.Geometry import RadToCart2D, CartToRad2D
 def jer_formula(x, p0, p1, p2, p3):
     return np.sqrt(p0*np.abs(p0)/(x*x)+p1*p1*np.power(x,p3)+p2*p2)
 
-def met_shift(ev):
+def met_shift(ev, unclust_energy):
     @nb.njit
     def met_shift_numba(met, mephi, jpt, jptshift, jphi, jstarts, jstops):
         jpx_old, jpy_old = RadToCart2D(jpt, jphi)
         jpx_new, jpy_new = RadToCart2D(jptshift, jphi)
-        djpx = jpx_new - jpx_old
-        djpy = jpy_new - jpy_old
 
-        mex, mey = RadToCart2D(met, mephi)
-        for idx, (start, stop) in enumerate(zip(jstarts, jstops)):
-            mex[idx] -= djpx[start:stop][jpx_new[start:stop]>15.].sum()
-            mey[idx] -= djpy[start:stop][jpy_new[start:stop]>15.].sum()
+        mex, mey = RadToCart2D(met[:], mephi[:])
+        for iev, (start, stop) in enumerate(zip(jstarts, jstops)):
+            for iob in range(start, stop):
+                if jpt[iob] > unclust_energy:
+                    mex[iev] += jpx_old[iob]
+                    mey[iev] += jpy_old[iob]
+                if jptshift[iob]  > unclust_energy:
+                    mex[iev] -= jpx_new[iob]
+                    mey[iev] -= jpy_new[iob]
 
         return CartToRad2D(mex, mey)
     return met_shift_numba(
-        ev.MET_pt, ev.MET_phi, ev.Jet_pt.content, ev.Jet_ptShift(ev).content,
-        ev.Jet_phi.content, ev.Jet_pt.starts, ev.Jet_pt.stops,
+        ev.MET_ptJESOnly, ev.MET_phiJESOnly, ev.Jet_ptJESOnly.content,
+        ev.Jet_pt.content, ev.Jet_phi.content,
+        ev.Jet_pt.starts, ev.Jet_pt.stops,
     )
 
 class JecVariations(object):
@@ -104,7 +108,7 @@ class JecVariations(object):
             [self.jersfs["eta_high"].values],
             1,
         )[:,0]
-        ressfs = self.jersfs.iloc[indices][["corr", "corr_down", "corr_up"]].values
+        ressfs = self.jersfs.iloc[indices][["corr", "corr_up", "corr_down"]].values
         jersfs = np.ones_like(event.Jet_pt.content, dtype=np.float32)
         jersfs_up = np.ones_like(event.Jet_pt.content, dtype=np.float32)
         jersfs_down = np.ones_like(event.Jet_pt.content, dtype=np.float32)
@@ -146,9 +150,12 @@ class JecVariations(object):
             np.divide(jersfs_down, jersfs, out=np.ones_like(jersfs), where=(jersfs!=0.))-1.,
         )
         if self.apply_jer_corrections:
-            event.Jet_ptCorrected = event.Jet_pt*event.Jet_JECjerSF
-            met, mephi = met_shift(event)
-            event.Jet_pt = event.Jet_ptCorrected[:,:]
+            event.Jet_ptJESOnly = event.Jet_pt[:,:]
+            event.MET_ptJESOnly = event.MET_pt[:]
+            event.MET_phiJESOnly = event.MET_phi[:]
+
+            event.Jet_pt = (event.Jet_pt*event.Jet_JECjerSF)[:,:]
+            met, mephi = met_shift(event, self.unclust_threshold)
             event.MET_pt = met[:]
             event.MET_phi = mephi[:]
 
@@ -166,11 +173,11 @@ class JecVariations(object):
         corr_up = np.array(list(df.iloc[indices]["corr_up"].values))
         corr_down = np.array(list(df.iloc[indices]["corr_down"].values))
 
-        corr_up = interpolate(event.Jet_pt.content, pt, corr_up)
-        corr_down = interpolate(event.Jet_pt.content, pt, corr_down)
+        corr_up = interpolate(event.Jet_ptJESOnly.content, pt, corr_up)
+        corr_down = interpolate(event.Jet_ptJESOnly.content, pt, corr_down)
 
-        starts = event.Jet_pt.starts
-        stops = event.Jet_pt.stops
+        starts = event.Jet_eta.starts
+        stops = event.Jet_eta.stops
 
         setattr(event, "Jet_JECjes{}Up".format(source), awk.JaggedArray(
             starts, stops, corr_up,
