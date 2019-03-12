@@ -85,12 +85,14 @@ tau_cross_cleaning = Readers.ObjectCrossCleaning(
     name = "tau_cross_cleaning",
     collections = ("Tau",),
     ref_collections = ("MuonVeto", "ElectronVeto"),
+    mindr = 0.4,
 )
 
 jet_cross_cleaning = Readers.ObjectCrossCleaning(
     name = "jet_cross_cleaning",
     collections = ("Jet",),
     ref_collections = ("MuonVeto", "ElectronVeto", "PhotonVeto", "TauVeto"),
+    mindr = 0.4,
 )
 
 trigger_checker = Readers.TriggerChecker(

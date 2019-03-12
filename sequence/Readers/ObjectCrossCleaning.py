@@ -8,22 +8,24 @@ from cachetools.keys import hashkey
 from functools import partial
 from utils.Geometry import DeltaR2
 
-def evaluate_xclean_mask(obj1name, obj2names):
+def evaluate_xclean_mask(obj1name, obj2names, mindr):
     @nb.njit
     def xclean_mask_numba(
         etas1, phis1, starts1, stops1, etas2, phis2, starts2, stops2,
     ):
-        content = np.ones(stops1[-1], dtype=np.bool8)
+        content = np.ones_like(etas1, dtype=np.bool8)
         for iev, (start1, stop1, start2, stop2) in enumerate(zip(
             starts1, stops1, starts2, stops2,
         )):
             for idx1 in range(start1, stop1):
+                eta1 = etas1[idx1]
+                phi1 = phis1[idx1]
                 for idx2 in range(start2, stop2):
-                    deta = etas1[idx1] - etas2[idx2]
-                    dphi = phis1[idx1] - phis2[idx2]
+                    deta = eta1 - etas2[idx2]
+                    dphi = phi1 - phis2[idx2]
 
                     # dR**2 < 0.4**2
-                    if DeltaR2(deta, dphi) < 0.16:
+                    if DeltaR2(deta, dphi) < mindr**2:
                         content[idx1] = False
                         break
 
@@ -59,5 +61,5 @@ class ObjectCrossCleaning(object):
             setattr(
                 event,
                 "{}_XCleanMask".format(cname),
-                evaluate_xclean_mask(cname, self.ref_collections),
+                evaluate_xclean_mask(cname, self.ref_collections, self.mindr),
             )
