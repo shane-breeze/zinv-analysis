@@ -29,10 +29,12 @@ gen_boson_producer = Readers.GenBosonProducer(
 )
 lhe_part_assigner = Readers.LHEPartAssigner(
     name = "lhe_part_assigner",
+    old_parents = ["WJetsToLNu", "DYJetsToLL", "ZJetsToLL", "GStarJetsToLL"],
     data = False,
 )
 gen_part_assigner = Readers.GenPartAssigner(
     name = "gen_part_assigner",
+    old_parents = ["WJetsToLNu", "DYJetsToLL", "ZJetsToLL", "GStarJetsToLL"],
     data = False,
 )
 
