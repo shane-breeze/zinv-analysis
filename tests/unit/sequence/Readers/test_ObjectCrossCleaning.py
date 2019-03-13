@@ -14,6 +14,7 @@ class DummyEvent(object):
         self.iblock = 0
         self.nsig = 0
         self.source = ''
+        self.attribute_variation_sources = []
 
         self.C1 = DummyColl()
         self.RC1 = DummyColl()

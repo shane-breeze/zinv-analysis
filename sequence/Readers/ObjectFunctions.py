@@ -25,7 +25,12 @@ def jet_pt_shift():
         return awk.JaggedArray(nominal.starts, nominal.stops, pt_shift_numba(
             nominal.content, nsig, up, down,
         ))
-    return lambda ev: fjet_pt_shift(ev, ev.iblock, ev.nsig, ev.source)
+
+    def return_jet_pt_shift(ev):
+        source = ev.source if ev.source in ev.attribute_variation_sources else ''
+        return fjet_pt_shift(ev, ev.iblock, ev.nsig, source)
+
+    return return_jet_pt_shift
 
 def muon_pt_shift():
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fmuon_pt_shift'))
@@ -36,7 +41,7 @@ def muon_pt_shift():
         ))
 
     def ret_func(ev):
-        source = ev.source if ev.source == "muonPtScale" else ""
+        source = ev.source if ev.source == "muonPtScale" else ''
         return fmuon_pt_shift(ev, ev.iblock, ev.nsig, source)
 
     return ret_func
@@ -120,9 +125,11 @@ def obj_selection(objname, selection, xclean=False):
 
         return obj[mask]
 
-    return lambda ev, attr: fobj_selection(
-        ev, ev.iblock, ev.nsig, ev.source, objname, selection, xclean, attr,
-    )
+    def return_obj_selection(ev, attr):
+        source = ev.source if ev.source in ev.attribute_variation_sources else ''
+        return fobj_selection(
+            ev, ev.iblock, ev.nsig, source, objname, selection, xclean, attr,
+        )
 
 class ObjectFunctions(object):
     def __init__(self, **kwargs):

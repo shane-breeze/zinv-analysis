@@ -48,9 +48,11 @@ def evaluate_xclean_mask(obj1name, obj2names, mindr):
             reduce(operator.and_, masks),
         )
 
-    return lambda ev: fevaluate_xclean_mask(
-        ev, obj1name, tuple(obj2names), ev.iblock, ev.nsig, ev.source,
-    )
+    def return_evaluate_xclean_mask(ev):
+        source = ev.source if ev.source in ev.attribute_variation_sources else ''
+        return fevaluate_xclean_mask(ev, obj1name, tuple(obj2names), ev.iblock, ev.nsig, source)
+
+    return return_evaluate_xclean_mask
 
 class ObjectCrossCleaning(object):
     def __init__(self, **kwargs):
