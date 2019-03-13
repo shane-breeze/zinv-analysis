@@ -35,6 +35,7 @@ def module():
 def test_objxclean_init(module):
     assert module.collections == ("C1",)
     assert module.ref_collections == ("RC1", "RC2")
+    assert module.mindr == 0.4
 
 def test_objxclean_begin(module, event):
     assert module.begin(event) is None
