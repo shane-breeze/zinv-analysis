@@ -40,9 +40,7 @@ def evaluate_met_trigger(cats, xcents, params):
         return weight_numba(wmet, nsig, up, down)
 
     def ret_func(ev):
-        source = ev.source
-        if source not in ["metTrigStat", "metTrigSyst"]:
-            source = ''
+        source = ev.source if ev.source in ev.attribute_variation_sources+["metTrigStat", "metTrigSyst"] else ''
         return fevaluate_met_trigger(ev, ev.iblock, ev.nsig, source)
 
     return ret_func

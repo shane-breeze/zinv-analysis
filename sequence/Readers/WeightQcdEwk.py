@@ -8,7 +8,7 @@ from functools import partial
 
 from utils.NumbaFuncs import get_bin_indices, weight_numba
 
-def evaluate_qcdewk_weight():
+def evaluate_qcdewk_weight(theory_uncs):
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_qcdewk_weight'))
     def fevaluate_qcdewk_weight(ev, evidx, nsig, source):
         central = ev.WeightQcdEwkNominal
@@ -20,7 +20,11 @@ def evaluate_qcdewk_weight():
             down = 0.
         return weight_numba(central, nsig, up, down)
 
-    return lambda ev: fevaluate_qcdewk_weight(ev, ev.iblock, ev.nsig, ev.source)
+    def return_evaluate_qcdewk_weight(ev):
+        source = ev.source if ev.source in theory_uncs else ''
+        return fevaluate_qcdewk_weight(ev, ev.iblock, ev.nsig, source)
+
+    return return_evaluate_qcdewk_weight
 
 class WeightQcdEwk(object):
     def __init__(self, **kwargs):
@@ -30,7 +34,7 @@ class WeightQcdEwk(object):
         if event.config.dataset.isdata:
             return
 
-        event.WeightQcdEwk = evaluate_qcdewk_weight()
+        event.WeightQcdEwk = evaluate_qcdewk_weight(self.nusiances)
 
         self.variations = [""]\
                 + [n+"Up" for n in self.nuisances]\

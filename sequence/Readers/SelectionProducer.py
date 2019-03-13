@@ -12,7 +12,12 @@ def evaluate_selection(name, cutlist):
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_selection'))
     def fevaluate_selection(ev, evidx, nsig, source, name_):
         return reduce(operator.add, cutlist)(ev)
-    return lambda ev: fevaluate_selection(ev, ev.iblock, ev.nsig, ev.source, name)
+
+    def return_evaluate_selection(ev):
+        source = ev.source if ev.source in ev.attribute_variation_sources else ''
+        return fevaluate_selection(ev, ev.iblock, ev.nsig, source, name)
+
+    return return_evaluate_selection
 
 class SelectionProducer(object):
     def __init__(self, **kwargs):
