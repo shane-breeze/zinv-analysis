@@ -37,7 +37,12 @@ def evaluate_metnox(arg):
             ev.ElectronSelection(ev, 'ptShift').content, ev.ElectronSelection(ev, 'phi').content,
             ev.ElectronSelection(ev, 'phi').starts, ev.ElectronSelection(ev, 'phi').stops,
         )[arg_]
-    return lambda ev: fevaluate_metnox(ev, ev.iblock, ev.nsig, ev.source, arg)
+
+    def return_evaluate_metnox(ev):
+        source = ev.source if ev.source in ev.attribute_variation_sources else ''
+        return fevaluate_metnox(ev, ev.iblock, ev.nsig, source, arg)
+
+    return return_evaluate_metnox
 
 def evaluate_mindphi(njets):
     @nb.njit
@@ -59,7 +64,12 @@ def evaluate_mindphi(njets):
         return mindphi_numba(
             jphis.content, jphis.starts, jphis.stops, njets_, ev.METnoX_phi(ev),
         )
-    return lambda ev: fevaluate_mindphi(ev, ev.iblock, ev.nsig, ev.source, njets)
+
+    def return_evaluate_mindphi(ev):
+        source = ev.source if ev.source in ev.attribute_variation_sources else ''
+        return fevaluate_mindphi(ev, ev.iblock, ev.nsig, source, njets)
+
+    return return_evaluate_mindphi
 
 def evaluate_met_dcalo():
     @nb.njit
@@ -71,7 +81,12 @@ def evaluate_met_dcalo():
         return met_dcalo_numba(
             ev.MET_ptShift(ev), ev.CaloMET_pt, ev.METnoX_pt(ev),
         )
-    return lambda ev: fevaluate_met_dcalo(ev, ev.iblock, ev.nsig, ev.source)
+
+    def return_evaluate_met_dcalo(ev):
+        source = ev.source if ev.source in ev.attribute_variation_sources else ''
+        return fevaluate_met_dcalo(ev, ev.iblock, ev.nsig, source)
+
+    return return_evaluate_met_dcalo
 
 def evaluate_mtw():
     @nb.njit
@@ -113,7 +128,11 @@ def evaluate_mtw():
             epts.starts, epts.stops,
         )
 
-    return lambda ev: fevaluate_mtw(ev, ev.iblock, ev.nsig, ev.source)
+    def return_evaluate_mtw(ev):
+        source = ev.source if ev.source in ev.attribute_variation_sources else ''
+        return fevaluate_mtw(ev, ev.iblock, ev.nsig, source)
+
+    return return_evaluate_mtw
 
 def evaluate_mll():
     @nb.njit
@@ -161,7 +180,11 @@ def evaluate_mll():
             ev.size,
         )
 
-    return lambda ev: fevaluate_mll(ev, ev.iblock, ev.nsig, ev.source)
+    def return_evaluate_mll(ev):
+        source = ev.source if ev.source in ev.attribute_variation_sources else ''
+        return fevaluate_mll(ev, ev.iblock, ev.nsig, source)
+
+    return return_evaluate_mll
 
 def evaluate_lepton_charge():
     @nb.njit
@@ -187,7 +210,12 @@ def evaluate_lepton_charge():
             ev.size,
         )
 
-    return lambda ev: fevaluate_lepton_charge(ev, ev.iblock, ev.nsig, ev.source)
+    def return_evaluate_lepton_charge(ev):
+        source = ev.source if ev.source in ev.attribute_variation_sources else ''
+        return fevaluate_lepton_charge(ev, ev.iblock, ev.nsig, source)
+
+    return return_evaluate_lepton_charge
+
 
 class EventFunctions(object):
     def __init__(self, **kwargs):

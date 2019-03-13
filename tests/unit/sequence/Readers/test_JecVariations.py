@@ -12,7 +12,7 @@ class DummyEvent(object):
         self.nsig = 0
         self.source = ''
         self.cache = {}
-        self.variation_sources = ["jesTotal", "jerSF", "unclust", "jesAbsoluteStat"]
+        self.attribute_variation_sources = ["jesTotal", "jerSF", "unclust", "jesAbsoluteStat"]
 
 @pytest.fixture()
 def event():

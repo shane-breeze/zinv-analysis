@@ -11,6 +11,7 @@ class DummyEvent(object):
         self.nsig = 0
         self.source = ''
         self.cache = {}
+        self.attribute_variation_sources = []
 
 @pytest.fixture()
 def event():
