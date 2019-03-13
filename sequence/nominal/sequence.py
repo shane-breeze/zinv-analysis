@@ -51,6 +51,7 @@ jec_variations = Readers.JecVariations(
 
 object_functions = Readers.ObjectFunctions(
     name = "object_functions",
+    unclust_threshold = 15.,
     selections = [
         ("Jet", "JetVeto", True),
         ("Jet", "JetVetoNoSelection", True),

@@ -71,20 +71,24 @@ def photon_pt_shift():
 
     return ret_func
 
-def met_shift(arg):
+def met_shift(arg, unclust_energy):
     @nb.njit
     def met_shift_numba(
         met, mephi, jpt, jptcorr, jphi, jstarts, jstops, metuncx, metuncy, nsig,
     ):
         jpx_old, jpy_old = RadToCart2D(jpt, jphi)
         jpx_new, jpy_new = RadToCart2D(jptcorr, jphi)
-        djpx = jpx_new - jpx_old
-        djpy = jpy_new - jpy_old
 
         mex, mey = RadToCart2D(met, mephi)
-        for idx, (start, stop) in enumerate(zip(jstarts, jstops)):
-            mex[idx] -= djpx[start:stop][jpx_new[start:stop]>15.].sum()
-            mey[idx] -= djpy[start:stop][jpy_new[start:stop]>15.].sum()
+        for iev, (start, stop) in enumerate(zip(jstarts, jstops)):
+            for iob in range(start, stop):
+                if jpt[iob] > unclust_energy:
+                    mex[iev] += jpx_old[iob]
+                    mey[iev] += jpy_old[iob]
+                if jptcorr[iob] > unclust_energy:
+                    mex[iev] -= jpx_new[iob]
+                    mey[iev] -= jpy_new[iob]
+
         mex += nsig*metuncx
         mey += nsig*metuncy
 
@@ -130,8 +134,8 @@ class ObjectFunctions(object):
         event.Electron_ptShift = ele_pt_shift()
         event.Photon_ptShift = photon_pt_shift()
         event.Tau_ptShift = lambda ev: ev.Tau_pt
-        event.MET_ptShift = met_shift(0)
-        event.MET_phiShift = met_shift(1)
+        event.MET_ptShift = met_shift(0, self.unclust_threshold)
+        event.MET_phiShift = met_shift(1, self.unclust_threshold)
 
         for objname, selection, xclean in self.selections:
             if xclean:
