@@ -1,7 +1,7 @@
 import numpy as np
+from utils.AwkwardOps import get_nth_object
 
 class LHEPartAssigner(object):
-    old_parents = ["WJetsToLNu", "DYJetsToLL", "ZJetsToLL", "GStarJetsToLL"]
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
@@ -10,16 +10,15 @@ class LHEPartAssigner(object):
             return True
 
         pdg = event.LHEPart.pdgId
-        event.LeptonDecay = np.abs(
+        event.LeptonDecay = get_nth_object(np.abs(
             pdg[(np.abs(pdg)==11) | (np.abs(pdg)==13) | (np.abs(pdg)==15)]
-        )[:,0]
+        ), 0, event.size)
         event.LeptonIsElectron = (event.LeptonDecay == 11)
         event.LeptonIsMuon = (event.LeptonDecay == 13)
         event.LeptonIsTau = (event.LeptonDecay == 15)
         event.delete_branches(["LHEPart_pdgId"])
 
 class GenPartAssigner(object):
-    old_parents = ["WJetsToLNu", "DYJetsToLL", "ZJetsToLL", "GStarJetsToLL"]
     def __init__(self, **kwargs):
         self.__dict__.update(**kwargs)
 

@@ -29,10 +29,12 @@ gen_boson_producer = Readers.GenBosonProducer(
 )
 lhe_part_assigner = Readers.LHEPartAssigner(
     name = "lhe_part_assigner",
+    old_parents = ["WJetsToLNu", "DYJetsToLL", "ZJetsToLL", "GStarJetsToLL"],
     data = False,
 )
 gen_part_assigner = Readers.GenPartAssigner(
     name = "gen_part_assigner",
+    old_parents = ["WJetsToLNu", "DYJetsToLL", "ZJetsToLL", "GStarJetsToLL"],
     data = False,
 )
 
@@ -49,6 +51,7 @@ jec_variations = Readers.JecVariations(
 
 object_functions = Readers.ObjectFunctions(
     name = "object_functions",
+    unclust_threshold = 15.,
     selections = [
         ("Jet", "JetVeto", True),
         ("Jet", "JetVetoNoSelection", True),
@@ -83,12 +86,14 @@ tau_cross_cleaning = Readers.ObjectCrossCleaning(
     name = "tau_cross_cleaning",
     collections = ("Tau",),
     ref_collections = ("MuonVeto", "ElectronVeto"),
+    mindr = 0.4,
 )
 
 jet_cross_cleaning = Readers.ObjectCrossCleaning(
     name = "jet_cross_cleaning",
     collections = ("Jet",),
     ref_collections = ("MuonVeto", "ElectronVeto", "PhotonVeto", "TauVeto"),
+    mindr = 0.4,
 )
 
 trigger_checker = Readers.TriggerChecker(
