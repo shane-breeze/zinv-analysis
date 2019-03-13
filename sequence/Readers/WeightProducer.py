@@ -23,7 +23,8 @@ class WeightProducer(object):
             input_dict = yaml.load(f)
 
         weights_dict = input_dict["weights"]
-        event.variation_sources = input_dict["variations"]
+        event.weight_variation_sources = input_dict["weight_variations"]
+        event.attribute_variation_sources = input_dict["attribute_variations"]
         data_or_mc = "Data" if event.config.dataset.isdata else "MC"
 
         self.lambda_functions = {

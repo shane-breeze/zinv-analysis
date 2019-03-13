@@ -60,7 +60,7 @@ class JecVariations(object):
         # Regex the variations
         comp_jes_regex = re.compile(self.jes_regex)
         variations = []
-        for v in event.variation_sources:
+        for v in event.attribute_variation_sources:
             match = comp_jes_regex.search(v)
             if match:
                 vari = match.group("source")
