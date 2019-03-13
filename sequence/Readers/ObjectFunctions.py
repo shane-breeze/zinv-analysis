@@ -17,8 +17,8 @@ def jet_pt_shift():
     def fjet_pt_shift(ev, evidx, nsig, source):
         nominal = ev.Jet.pt
         try:
-            up = getattr(ev, 'JEC{}Up'.format(source))(ev).content
-            down = getattr(ev, 'JEC{}Down'.format(source))(ev).content
+            up = getattr(ev.Jet, 'JEC{}Up'.format(source)).content
+            down = getattr(ev.Jet, 'JEC{}Down'.format(source)).content
         except AttributeError:
             up = 0.
             down = 0.
@@ -30,7 +30,7 @@ def jet_pt_shift():
 def muon_pt_shift():
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fmuon_pt_shift'))
     def fmuon_pt_shift(ev, evidx, nsig, source):
-        shift = (source=="muonPtScale")*ev.Muon_ptErr.content/ev.Muon.pt.content
+        shift = (source=="muonPtScale")*ev.Muon.ptErr.content/ev.Muon.pt.content
         return awk.JaggedArray(ev.Muon.pt.starts, ev.Muon.pt.stops, pt_shift_numba(
             ev.Muon.pt.content, nsig, shift, -1.*shift
         ))
