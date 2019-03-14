@@ -273,8 +273,8 @@ weight_qcd_ewk = Readers.WeightQcdEwk(
     params = ["K_NLO", "d1K_NLO", "d2K_NLO", "d3K_NLO", "K_NNLO", "d1K_NNLO",
               "d2K_NNLO", "d3K_NNLO", "kappa_EW", "d1kappa_EW", "d2kappa_EW",
               "d3kappa_EW", "dK_NLO_mix"],
-    nuisances = ["d1k_qcd", "d2k_qcd", "d3k_qcd", "d1k_ew", "d2k_ew_z",
-                 "d2k_ew_w", "d3k_ew_z", "d3k_ew_w", "dk_mix"],
+    variation_names = ["d1k_qcd", "d2k_qcd", "d3k_qcd", "d1k_ew", "d2k_ew_z",
+                       "d2k_ew_w", "d3k_ew_z", "d3k_ew_w", "dk_mix"],
 #    formula = "1 + kappa_EW + d1k_ew*d1kappa_EW + isz*(d2k_ew_z*d2kappa_EW + d3k_ew_z*d3kappa_EW)"\
 #                                               "+ isw*(d2k_ew_w*d2kappa_EW + d3k_ew_w*d3kappa_EW)",
 #    params = ["kappa_EW", "d1kappa_EW", "d2kappa_EW", "d3kappa_EW"],
@@ -434,8 +434,8 @@ sequence = [
     (collection_creator, NullCollector()),
     # selection and weight producers. They only create functions and hence can
     # be placed near the start
-    (selection_producer, NullCollector()),
     (weight_producer, NullCollector()),
+    (selection_producer, NullCollector()),
     # # Try to keep GenPart branch stuff before everything else. It's quite big
     # # and is deleted after use. Don't want to add the memory consumption of
     # # this with all other branches

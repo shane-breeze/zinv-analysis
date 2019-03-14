@@ -1,4 +1,4 @@
-name: "Histogrammer_cfg"
+name: "Systematics_cfg"
 categories:
     monojet:
         - ["MET", "Monojet"]

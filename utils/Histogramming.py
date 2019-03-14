@@ -78,6 +78,8 @@ class Histograms(object):
 
     def clear_empties(self):
         df = self.histograms
+        if df is None:
+            return
         columns = [c for c in df.index.names if "bin" not in c]
         self.histograms = df.loc[df.groupby(columns)["count"].transform(func=np.sum)>0,:]
 
@@ -189,9 +191,9 @@ class Histograms(object):
         return np.hstack([bins_1d, counts_1d, yields_1d, variance_1d])
 
     def merge(self, other):
-        if self.histograms.shape[0] == 0:
+        if self.histograms.shape[0] == 0 or self.histograms is None:
             return other
-        elif other.histograms.shape[0] == 0:
+        elif other.histograms.shape[0] == 0 or other.histograms is None:
             return self
         columns = self.histograms.index.names
         self.histograms = pd.concat([self.histograms, other.histograms])\

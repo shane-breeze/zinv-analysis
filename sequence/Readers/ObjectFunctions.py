@@ -131,6 +131,8 @@ def obj_selection(objname, selection, xclean=False):
             ev, ev.iblock, ev.nsig, source, objname, selection, xclean, attr,
         )
 
+    return return_obj_selection
+
 class ObjectFunctions(object):
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)

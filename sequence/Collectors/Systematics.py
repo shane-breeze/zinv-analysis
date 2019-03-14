@@ -13,16 +13,21 @@ from drawing.dist_facet import dist_facet
 class SystematicsReader(HistReader):
     def begin(self, event):
         # Only run for variations defined in the event
-        self.histograms.configs = [
-            c for c in self.histograms.configs
-            if c["weightname"] in set(event.weight_variation_sources)\
-            + set(event.attribute_variation_sources)
-        ]
+        new_configs = []
+        for c in self.histograms.configs:
+            wname = c["weightname"][:-2] if c["weightname"].endswith("Up")\
+                    else c["weightname"][:-4] if c["weightname"].endswith("Down")\
+                    else c["weightname"]
+            if (wname in event.weight_variation_sources + event.attribute_variation_sources) or wname=="":
+                new_configs.append(c)
+        self.histograms.configs = new_configs
         super(SystematicsReader, self).begin(event)
 
 class SystematicsCollector(HistCollector):
     def save(self, histograms):
         df = histograms.histograms
+        if df is None:
+            return
 
         # Remove variations from name and region
         levels = df.index.names

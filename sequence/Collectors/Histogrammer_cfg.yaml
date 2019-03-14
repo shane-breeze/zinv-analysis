@@ -299,7 +299,9 @@ configs:
         bins:
             - [0., 1000., 51]
         weights:
-            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
+            - ["",                   0,   "",               "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
+            - ["eleEnergyScaleUp",   1.,  "eleEnergyScale", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
+            - ["eleEnergyScaleDown", -1., "eleEnergyScale", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     LeadElectronSelection_eta:
         categories:
             - "ele"

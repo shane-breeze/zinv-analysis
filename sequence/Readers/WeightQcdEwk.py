@@ -34,11 +34,11 @@ class WeightQcdEwk(object):
         if event.config.dataset.isdata:
             return
 
-        event.WeightQcdEwk = evaluate_qcdewk_weight(self.nusiances)
+        event.WeightQcdEwk = evaluate_qcdewk_weight(self.variation_names)
 
         self.variations = [""]\
-                + [n+"Up" for n in self.nuisances]\
-                + [n+"Down" for n in self.nuisances]
+                + [n+"Up" for n in self.variation_names]\
+                + [n+"Down" for n in self.variation_names]
 
         self.parent = event.config.dataset.parent
         if self.parent not in self.input_paths:
@@ -71,19 +71,19 @@ class WeightQcdEwk(object):
 
         # nominal
         columns = [""]
-        for nuisance in self.nuisances:
-            input_df[nuisance] = 0
+        for var in self.variation_names:
+            input_df[var] = 0
         input_df[""] = input_df.eval(self.formula)
 
         # Up/down variations
-        for nuisance in self.nuisances:
-            input_df[nuisance] = 1
-            input_df[nuisance+"Up"] = input_df.eval(self.formula)
-            input_df[nuisance] = -1
-            input_df[nuisance+"Down"] = input_df.eval(self.formula)
-            input_df[nuisance] = 0
-            columns.append(nuisance+"Up")
-            columns.append(nuisance+"Down")
+        for var in self.variation_names:
+            input_df[var] = 1
+            input_df[var+"Up"] = input_df.eval(self.formula)
+            input_df[var] = -1
+            input_df[var+"Down"] = input_df.eval(self.formula)
+            input_df[var] = 0
+            columns.append(var+"Up")
+            columns.append(var+"Down")
         input_df = input_df[columns]
 
         if self.overflow:
