@@ -471,6 +471,57 @@ def test_objfunc_tptshift(module, event, inputs, outputs):
         }, {
             "metshift": [213.396691481902, 260.918382127075, 398.714177256099],
             "mephishift": [0.257651731212511, 0.569538357995496, 0.762572497967355],
+        }], [{
+            "nsig":     1,
+            "source":   'unclust',
+            "met":      [200., 300., 400.],
+            "mephi":    [0.3, 0.6, 0.9],
+            "jstarts":  [0, 1, 2],
+            "jstops":   [1, 2, 4],
+            "jpt":      [16., 40., 60., 80.],
+            "jptshift": [16., 40., 60., 80.],
+            "jphi":     [-0.3, 0.8, -1.1, 2.5],
+            "evvars": {
+                "MetUnclustEnUpDeltaX": [10., 15., 25.],
+                "MetUnclustEnUpDeltaY": [5., 7., 13.],
+            },
+        }, {
+            "metshift": [211.038826687946, 316.343988282449, 425.878855104992],
+            "mephishift": [0.308631127377874, 0.591489263592354, 0.872988464087041],
+        }], [{
+            "nsig":     -1,
+            "source":   'unclust',
+            "met":      [200., 300., 400.],
+            "mephi":    [0.3, 0.6, 0.9],
+            "jstarts":  [0, 1, 2],
+            "jstops":   [1, 2, 4],
+            "jpt":      [16., 40., 60., 80.],
+            "jptshift": [16., 40., 60., 80.],
+            "jphi":     [-0.3, 0.8, -1.1, 2.5],
+            "evvars": {
+                "MetUnclustEnUpDeltaX": [10., 15., 25.],
+                "MetUnclustEnUpDeltaY": [5., 7., 13.],
+            },
+        }, {
+            "metshift": [188.977812534104, 283.680244425927, 374.453202382435],
+            "mephishift": [0.290361256916289, 0.609490714518387, 0.930722271015859],
+        }], [{
+            "nsig":     1,
+            "source":   'unclust',
+            "met":      [200., 300., 400.],
+            "mephi":    [0.3, 0.6, 0.9],
+            "jstarts":  [0, 1, 2],
+            "jstops":   [1, 2, 4],
+            "jpt":      [16., 40., 60., 80.],
+            "jptshift": [14., 80., 45., 121.],
+            "jphi":     [-0.3, 0.8, -1.1, 2.5],
+            "evvars": {
+                "MetUnclustEnUpDeltaX": [10., 15., 25.],
+                "MetUnclustEnUpDeltaY": [5., 7., 13.],
+            },
+        }, {
+            "metshift": [224.352309434740, 277.334010882431, 425.843625873921],
+            "mephishift": [0.267845027761373, 0.561628679459254, 0.744090959514257],
         }],
     )
 )
@@ -515,3 +566,70 @@ def test_objfunc_metshift(module, event, inputs, outputs):
         np.array(outputs["mephishift"]),
         rtol=1e-6, equal_nan=True,
     )
+
+
+@pytest.mark.parametrize(
+    "inputs,outputs", (
+        [{
+            "nsig":   0,
+            "source": '',
+            "starts": [0, 1, 2, 4],
+            "stops":  [1, 2, 4, 6],
+            "pt":     [20., 30., 40., 50., 60., 70.],
+            "mask":   [True, False, True, False, True, True],
+            "xclean": [True, True, True, True, False, True],
+        }, {
+            "starts_noxclean": [0, 1, 1, 2],
+            "stops_noxclean":  [1, 1, 2, 4],
+            "pt_noxclean":     [20., 40., 60., 70.],
+            "starts_mask":     [0, 1, 1, 2],
+            "stops_mask":      [1, 1, 2, 3],
+            "pt_mask":         [20., 40., 70.],
+        }],
+    )
+)
+def test_objfunc_xclean(module, event, inputs, outputs):
+    event.nsig = inputs["nsig"]
+    event.source = inputs["source"]
+
+    mask = awk.JaggedArray(inputs["starts"], inputs["stops"], inputs["mask"])
+    xclean_mask = awk.JaggedArray(inputs["starts"], inputs["stops"], inputs["xclean"])
+    pt = awk.JaggedArray(inputs["starts"], inputs["stops"], inputs["pt"])
+
+    for objname, selection, xclean in selections:
+        setattr(event, objname+"_pt", pt)
+        setattr(
+            event, "{}_{}Mask".format(objname, selection),
+            mock.Mock(side_effect=lambda ev: mask),
+        )
+        if xclean:
+            if hasattr(event, "{}_XCleanMask"):
+                continue
+            setattr(
+                event, "{}_XCleanMask".format(objname),
+                mock.Mock(side_effect=lambda ev: xclean_mask),
+            )
+
+    pt_noxclean = awk.JaggedArray(
+        outputs["starts_noxclean"], outputs["stops_noxclean"],
+        outputs["pt_noxclean"],
+    )
+    pt_mask = awk.JaggedArray(
+        outputs["starts_mask"], outputs["stops_mask"], outputs["pt_mask"],
+    )
+
+    module.begin(event)
+    for objname, selection, xclean in selections:
+        out_mask = getattr(event, selection)(event, 'pt')
+        if xclean:
+            out_noxclean = getattr(event, selection+"NoXClean")(event, 'pt')
+            assert np.array_equal(out_mask.starts, pt_mask.starts)
+            assert np.array_equal(out_mask.stops, pt_mask.stops)
+            assert np.array_equal(out_mask.content, pt_mask.content)
+            assert np.array_equal(out_noxclean.starts, pt_noxclean.starts)
+            assert np.array_equal(out_noxclean.stops, pt_noxclean.stops)
+            assert np.array_equal(out_noxclean.content, pt_noxclean.content)
+        else:
+            assert np.array_equal(out_mask.starts, pt_noxclean.starts)
+            assert np.array_equal(out_mask.stops, pt_noxclean.stops)
+            assert np.array_equal(out_mask.content, pt_noxclean.content)
