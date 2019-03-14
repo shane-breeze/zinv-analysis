@@ -19,7 +19,7 @@ jobs:
                 name: run tests
                 command: |
                     source setup.sh
-                    pytest --cov-report html:cov_html --cov=zinv tests/
+                    python -m pytest --cov-report html:cov_html --cov=zinv tests/
 
             - store_artifacts:
                 path: cov_html
