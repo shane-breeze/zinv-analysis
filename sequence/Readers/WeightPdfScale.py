@@ -27,6 +27,7 @@ def evaluate_pdf_variations():
             weight = weight_numba(1., nsig, pdf_relstddev, -pdf_relstddev)
         else:
             weight = np.ones(ev.size, dtype=np.float32)
+        ev.delete_branches(["LHEWeight_originalXWGTUP", "LHEPdfWeight"])
         return weight
 
     def ret_func(ev):
@@ -44,6 +45,7 @@ def evaluate_scale_variations(name, positions):
             weight = weight_numba(1., nsig, up, down)
         else:
             weight = np.ones(ev.size, dtype=np.float32)
+        ev.delete_branches(["LHEScaleWeight"])
         return weight
 
     def ret_func(ev):

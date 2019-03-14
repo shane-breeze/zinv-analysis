@@ -138,24 +138,28 @@ weight_electrons = Readers.WeightObjects(
             "binning_variables": ("ev: ev.Electron.eta", "ev: ev.Electron_ptShift(ev)"),
             "weighted_paths": [(1, datapath+"/electrons/electron_idiso_tight.txt")],
             "add_syst": "ev: awk.JaggedArray.zeros_like(ev.Electron.eta)",
+            "nuisances": ["eleIdIsoTight", "eleEnergyScale"],
         }, {
             "name": "eleIdIsoVeto",
             "collection": "Electron",
             "binning_variables": ("ev: ev.Electron.eta", "ev: ev.Electron_ptShift(ev)"),
             "weighted_paths": [(1, datapath+"/electrons/electron_idiso_veto.txt")],
             "add_syst": "ev: awk.JaggedArray.zeros_like(ev.Electron.eta)",
+            "nuisances": ["eleIdIsoVeto", "eleEnergyScale"],
         }, {
             "name": "eleReco",
             "collection": "Electron",
             "binning_variables": ("ev: ev.Electron.eta", "ev: ev.Electron_ptShift(ev)"),
             "weighted_paths": [(1, datapath+"/electrons/electron_reconstruction.txt")],
             "add_syst": "ev: 0.01*((ev.Electron_ptShift(ev)<20) | (ev.Electron_ptShift(ev)>80))",
+            "nuisances": ["eleReco", "eleEnergyScale"],
         }, {
             "name": "eleTrig",
             "collection": "Electron",
             "binning_variables": ("ev: ev.Electron_ptShift(ev)", "ev: np.abs(ev.Electron.eta)"),
             "weighted_paths": [(1, datapath+"/electrons/electron_trigger_v2.txt")],
             "add_syst": "ev: awk.JaggedArray.zeros_like(ev.Electron.eta)",
+            "nuisances": ["eleTrig", "eleEnergyScale"],
         },
     ],
     data = False,
@@ -170,6 +174,7 @@ weight_muons = Readers.WeightObjects(
             "weighted_paths": [(19.7, datapath+"/muons/muon_id_loose_runBCDEF.txt"),
                                (16.2, datapath+"/muons/muon_id_loose_runGH.txt")],
             "add_syst": "ev: 0.01*awk.JaggedArray.ones_like(ev.Muon.eta)",
+            "nuisances": ["muonIdTight", "muonPtScale"],
         }, {
             "name": "muonIdLoose",
             "collection": "Muon",
@@ -177,6 +182,7 @@ weight_muons = Readers.WeightObjects(
             "weighted_paths": [(19.7, datapath+"/muons/muon_id_loose_runBCDEF.txt"),
                                (16.2, datapath+"/muons/muon_id_loose_runGH.txt")],
             "add_syst": "ev: 0.01*awk.JaggedArray.ones_like(ev.Muon.eta)",
+            "nuisances": ["muonIdLoose", "muonPtScale"],
         }, {
             "name": "muonIsoTight",
             "collection": "Muon",
@@ -184,6 +190,7 @@ weight_muons = Readers.WeightObjects(
             "weighted_paths": [(19.7, datapath+"/muons/muon_iso_tight_tightID_runBCDEF.txt"),
                                (16.2, datapath+"/muons/muon_iso_tight_tightID_runGH.txt")],
             "add_syst": "ev: 0.005*awk.JaggedArray.ones_like(ev.Muon.eta)",
+            "nuisances": ["muonIsoTight", "muonPtScale"],
         }, {
             "name": "muonIsoLoose",
             "collection": "Muon",
@@ -191,6 +198,7 @@ weight_muons = Readers.WeightObjects(
             "weighted_paths": [(19.7, datapath+"/muons/muon_iso_loose_looseID_runBCDEF.txt"),
                                (16.2, datapath+"/muons/muon_iso_loose_looseID_runGH.txt")],
             "add_syst": "ev: 0.005*awk.JaggedArray.ones_like(ev.Muon.eta)",
+            "nuisances": ["muonIsoLoose", "muonPtScale"],
         }, {
             "name": "muonTrig",
             "collection": "Muon",
@@ -198,6 +206,7 @@ weight_muons = Readers.WeightObjects(
             "weighted_paths": [(19.7, datapath + "/muons/muon_trigger_IsoMu24_OR_IsoTkMu24_runBCDEF.txt"),
                                (16.2, datapath + "/muons/muon_trigger_IsoMu24_OR_IsoTkMu24_runGH.txt")],
             "add_syst": "ev: 0.005*awk.JaggedArray.ones_like(ev.Muon.eta)",
+            "nuisances": ["muonTrig", "muonPtScale"],
         },
     ],
     data = False,
@@ -211,6 +220,7 @@ weight_taus = Readers.WeightObjects(
             "binning_variables": ("ev: ev.Tau_ptShift(ev)",),
             "weighted_paths": [(1, datapath+"/taus/tau_id_tight.txt")],
             "add_syst": "ev: 0.05*awk.JaggedArray.ones_like(ev.Tau.eta)",
+            "nuisances": ["tauIdTight", "tauEnergyScale"],
         },
     ],
     data = False,
@@ -224,12 +234,14 @@ weight_photon = Readers.WeightObjects(
             "binning_variables": ("ev: ev.Photon.eta", "ev: ev.Photon_ptShift(ev)"),
             "weighted_paths": [(1, datapath+"/photons/photon_cutbasedid_loose.txt")],
             "add_syst": "ev: awk.JaggedArray.zeros_like(ev.Photon.eta)",
+            "nuisances": ["photonIdLoose", "photonEnergyScale"],
         }, {
             "name": "photonPixelSeedVeto",
             "collection": "Photon",
             "binning_variables": ("ev: ev.Photon.r9", "ev: np.abs(ev.Photon.eta)", "ev: ev.Photon_ptShift(ev)"),
             "weighted_paths": [(1, datapath+"/photons/photon_pixelseedveto.txt")],
             "add_syst": "ev: awk.JaggedArray.zeros_like(ev.Photon.eta)",
+            "nuisances": ["photonPixelSeedVeto", "photonEnergyScale"],
         },
     ],
     data = False,
@@ -261,8 +273,8 @@ weight_qcd_ewk = Readers.WeightQcdEwk(
     params = ["K_NLO", "d1K_NLO", "d2K_NLO", "d3K_NLO", "K_NNLO", "d1K_NNLO",
               "d2K_NNLO", "d3K_NNLO", "kappa_EW", "d1kappa_EW", "d2kappa_EW",
               "d3kappa_EW", "dK_NLO_mix"],
-    nuisances = ["d1k_qcd", "d2k_qcd", "d3k_qcd", "d1k_ew", "d2k_ew_z",
-                 "d2k_ew_w", "d3k_ew_z", "d3k_ew_w", "dk_mix"],
+    variation_names = ["d1k_qcd", "d2k_qcd", "d3k_qcd", "d1k_ew", "d2k_ew_z",
+                       "d2k_ew_w", "d3k_ew_z", "d3k_ew_w", "dk_mix"],
 #    formula = "1 + kappa_EW + d1k_ew*d1kappa_EW + isz*(d2k_ew_z*d2kappa_EW + d3k_ew_z*d3kappa_EW)"\
 #                                               "+ isw*(d2k_ew_w*d2kappa_EW + d3k_ew_w*d3kappa_EW)",
 #    params = ["kappa_EW", "d1kappa_EW", "d2kappa_EW", "d3kappa_EW"],
@@ -422,8 +434,8 @@ sequence = [
     (collection_creator, NullCollector()),
     # selection and weight producers. They only create functions and hence can
     # be placed near the start
-    (selection_producer, NullCollector()),
     (weight_producer, NullCollector()),
+    (selection_producer, NullCollector()),
     # # Try to keep GenPart branch stuff before everything else. It's quite big
     # # and is deleted after use. Don't want to add the memory consumption of
     # # this with all other branches

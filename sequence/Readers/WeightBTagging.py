@@ -65,7 +65,11 @@ def evaluate_btagsf(df, attrs, h2f):
             jpt.starts, jpt.stops, weight_numba(sf, nsig, sf_up, sf_down),
         )
 
-    return lambda ev: fevaluate_btagsf(ev, ev.iblock, ev.nsig, ev.source, tuple(attrs))
+    def return_evaluate_btagsf(ev):
+        source = ev.source if ev.source in ev.attribute_variation_sources+["btagSF"] else ''
+        return fevaluate_btagsf(ev, ev.iblock, ev.nsig, source, tuple(attrs))
+
+    return return_evaluate_btagsf
 
 class WeightBTagging(object):
     ops = {"loose": 0, "medium": 1, "tight": 2, "reshaping": 3}

@@ -18,7 +18,12 @@ def evaluate_skim(objname, name, cutlist):
             starts, stops,
             reduce(operator.add, cutlist)(ev).content,
         )
-    return lambda ev: fevaluate_skim(ev, ev.iblock, ev.nsig, ev.source, name, objname)
+
+    def return_evaluate_skim(ev):
+        source = ev.source if ev.source in ev.attribute_variation_sources else ''
+        return fevaluate_skim(ev, ev.iblock, ev.nsig, source, name, objname)
+
+    return return_evaluate_skim
 
 def evaluate_this_not_that(this, that):
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_this_not_that'))
@@ -26,7 +31,12 @@ def evaluate_this_not_that(this, that):
         this_attr = getattr(ev, this_)(ev)
         that_attr = getattr(ev, that_)(ev)
         return this_attr & (~that_attr)
-    return lambda ev: fevaluate_this_not_that(ev, ev.iblock, ev.nsig, ev.source, this, that)
+
+    def return_evaluate_this_not_that(ev):
+        source = ev.source if ev.source in ev.attribute_variation_sources else ''
+        return fevaluate_this_not_that(ev, ev.iblock, ev.nsig, source, this, that)
+
+    return return_evaluate_this_not_that
 
 class SkimCollections(object):
     def __init__(self, **kwargs):

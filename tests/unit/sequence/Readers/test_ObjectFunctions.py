@@ -15,6 +15,9 @@ class DummyEvent(object):
         self.nsig = 0
         self.source = ''
         self.cache = {}
+        self.attribute_variation_sources = [
+            "Var1", "muonPtScale", "eleEnergyScale", "photonEnergyScale",
+        ]
 
         self.Jet = DummyColl()
         self.Muon = DummyColl()

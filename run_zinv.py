@@ -60,6 +60,9 @@ def parse_args():
     parser.add_argument("--sample", default=None, type=str,
                         help="Select some sample (comma delimited). Can "
                         "selected from (data, mc and more)")
+    parser.add_argument("--nuisances", default=None, type=str,
+                        help="Nuisances to process in the systematics "
+                        "analyzer. Comma-delimited.")
     parser.add_argument("--redraw", default=False, action='store_true',
                         help="Overrides most options. Runs over collectors "
                              "only to rerun the draw function on outdir")
@@ -170,7 +173,7 @@ vmem_dict = {
     "WZTo2L2Q":       18,
     "WZTo2Q2Nu":      12,
     "WZTo3L1Nu":      12,
-    "ZJetsToNuNu_Pt-0To50":         12,
+    "ZJetsToNuNu_Pt-0To50":         18,
     "ZJetsToNuNu_Pt-50To100":       18,
     "ZJetsToNuNu_Pt-100To250":      18,
     "ZJetsToNuNu_Pt-100To250_ext1": 18,
@@ -276,6 +279,7 @@ if __name__ == "__main__":
     sequence = build_sequence(
         options.sequence_cfg, options.outdir, options.event_selection_cfg,
         options.physics_object_cfg, options.trigger_cfg, options.weight_cfg,
+        options.nuisances.split(","),
     )
     datasets = get_datasets(options.dataset_cfg)
 
