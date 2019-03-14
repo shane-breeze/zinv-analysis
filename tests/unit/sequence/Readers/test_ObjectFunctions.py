@@ -3,7 +3,7 @@ import mock
 import numpy as np
 import awkward as awk
 
-from sequence.Readers import ObjectFunctions
+from zinv.sequence.Readers import ObjectFunctions
 
 class DummyColl(object):
     def __init__(self):
@@ -435,73 +435,83 @@ def test_objfunc_tptshift(module, event, inputs, outputs):
         rtol=1e-6, equal_nan=True,
     )
 
-#@pytest.mark.parametrize(
-#    "inputs,outputs", (
-#        [{
-#        #    "nsig":     0,
-#        #    "source":   '',
-#        #    "met":      [200., 300., 400.],
-#        #    "mephi":    [0.3, 0.6, 0.9],
-#        #    "jstarts":  [0, 1, 2],
-#        #    "jstops":   [1, 2, 4],
-#        #    "jpt":      [20., 40., 60., 80.],
-#        #    "jptshift": [20., 40., 60., 80.],
-#        #    "jphi":     [-0.3, 0.8, -1.1, 2.5],
-#        #    "evvars": {
-#        #        "MetUnclustEnUpDeltaX": [10., 15., 25.],
-#        #        "MetUnclustEnUpDeltaY": [5., 7., 13.],
-#        #    },
-#        #}, {
-#        #    "metshift": [200., 300., 400.],
-#        #}], [{
-#            "nsig":     1,
-#            "source":   'Var1',
-#            "met":      [200., 300., 400.],
-#            "mephi":    [0.3, 0.6, 0.9],
-#            "jstarts":  [0, 1, 2],
-#            "jstops":   [1, 2, 4],
-#            "jpt":      [16., 40., 60., 80.],
-#            "jptshift": [14., 80., 45., 121.],
-#            "jphi":     [-0.3, 0.8, -1.1, 2.5],
-#            "evvars": {
-#                "MetUnclustEnUpDeltaX": [10., 15., 25.],
-#                "MetUnclustEnUpDeltaY": [5., 7., 13.],
-#            },
-#        }, {
-#            "metshift": [200., 300., 400.],
-#        }],
-#    )
-#)
-#def test_objfunc_metshift(module, event, inputs, outputs):
-#    event.nsig = inputs["nsig"]
-#    event.source = inputs["source"]
-#
-#    met = np.array(inputs["met"], dtype=np.float32)
-#    mephi = np.array(inputs["mephi"], dtype=np.float32)
-#    event.MET_pt = met
-#    event.MET.pt = met
-#    event.MET_phi = mephi
-#    event.MET.phi = mephi
-#
-#    starts, stops = inputs["jstarts"], inputs["jstops"]
-#    jpt = awk.JaggedArray(starts, stops, inputs["jpt"])
-#    jptshift = awk.JaggedArray(starts, stops, inputs["jptshift"])
-#    jphi = awk.JaggedArray(starts, stops, inputs["jphi"])
-#    event.Jet.pt = jpt
-#    event.Jet_pt = jpt
-#    event.Jet.phi = jphi
-#    event.Jet_phi = jphi
-#
-#    for key, val in inputs["evvars"].items():
-#        setattr(event.MET, key, np.array(val, dtype=np.float32))
-#        setattr(event, "MET_"+key, np.array(val, dtype=np.float32))
-#
-#    module.begin(event)
-#    metshift = event.MET_ptShift(event)
-#
-#    assert np.allclose(
-#        metshift,
-#        np.array(outputs["metshift"]),
-#        rtol=1e-6, equal_nan=True,
-#    )
-#    assert False
+@pytest.mark.parametrize(
+    "inputs,outputs", (
+        [{
+            "nsig":     0,
+            "source":   '',
+            "met":      [200., 300., 400.],
+            "mephi":    [0.3, 0.6, 0.9],
+            "jstarts":  [0, 1, 2],
+            "jstops":   [1, 2, 4],
+            "jpt":      [20., 40., 60., 80.],
+            "jptshift": [20., 40., 60., 80.],
+            "jphi":     [-0.3, 0.8, -1.1, 2.5],
+            "evvars": {
+                "MetUnclustEnUpDeltaX": [10., 15., 25.],
+                "MetUnclustEnUpDeltaY": [5., 7., 13.],
+            },
+        }, {
+            "metshift": [200., 300., 400.],
+            "mephishift": [0.3, 0.6, 0.9],
+        }], [{
+            "nsig":     1,
+            "source":   'Var1',
+            "met":      [200., 300., 400.],
+            "mephi":    [0.3, 0.6, 0.9],
+            "jstarts":  [0, 1, 2],
+            "jstops":   [1, 2, 4],
+            "jpt":      [16., 40., 60., 80.],
+            "jptshift": [14., 80., 45., 121.],
+            "jphi":     [-0.3, 0.8, -1.1, 2.5],
+            "evvars": {
+                "MetUnclustEnUpDeltaX": [10., 15., 25.],
+                "MetUnclustEnUpDeltaY": [5., 7., 13.],
+            },
+        }, {
+            "metshift": [213.396691481902, 260.918382127075, 398.714177256099],
+            "mephishift": [0.257651731212511, 0.569538357995496, 0.762572497967355],
+        }],
+    )
+)
+def test_objfunc_metshift(module, event, inputs, outputs):
+    event.nsig = inputs["nsig"]
+    event.source = inputs["source"]
+
+    met = np.array(inputs["met"], dtype=np.float32)
+    mephi = np.array(inputs["mephi"], dtype=np.float32)
+    event.MET_pt = met
+    event.MET.pt = met
+    event.MET_phi = mephi
+    event.MET.phi = mephi
+
+    starts, stops = inputs["jstarts"], inputs["jstops"]
+    jpt = awk.JaggedArray(starts, stops, inputs["jpt"])
+    jptshift = awk.JaggedArray(starts, stops, inputs["jptshift"])
+    jphi = awk.JaggedArray(starts, stops, inputs["jphi"])
+    event.Jet.pt = jpt
+    event.Jet_pt = jpt
+    event.Jet.phi = jphi
+    event.Jet_phi = jphi
+
+    for key, val in inputs["evvars"].items():
+        setattr(event.MET, key, np.array(val, dtype=np.float32))
+        setattr(event, "MET_"+key, np.array(val, dtype=np.float32))
+
+    module.begin(event)
+    event.Jet.ptShift = mock.Mock(side_effect=lambda ev: jptshift)
+    event.Jet_ptShift = mock.Mock(side_effect=lambda ev: jptshift)
+    metshift = event.MET_ptShift(event)
+    mephishift = event.MET_phiShift(event)
+
+    assert np.allclose(
+        metshift,
+        np.array(outputs["metshift"]),
+        rtol=1e-6, equal_nan=True,
+    )
+
+    assert np.allclose(
+        mephishift,
+        np.array(outputs["mephishift"]),
+        rtol=1e-6, equal_nan=True,
+    )

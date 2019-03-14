@@ -1,7 +1,7 @@
 import pytest
 import mock
 
-from sequence.Readers import GenBosonProducer
+from zinv.sequence.Readers import GenBosonProducer
 
 class DummyEvent(object):
     def __init__(self):

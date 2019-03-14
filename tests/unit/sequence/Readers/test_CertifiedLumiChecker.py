@@ -2,7 +2,7 @@ import pytest
 import mock
 import numpy as np
 
-from sequence.Readers import CertifiedLumiChecker
+from zinv.sequence.Readers import CertifiedLumiChecker
 
 class DummyEvent(object):
     def __init__(self):

@@ -4,7 +4,7 @@ import os
 import numpy as np
 import awkward as awk
 
-from sequence.Readers import JecVariations
+from zinv.sequence.Readers import JecVariations
 
 class DummyEvent(object):
     def __init__(self):
@@ -21,7 +21,7 @@ def event():
 @pytest.fixture()
 def module():
     toppath = os.path.abspath(os.environ["TOPDIR"])
-    datapath = os.path.join(toppath, "data")
+    datapath = os.path.join(toppath, "zinv/data")
     return JecVariations(
         jes_unc_file = datapath + "/jecs/Summer16_23Sep2016V4_MC_UncertaintySources_AK4PFchs.txt",
         jer_sf_file = datapath + "/jecs/Spring16_25nsV10a_MC_SF_AK4PFchs.txt",
