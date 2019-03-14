@@ -11,3 +11,4 @@
 # setup atuproot
 export PYTHONPATH=$PYTHONPATH:$PWD
 export TOPDIR=$PWD
+export PATH=$PATH:"$TOPDIR/zinv/scripts/"
