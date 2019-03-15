@@ -132,7 +132,7 @@ def compute_bin(x, bin_edges):
     a_max = bin_edges[-1]
 
     if x == a_max:
-        return n - 1
+        return n
 
     bin = int(n * (x - a_min) / (a_max - a_min))
     bin = -1 if bin < 0 else n if bin >= n else bin
