@@ -4,14 +4,14 @@ import operator
 
 from cachetools import cachedmethod
 from cachetools.keys import hashkey
-from functools import partial
+from functools import partial, reduce
 
 from zinv.utils.Lambda import Lambda
 
 def evaluate_selection(name, cutlist):
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_selection'))
     def fevaluate_selection(ev, evidx, nsig, source, name_):
-        return reduce(operator.add, cutlist)(ev)
+        return reduce(operator.add, cutlist, Lambda("ev: np.ones(ev.size, dtype=np.bool8)"))(ev)
 
     def return_evaluate_selection(ev):
         source = ev.source if ev.source in ev.attribute_variation_sources else ''
@@ -67,6 +67,8 @@ class SelectionProducer(object):
                     if newcutflow not in additional_selections:
                         additional_selections[newcutflow] = {}
                         additional_selections[newcutflow][data_or_mc] = new_selection
+
+        self.selections.update(additional_selections)
 
         # Add cutflows to the event
         data_or_mc = "Data" if event.config.dataset.isdata else "MC"

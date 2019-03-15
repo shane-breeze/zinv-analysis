@@ -1,9 +1,5 @@
 selections:
     lumi_selection: "ev: ev.IsCertified(ev)"
-#    trigger_selection: "ev: ev.IsTriggered(ev)"
-#    trigger_met_selection: "ev: ev.IsMETTriggered(ev)"
-#    trigger_singlemuon_selection: "ev: ev.IsSingleMuonTriggered(ev)"
-#    trigger_singleele_selection: "ev: ev.IsSingleElectronTriggered(ev)"
     filter_selection:
         "ev: (ev.Flag_goodVertices>0.5)
              & (ev.Flag_globalTightHalo2016Filter>0.5)
