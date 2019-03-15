@@ -84,7 +84,21 @@ def interp(x, xp, fp):
 def interpolate(x, xp, fp):
     result = np.zeros_like(x, dtype=np.float32)
     for idx in range(x.shape[0]):
-        result[idx] = interp(x[idx], xp[idx,:], fp[idx,:])
+        cx = x[idx]
+        cxp = xp[idx,:]
+        cfp = fp[idx,:]
+
+        if cx < cxp[0]:
+            result[idx] = cfp[0]
+        elif cx >= cxp[-1]:
+            result[idx] = cfp[-1]
+        else:
+            for ix in range(cxp.shape[0]-1):
+                if cxp[ix] <= cx < cxp[ix+1]:
+                    result[idx] = (cx-cxp[ix])*(cfp[ix+1]-cfp[ix])/(cxp[ix+1]-cxp[ix]) + cfp[ix]
+                    break
+            else:
+                result[idx] = np.nan
     return result
 
 @nb.njit

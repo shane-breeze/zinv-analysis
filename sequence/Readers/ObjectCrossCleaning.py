@@ -49,8 +49,10 @@ def evaluate_xclean_mask(obj1name, obj2names, mindr):
         )
 
     def return_evaluate_xclean_mask(ev):
-        source = ev.source if ev.source in ev.attribute_variation_sources else ''
-        return fevaluate_xclean_mask(ev, obj1name, tuple(obj2names), ev.iblock, ev.nsig, source)
+        source, nsig = ev.source, ev.nsig
+        if source not in ev.attribute_variation_sources:
+            source, nsig = '', 0.
+        return fevaluate_xclean_mask(ev, obj1name, tuple(obj2names), ev.iblock, nsig, source)
 
     return return_evaluate_xclean_mask
 

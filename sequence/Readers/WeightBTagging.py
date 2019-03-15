@@ -66,8 +66,10 @@ def evaluate_btagsf(df, attrs, h2f):
         )
 
     def return_evaluate_btagsf(ev):
-        source = ev.source if ev.source in ev.attribute_variation_sources+["btagSF"] else ''
-        return fevaluate_btagsf(ev, ev.iblock, ev.nsig, source, tuple(attrs))
+        source, nsig = ev.source, ev.nsig
+        if source not in ev.attribute_variation_sources+["btagSF"]:
+            source, nsig = '', 0.
+        return fevaluate_btagsf(ev, ev.iblock, nsig, source, tuple(attrs))
 
     return return_evaluate_btagsf
 

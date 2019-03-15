@@ -97,8 +97,10 @@ def evaluate_prefiring_weight(funcs, jetmap, photmap, syst):
         )
 
     def ret_func(ev):
-        source = ev.source if ev.source == "prefiring" else ""
-        return fevaluate_prefiring_weight(ev, ev.iblock, ev.nsig, source)
+        source, nsig = ev.source, ev.nsig
+        if source not in ["prefiring"]:
+            source, nsig = '', 0.
+        return fevaluate_prefiring_weight(ev, ev.iblock, nsig, source)
 
     return ret_func
 
