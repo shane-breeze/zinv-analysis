@@ -121,16 +121,14 @@ class Histograms(object):
         weights1 = weight
         weights2 = weight**2
 
-        variables = np.transpose(np.array(variables))
+        #variables = np.transpose(np.array(variables))
         bins = [np.array(b) for b in config["bins"]]
 
         hist_bins = bins
-        hist_counts, _ = np.histogramdd(variables, bins)
-        print(hist_counts)
+        #hist_counts, _ = np.histogramdd(variables, bins)
         #hist_yields, _ = np.histogramdd(variables, bins, weights=weights1)
         #hist_variance, _ = np.histogramdd(variables, bins, weights=weights2)
         hist_counts = histogram1d_numba(variables[0], bins[0][1:-1], np.ones_like(weights1))
-        print(hsit_counts)
         hist_yields = histogram1d_numba(variables[0], bins[0][1:-1], weights1)
         hist_variance = histogram1d_numba(variables[0], bins[0][1:-1], weights2)
 
