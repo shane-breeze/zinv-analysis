@@ -89,9 +89,9 @@ def interpolate(x, xp, fp):
         cfp = fp[idx,:]
 
         if cx < cxp[0]:
-            result = cfp[0]
+            result[idx] = cfp[0]
         elif cx >= cxp[-1]:
-            result = cfp[-1]
+            result[idx] = cfp[-1]
         else:
             for ix in range(cxp.shape[0]-1):
                 if cxp[ix] <= cx < cxp[ix+1]:
