@@ -57,8 +57,10 @@ def evaluate_object_weights(df, bins_vars, add_syst, name, nuisances):
         )
 
     def return_evaluate_object_weights(ev):
-        source = ev.source if ev.source in nuisances else ''
-        return fevaluate_object_weights(ev, ev.iblock, ev.nsig, source, name)
+        source, nsig = ev.source, ev.nsig
+        if source not in nuisances:
+            source, nsig = '', 0.
+        return fevaluate_object_weights(ev, ev.iblock, nsig, source, name)
 
     return return_evaluate_object_weights
 

@@ -18,21 +18,40 @@ def evaluate_met_trigger(cats, xcents, params):
             if nmuons[iev] not in cats_:
                 continue
             cat = cats_.index(nmuons[iev])
-            output[iev] = interp(met[iev], xcents_[cat], incorr[cat])
+
+            cmet = met[iev]
+            cxc = xcents_[cat]
+            cic = incorr[cat]
+
+            if cmet < cxc[0]:
+                output[iev] = cic[0]
+            elif cmet >= cxc[-1]:
+                output[iev] = cic[-1]
+            else:
+                for ix in range(cxc.shape[0]-1):
+                    if cxc[ix] <= cmet < cxc[ix+1]:
+                        output[iev] = (cmet-cxc[ix])*(cic[ix+1]-cic[ix])/(cxc[ix+1]-cxc[ix]) + cic[ix]
+                        break
+                else:
+                    output[iev] = np.nan
         return output
+
+    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'met_trigger_numba_cached'))
+    def met_trigger_numba_cached(ev, evidx, idx):
+        nmuons = ev.MuonSelection(ev, 'pt').counts
+        metnox = ev.METnoX_pt(ev)
+        return met_trigger_numba(cats, xcents, params[idx], nmuons, metnox)
 
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_met_trigger'))
     def fevaluate_met_trigger(ev, evidx, nsig, source):
-        nmuons = ev.MuonSelection(ev, 'pt').counts
-        metnox = ev.METnoX_pt(ev)
-        wmet = met_trigger_numba(cats, xcents, params[0], nmuons, metnox)
+        wmet = met_trigger_numba_cached(ev, evidx, 0)
 
         if source == "metTrigStat":
-            up = met_trigger_numba(cats, xcents, params[1], nmuons, metnox) / wmet - 1.
-            down = met_trigger_numba(cats, xcents, params[2], nmuons, metnox) / wmet - 1.
+            up = met_trigger_numba_cached(ev, evidx, 1)
+            down = met_trigger_numba_cached(ev, evidx, 2)
         elif source == "metTrigSyst":
-            up = met_trigger_numba(cats, xcents, params[3], nmuons, metnox) / wmet - 1.
-            down = met_trigger_numba(cats, xcents, params[4], nmuons, metnox) / wmet - 1.
+            up = met_trigger_numba_cached(ev, evidx, 3)
+            down = met_trigger_numba_cached(ev, evidx, 4)
         else:
             up = np.zeros_like(wmet)
             down = np.zeros_like(wmet)
@@ -40,8 +59,10 @@ def evaluate_met_trigger(cats, xcents, params):
         return weight_numba(wmet, nsig, up, down)
 
     def ret_func(ev):
-        source = ev.source if ev.source in ev.attribute_variation_sources+["metTrigStat", "metTrigSyst"] else ''
-        return fevaluate_met_trigger(ev, ev.iblock, ev.nsig, source)
+        source, nsig = ev.source, ev.nsig
+        if ev.source not in ev.attribute_variation_sources+["metTrigSyst", "metTrigStat"]:
+            source, nsig = '', 0.
+        return fevaluate_met_trigger(ev, ev.iblock, nsig, source)
 
     return ret_func
 

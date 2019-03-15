@@ -23,8 +23,10 @@ def evaluate_pu(var, corrs):
         return weight_numba(nominal, nsig, up, down)
 
     def ret_func(ev):
-        source = ev.source if ev.source == "pileup" else ""
-        return fevaluate_pu(ev, ev.iblock, ev.nsig, source, var)
+        source, nsig = ev.source, ev.nsig
+        if source not in ["pileup"]:
+            source, nsig = '', 0.
+        return fevaluate_pu(ev, ev.iblock, nsig, source, var)
 
     return ret_func
 

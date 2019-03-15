@@ -21,8 +21,10 @@ def evaluate_qcdewk_weight(theory_uncs):
         return weight_numba(central, nsig, up, down)
 
     def return_evaluate_qcdewk_weight(ev):
-        source = ev.source if ev.source in theory_uncs else ''
-        return fevaluate_qcdewk_weight(ev, ev.iblock, ev.nsig, source)
+        source, nsig = ev.source, ev.nsig
+        if source not in theory_uncs:
+            source, nsig = '', 0.
+        return fevaluate_qcdewk_weight(ev, ev.iblock, nsig, source)
 
     return return_evaluate_qcdewk_weight
 

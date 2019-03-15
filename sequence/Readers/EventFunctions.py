@@ -39,8 +39,10 @@ def evaluate_metnox(arg):
         )[arg_]
 
     def return_evaluate_metnox(ev):
-        source = ev.source if ev.source in ev.attribute_variation_sources else ''
-        return fevaluate_metnox(ev, ev.iblock, ev.nsig, source, arg)
+        source, nsig = ev.source, ev.nsig
+        if source not in ev.attribute_variation_sources:
+            source, nsig = '', 0.
+        return fevaluate_metnox(ev, ev.iblock, nsig, source, arg)
 
     return return_evaluate_metnox
 
@@ -66,8 +68,10 @@ def evaluate_mindphi(njets):
         )
 
     def return_evaluate_mindphi(ev):
-        source = ev.source if ev.source in ev.attribute_variation_sources else ''
-        return fevaluate_mindphi(ev, ev.iblock, ev.nsig, source, njets)
+        source, nsig = ev.source, ev.nsig
+        if source not in ev.attribute_variation_sources:
+            source, nsig = '', 0.
+        return fevaluate_mindphi(ev, ev.iblock, nsig, source, njets)
 
     return return_evaluate_mindphi
 
@@ -83,8 +87,10 @@ def evaluate_met_dcalo():
         )
 
     def return_evaluate_met_dcalo(ev):
-        source = ev.source if ev.source in ev.attribute_variation_sources else ''
-        return fevaluate_met_dcalo(ev, ev.iblock, ev.nsig, source)
+        source, nsig = ev.source, ev.nsig
+        if source not in ev.attribute_variation_sources:
+            source, nsig = '', 0.
+        return fevaluate_met_dcalo(ev, ev.iblock, nsig, source)
 
     return return_evaluate_met_dcalo
 
@@ -129,8 +135,10 @@ def evaluate_mtw():
         )
 
     def return_evaluate_mtw(ev):
-        source = ev.source if ev.source in ev.attribute_variation_sources else ''
-        return fevaluate_mtw(ev, ev.iblock, ev.nsig, source)
+        source, nsig = ev.source, ev.nsig
+        if source not in ev.attribute_variation_sources:
+            source, nsig = '', 0.
+        return fevaluate_mtw(ev, ev.iblock, nsig, source)
 
     return return_evaluate_mtw
 
@@ -181,8 +189,10 @@ def evaluate_mll():
         )
 
     def return_evaluate_mll(ev):
-        source = ev.source if ev.source in ev.attribute_variation_sources else ''
-        return fevaluate_mll(ev, ev.iblock, ev.nsig, source)
+        source, nsig = ev.source, ev.nsig
+        if source not in ev.attribute_variation_sources:
+            source, nsig = '', 0.
+        return fevaluate_mll(ev, ev.iblock, nsig, source)
 
     return return_evaluate_mll
 
@@ -211,8 +221,10 @@ def evaluate_lepton_charge():
         )
 
     def return_evaluate_lepton_charge(ev):
-        source = ev.source if ev.source in ev.attribute_variation_sources else ''
-        return fevaluate_lepton_charge(ev, ev.iblock, ev.nsig, source)
+        source, nsig = ev.source, ev.nsig
+        if source not in ev.attribute_variation_sources:
+            source, nsig = '', 0.
+        return fevaluate_lepton_charge(ev, ev.iblock, nsig, source)
 
     return return_evaluate_lepton_charge
 

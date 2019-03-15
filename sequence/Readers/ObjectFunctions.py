@@ -27,8 +27,10 @@ def jet_pt_shift():
         ))
 
     def return_jet_pt_shift(ev):
-        source = ev.source if ev.source in ev.attribute_variation_sources else ''
-        return fjet_pt_shift(ev, ev.iblock, ev.nsig, source)
+        source, nsig = ev.source, ev.nsig
+        if source not in ev.attribute_variation_sources:
+            source, nsig = '', 0.
+        return fjet_pt_shift(ev, ev.iblock, nsig, source)
 
     return return_jet_pt_shift
 
@@ -41,8 +43,10 @@ def muon_pt_shift():
         ))
 
     def ret_func(ev):
-        source = ev.source if ev.source == "muonPtScale" else ''
-        return fmuon_pt_shift(ev, ev.iblock, ev.nsig, source)
+        source, nsig = ev.source, ev.nsig
+        if source not in ['muonPtScale']:
+            source, nsig = '', 0.
+        return fmuon_pt_shift(ev, ev.iblock, nsig, source)
 
     return ret_func
 
@@ -55,8 +59,10 @@ def ele_pt_shift():
         ))
 
     def ret_func(ev):
-        source = ev.source if ev.source == "eleEnergyScale" else ""
-        return fele_pt_shift(ev, ev.iblock, ev.nsig, source)
+        source, nsig = ev.source, ev.nsig
+        if source not in ['eleEnergyScale']:
+            source, nsig = '', 0.
+        return fele_pt_shift(ev, ev.iblock, nsig, source)
 
     return ret_func
 
@@ -71,8 +77,10 @@ def photon_pt_shift():
         return result
 
     def ret_func(ev):
-        source = ev.source if ev.source == "photonEnergyScale" else ""
-        return fphoton_pt_shift(ev, ev.iblock, ev.nsig, source)
+        source, nsig = ev.source, ev.nsig
+        if source not in ['photonEnergyScale']:
+            source, nsig = '', 0.
+        return fphoton_pt_shift(ev, ev.iblock, nsig, source)
 
     return ret_func
 
@@ -110,7 +118,13 @@ def met_shift(arg, unclust_energy):
             nsig,
         )[arg_]
 
-    return lambda ev: fmet_shift(ev, ev.iblock, ev.nsig, ev.source, arg)
+    def return_met_shift(ev):
+        source, nsig = ev.source, ev.nsig
+        if source not in ev.attribute_variation_sources:
+            source, nsig = '', 0.
+        return fmet_shift(ev, ev.iblock, nsig, source, arg)
+
+    return return_met_shift
 
 def obj_selection(objname, selection, xclean=False):
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fobj_selection'))
@@ -126,9 +140,11 @@ def obj_selection(objname, selection, xclean=False):
         return obj[mask]
 
     def return_obj_selection(ev, attr):
-        source = ev.source if ev.source in ev.attribute_variation_sources else ''
+        source, nsig = ev.source, ev.nsig
+        if source not in ev.attribute_variation_sources:
+            source, nsig = '', 0.
         return fobj_selection(
-            ev, ev.iblock, ev.nsig, source, objname, selection, xclean, attr,
+            ev, ev.iblock, nsig, source, objname, selection, xclean, attr,
         )
 
     return return_obj_selection
