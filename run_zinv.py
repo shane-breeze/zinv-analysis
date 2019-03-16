@@ -60,7 +60,7 @@ def parse_args():
     parser.add_argument("--sample", default=None, type=str,
                         help="Select some sample (comma delimited). Can "
                         "selected from (data, mc and more)")
-    parser.add_argument("--nuisances", default=None, type=str,
+    parser.add_argument("--nuisances", default="", type=str,
                         help="Nuisances to process in the systematics "
                         "analyzer. Comma-delimited.")
     parser.add_argument("--redraw", default=False, action='store_true',
@@ -220,20 +220,32 @@ def run(sequence, datasets, options):
 
     # Change parallel options (SGE not supported in standard `build_parallel`)
     process.parallel_mode = options.mode
-    process.parallel = build_parallel(
-        options.mode,
-        quiet = options.quiet,
-        processes = options.ncores,
-        #user_modules = ('sequence', 'drawing', 'utils'),
+    if options.mode == 'sge':
         dispatcher_options = {
             "vmem": 6,
             "walltime": 10800,
             "vmem_dict": vmem_dict,
             "walltime_dict": {},
-        },
-        dropbox_options = {
-            "sleep": 10,
-        },
+        }
+        dropbox_options = {}
+    elif options.mode == 'htcondor':
+        dispatcher_options = {
+            "job_desc_dict": {
+                "JobFlavour": "workday",
+                "RequestCpus": 4,
+            },
+        }
+        dropbox_options = {}
+    else:
+        dispatcher_options = {}
+        dropbox_options = {}
+    process.parallel = build_parallel(
+        options.mode,
+        quiet = options.quiet,
+        processes = options.ncores,
+        #user_modules = ('sequence', 'drawing', 'utils'),
+        dispatcher_options = dispatcher_options,
+        dropbox_options = dropbox_options,
     )
 
     return process.run(datasets, sequence)

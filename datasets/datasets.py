@@ -1,6 +1,6 @@
 from __future__ import print_function
 from collections import namedtuple
-import yaml
+import oyaml as yaml
 import os
 import six
 import logging
@@ -28,21 +28,17 @@ def get_datasets(path):
         datasets_dict = yaml.load(f)
 
     datasets = []
-    dataset_info_path = datasets_dict["path"]
+    #dataset_info_path = datasets_dict["path"]
     default = datasets_dict["default"]
 
     temp_datasets = []
-    for d in datasets_dict["datasets"]:
+    for d in datasets_dict["datasets"].keys():
         if d not in temp_datasets:
             temp_datasets.append(d)
 
     for dataset in temp_datasets:
-        if isinstance(dataset, six.string_types):
-            dataset_kwargs = _from_string(dataset, dataset_info_path, default)
-        elif isinstance(dataset, dict):
-            dataset_kwargs = _from_dict(dataset, dataset_info_path, default)
-        else:
-            raise TypeError("{} not a string or dict".format(dataset))
+        dataset_kwargs = datasets_dict["datasets"][dataset]
+        dataset_kwargs.update(default)
         datasets.append(Dataset(**dataset_kwargs))
 
     # Associate samples
