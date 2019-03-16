@@ -76,7 +76,7 @@ def evaluate_mindphi(njets):
     return return_evaluate_mindphi
 
 def evaluate_met_dcalo():
-    @nb.njit(["float32(float32,float32)"])
+    @nb.njit(["float32(float32,float32,float32)"])
     def met_dcalo_numba(pfmet, calomet, metnox):
         return np.abs(pfmet-calomet)/metnox
 
