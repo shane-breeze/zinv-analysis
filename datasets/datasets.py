@@ -1,9 +1,4 @@
-from __future__ import print_function
-from collections import namedtuple
 import oyaml as yaml
-import os
-import six
-import logging
 
 class Dataset(object):
     args = ["name", "parent", "isdata", "xsection", "lumi", "energy",
@@ -28,7 +23,6 @@ def get_datasets(path):
         datasets_dict = yaml.load(f)
 
     datasets = []
-    #dataset_info_path = datasets_dict["path"]
     default = datasets_dict["default"]
 
     temp_datasets = []
@@ -53,38 +47,3 @@ def get_datasets(path):
             dataset.associates = associated_datasets
 
     return datasets
-
-def _from_string(dataset, path, default):
-    cfg = default.copy()
-    cfg["name"] = dataset
-    return _extend_info(cfg, dataset, path)
-
-
-def _from_dict(dataset, path, default):
-    cfg = default.copy()
-    cfg.update(dataset)
-    if "name" not in cfg:
-        raise RuntimeError("Dataset provided as dict, without key-value pair for 'name'")
-    return _extend_info(cfg, dataset["name"], path)
-
-
-def _extend_info(cfg, name, path):
-    infopath = path.format(name)
-    try:
-        with open(infopath, 'r') as f:
-            info = yaml.load(f)
-            if info["name"] != cfg["name"]:
-                raise ValueError("Mismatch between expected and read names: "
-                                 "{} and {}".format(cfg["name"], info["name"]))
-            cfg.update(info)
-    except IOError:
-        logger = logging.getLogger(__name__)
-        logger.warning("IOError: {}".format(infopath))
-
-    return cfg
-
-
-if __name__ == "__main__":
-    datas = get_datasets("datasets/cms_public_test.yaml")
-    for d in datas:
-        print(d)

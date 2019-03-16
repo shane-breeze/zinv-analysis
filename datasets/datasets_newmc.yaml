@@ -1,3 +1,6 @@
+default:
+  energy: 13000
+  lumi: 35860
 datasets:
   DYJetsToLL_Pt-0To50:
     DAS: /DYJetsToLL_Zpt-0To50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM
@@ -2255,7 +2258,3 @@ datasets:
     sumweights: 816165.0
     tree: Events
     xsection: null
-default:
-  energy: 13000
-  lumi: 35860
-path: /vols/cms/ZinvWidth/NanoAOD/201901_Jan/data/{}/info.yaml
