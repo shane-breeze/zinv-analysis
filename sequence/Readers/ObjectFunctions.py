@@ -10,7 +10,7 @@ from utils.Geometry import RadToCart2D, CartToRad2D
 
 @nb.njit
 def pt_shift_numba(pt, nsig, up, down):
-    return pt*(1 + (nsig>=0)*nsig*up - (nsig<0)*nsig*down)
+    return (pt*(1 + (nsig>=0)*nsig*up - (nsig<0)*nsig*down)).astype(np.float32)
 
 def jet_pt_shift():
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fjet_pt_shift'))
@@ -116,7 +116,7 @@ def met_shift(arg, unclust_energy):
             (source=="unclust")*ev.MET_MetUnclustEnUpDeltaX,
             (source=="unclust")*ev.MET_MetUnclustEnUpDeltaY,
             nsig,
-        )[arg_]
+        )[arg_].astype(np.float32)
 
     def return_met_shift(ev):
         source, nsig = ev.source, ev.nsig

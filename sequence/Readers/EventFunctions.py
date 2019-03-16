@@ -36,7 +36,7 @@ def evaluate_metnox(arg):
             ev.MuonSelection(ev, 'phi').starts, ev.MuonSelection(ev, 'phi').stops,
             ev.ElectronSelection(ev, 'ptShift').content, ev.ElectronSelection(ev, 'phi').content,
             ev.ElectronSelection(ev, 'phi').starts, ev.ElectronSelection(ev, 'phi').stops,
-        )[arg_]
+        )[arg_].astype(np.float32)
 
     def return_evaluate_metnox(ev):
         source, nsig = ev.source, ev.nsig
@@ -95,7 +95,7 @@ def evaluate_met_dcalo():
     return return_evaluate_met_dcalo
 
 def evaluate_mtw():
-    @nb.njit
+    @nb.njit(["float32(float32,float32)"])
     def mtw_numba(ptprod, dphi):
         return np.sqrt(2*ptprod*(1-np.cos(dphi)))
 
