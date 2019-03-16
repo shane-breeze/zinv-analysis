@@ -1,4 +1,3 @@
-import os
 import pytest
 import mock
 import numpy as np
@@ -26,10 +25,7 @@ def module():
     return SelectionProducer(event_selection_path="dummy_path.yaml")
 
 def test_selectionproducer_init(module):
-    toppath = os.path.abspath(os.environ["TOPDIR"])
-    module.event_selection = os.path.join(
-        toppath, "zinv/sequence/nominal/event_selection.yaml",
-    )
+    assert module.event_selection_path == "dummy_path.yaml"
 
 def test_selectionproducer_open(module, event):
     event.config.dataset.isdata = True
