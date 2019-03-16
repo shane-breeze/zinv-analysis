@@ -10,7 +10,6 @@ from utils.Geometry import (BoundPhi, RadToCart2D, CartToRad2D,
                             LorTHPMToXYZE, LorXYZEToTHPM)
 
 def evaluate_metnox(arg):
-    @nb.njit
     def metnox_numba(
         met, mephi,
         mupt, muphi, mustarts, mustops,
@@ -76,7 +75,6 @@ def evaluate_mindphi(njets):
     return return_evaluate_mindphi
 
 def evaluate_met_dcalo():
-    @nb.njit
     def met_dcalo_numba(pfmet, calomet, metnox):
         return np.abs(pfmet-calomet)/metnox
 
@@ -95,7 +93,7 @@ def evaluate_met_dcalo():
     return return_evaluate_met_dcalo
 
 def evaluate_mtw():
-    @nb.njit
+    @nb.njit(["float32(float32,float32)"])
     def mtw_numba(ptprod, dphi):
         return np.sqrt(2*ptprod*(1-np.cos(dphi)))
 

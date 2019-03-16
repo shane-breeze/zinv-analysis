@@ -10,7 +10,7 @@ from utils.NumbaFuncs import weight_numba
 def evaluate_pdf_variations():
     @nb.njit
     def rel_stddev(nominal, pdfs, starts, stops):
-        rel_err = np.zeros_like(nominal)
+        rel_err = np.zeros_like(nominal, dtype=np.float32)
         for iev, (start, stop) in enumerate(zip(starts, stops)):
             rel_err[iev] = np.std(pdfs[start:stop]*nominal[iev])/nominal[iev]
         return rel_err
