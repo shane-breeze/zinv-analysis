@@ -10,6 +10,7 @@ from utils.Geometry import (BoundPhi, RadToCart2D, CartToRad2D,
                             LorTHPMToXYZE, LorXYZEToTHPM)
 
 def evaluate_metnox(arg):
+    @nb.njit
     def metnox_numba(
         met, mephi,
         mupt, muphi, mustarts, mustops,
@@ -35,7 +36,7 @@ def evaluate_metnox(arg):
             ev.MuonSelection(ev, 'phi').starts, ev.MuonSelection(ev, 'phi').stops,
             ev.ElectronSelection(ev, 'ptShift').content, ev.ElectronSelection(ev, 'phi').content,
             ev.ElectronSelection(ev, 'phi').starts, ev.ElectronSelection(ev, 'phi').stops,
-        )[arg_]
+        )[arg_].astype(np.float32)
 
     def return_evaluate_metnox(ev):
         source, nsig = ev.source, ev.nsig
@@ -75,6 +76,7 @@ def evaluate_mindphi(njets):
     return return_evaluate_mindphi
 
 def evaluate_met_dcalo():
+    @nb.njit(["float32(float32,float32)"])
     def met_dcalo_numba(pfmet, calomet, metnox):
         return np.abs(pfmet-calomet)/metnox
 
