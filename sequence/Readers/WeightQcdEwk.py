@@ -118,7 +118,7 @@ class WeightQcdEwk(object):
                 1,
             )[:,0]
             corrections = self.input_df.iloc[indices]
-            event.WeightQcdEwkNominal = corrections[""].values
+            event.WeightQcdEwkNominal = corrections[""].values.astype(np.float32)
             for variation in self.variations[1:]:
                 setattr(
                     event,

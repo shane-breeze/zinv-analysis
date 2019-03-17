@@ -125,9 +125,9 @@ class Histograms(object):
         #hist_counts, _ = np.histogramdd(variables, bins)
         #hist_yields, _ = np.histogramdd(variables, bins, weights=weights1)
         #hist_variance, _ = np.histogramdd(variables, bins, weights=weights2)
-        hist_counts = histogram1d_numba(variables[0], bins[0][1:-1], np.ones_like(weights1))
-        hist_yields = histogram1d_numba(variables[0], bins[0][1:-1], weights1)
-        hist_variance = histogram1d_numba(variables[0], bins[0][1:-1], weights2)
+        hist_counts = histogram1d_numba(variables[0], bins[0][1:-1], np.ones_like(weights1, dtype=np.float32))
+        hist_yields = histogram1d_numba(variables[0], bins[0][1:-1], weights1.astype(np.float32))
+        hist_variance = histogram1d_numba(variables[0], bins[0][1:-1], weights2.astype(np.float32))
 
         #data = self.create_onedim_hists(
         #    hist_bins, hist_counts, hist_yields, hist_variance,
