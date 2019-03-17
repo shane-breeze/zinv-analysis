@@ -8,11 +8,11 @@ from cachetools.keys import hashkey
 from functools import partial
 
 from utils.NumbaFuncs import weight_numba, get_bin_indices
-from utils.Geometry import DeltaR2
+from utils.Geometry import DeltaR2, RadToCart2D
 from utils.Lambda import Lambda
 
 def evaluate_prefiring_weight(funcs, jetmap, photmap, syst):
-    @nb.njit
+    @nb.njit(["UniTuple(float32[:],3)(float32[:],float32[:],float32[:],float32[:],int64[:],int64[:],float32[:],float32[:],float32[:],float32[:],int64[:],int64[:])"])
     def prob_nonprefiring_numba(
         pho_eta, pho_phi, pho_p, pho_perr, pho_stas, pho_stos,
         jet_eta, jet_phi, jet_p, jet_perr, jet_stas, jet_stos,
@@ -86,9 +86,11 @@ def evaluate_prefiring_weight(funcs, jetmap, photmap, syst):
 
         prob, probup, probdown = prob_nonprefiring_numba(
             photon_eta.content, ev.Photon_phi[photon_mask].content,
-            photon_effs, photon_effs_err, photon_eta.starts, photon_eta.stops,
+            photon_effs.astype(np.float32), photon_effs_err.astype(np.float32),
+            photon_eta.starts, photon_eta.stops,
             jet_eta.content, ev.Jet_phi[jet_mask].content,
-            jet_effs, jet_effs_err, jet_eta.starts, jet_eta.stops,
+            jet_effs.astype(np.float32), jet_effs_err.astype(np.float32),
+            jet_eta.starts, jet_eta.stops,
         )
         return weight_numba(
             prob, nsig,
@@ -97,10 +99,8 @@ def evaluate_prefiring_weight(funcs, jetmap, photmap, syst):
         )
 
     def ret_func(ev):
-        source, nsig = ev.source, ev.nsig
-        if source not in ["prefiring"]:
-            source, nsig = '', 0.
-        return fevaluate_prefiring_weight(ev, ev.iblock, nsig, source)
+        source = ev.source if ev.source == "prefiring" else ""
+        return fevaluate_prefiring_weight(ev, ev.iblock, ev.nsig, source)
 
     return ret_func
 

@@ -20,7 +20,7 @@ def evaluate_pu(var, corrs):
         nominal = ev_corrs["corr"].values
         up = (ev_corrs["corr_up"].values/nominal - 1.)*(source=="pileup")
         down = (ev_corrs["corr_down"].values/nominal - 1.)*(source=="pileup")
-        return weight_numba(nominal, nsig, up, down)
+        return weight_numba(nominal, nsig, up, down).astype(np.float32)
 
     def ret_func(ev):
         source, nsig = ev.source, ev.nsig

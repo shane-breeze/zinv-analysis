@@ -10,7 +10,7 @@ from utils.Geometry import (BoundPhi, RadToCart2D, CartToRad2D,
                             LorTHPMToXYZE, LorXYZEToTHPM)
 
 def evaluate_metnox(arg):
-    @nb.njit
+    @nb.njit(["UniTuple(float32[:],2)(float32[:],float32[:],float32[:],float32[:],int64[:],int64[:],float32[:],float32[:],int64[:],int64[:])"])
     def metnox_numba(
         met, mephi,
         mupt, muphi, mustarts, mustops,
@@ -47,7 +47,7 @@ def evaluate_metnox(arg):
     return return_evaluate_metnox
 
 def evaluate_mindphi(njets):
-    @nb.njit
+    @nb.njit(["float32[:](float32[:],int64[:],int64[:],int64,float32[:])"])
     def mindphi_numba(jphi, jstarts, jstops, njets_, mephi):
         dphi = np.zeros_like(mephi, dtype=np.float32)
         for iev, (start, stops) in enumerate(zip(jstarts, jstops)):
@@ -76,7 +76,7 @@ def evaluate_mindphi(njets):
     return return_evaluate_mindphi
 
 def evaluate_met_dcalo():
-    @nb.njit
+    @nb.njit(["float32[:](float32[:],float32[:],float32[:])"])
     def met_dcalo_numba(pfmet, calomet, metnox):
         return np.abs(pfmet-calomet)/metnox
 
@@ -99,7 +99,7 @@ def evaluate_mtw():
     def mtw_numba(ptprod, dphi):
         return np.sqrt(2*ptprod*(1-np.cos(dphi)))
 
-    @nb.njit
+    @nb.njit(["float32[:](float32[:],float32[:],float32[:],float32[:],int64[:],int64[:],float32[:],float32[:],int64[:],int64[:])"])
     def event_mtw_numba(
         met, mephi,
         mupt, muphi, mustarts, mustops,
@@ -143,7 +143,7 @@ def evaluate_mtw():
     return return_evaluate_mtw
 
 def evaluate_mll():
-    @nb.njit
+    @nb.njit(["float32[:](float32[:],float32[:],float32[:],float32[:],int64[:],int64[:],float32[:],float32[:],float32[:],float32[:],int64[:],int64[:],int64)"])
     def event_mll_numba(
         mpt, meta, mphi, mmass, mstas, mstos,
         ept, eeta, ephi, emass, estas, estos,
@@ -197,7 +197,7 @@ def evaluate_mll():
     return return_evaluate_mll
 
 def evaluate_lepton_charge():
-    @nb.njit
+    @nb.njit(["int32[:](int32[:],int64[:],int64[:],int32[:],int64[:],int64[:],int64)"])
     def lepton_charge_numba(mcharge, mstas, mstos, echarge, estas, estos, evsize):
         charge = np.zeros(evsize, dtype=np.int32)
         for iev, (msta, msto, esta, esto) in enumerate(zip(

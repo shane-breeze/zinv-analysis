@@ -9,7 +9,7 @@ from functools import partial
 from utils.Geometry import DeltaR2
 
 def evaluate_xclean_mask(obj1name, obj2names, mindr):
-    @nb.njit
+    @nb.njit(["boolean[:](float32[:],float32[:],int64[:],int64[:],float32[:],float32[:],int64[:],int64[:])"])
     def xclean_mask_numba(
         etas1, phis1, starts1, stops1, etas2, phis2, starts2, stops2,
     ):

@@ -7,7 +7,7 @@ from cachetools.keys import hashkey
 from functools import partial
 
 def evaluate_certified_lumi(cert_runs, cert_lumis):
-    @nb.njit
+    @nb.njit(["bool8(int32,int32,int32.int32)"])
     def is_certified_lumi(runs, lumis, cert_runs_, cert_lumis_):
         nev = runs.shape[0]
         is_certified = np.ones(nev, dtype=np.bool8)

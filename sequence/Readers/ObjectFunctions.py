@@ -8,7 +8,7 @@ from functools import partial
 
 from utils.Geometry import RadToCart2D, CartToRad2D, BoundPhi
 
-@nb.njit
+@nb.njit(["float32[:](float32[:], float32, float32[:], float32[:])"])
 def pt_shift_numba(pt, nsig, up, down):
     return (pt*(1 + (nsig>=0)*nsig*up - (nsig<0)*nsig*down)).astype(np.float32)
 
@@ -20,8 +20,8 @@ def jet_pt_shift():
             up = getattr(ev.Jet, 'JEC{}Up'.format(source)).content
             down = getattr(ev.Jet, 'JEC{}Down'.format(source)).content
         except AttributeError:
-            up = 0.
-            down = 0.
+            up = np.zeros_like(nominal.content, dtype=np.float32)
+            down = np.zeros_like(nominal.content, dtype=np.float32)
         return awk.JaggedArray(nominal.starts, nominal.stops, pt_shift_numba(
             nominal.content, nsig, up, down,
         ))
@@ -35,13 +35,14 @@ def jet_pt_shift():
     return return_jet_pt_shift
 
 def jet_dphimet():
-    @nb.njit
+    @nb.njit(["float32[:](float32[:], float32[:], int64[:], int64[:])"])
     def dphi_met(mephi, jphi, starts, stops):
         dphi = np.pi*np.ones_like(jphi, dtype=np.float32)
         for iev, (start, stop) in enumerate(zip(starts, stops)):
             for iob in range(start, stop):
                 dphi[iob] = np.abs(BoundPhi(jphi[iob]-mephi[iev]))
-        return dphi
+
+        return dphi.astype(np.float32)
 
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fjet_dphimet'))
     def fjet_dphimet(ev, evidx, nsig, source):
@@ -108,8 +109,8 @@ def photon_pt_shift():
 
     return ret_func
 
-def met_shift(arg, unclust_energy):
-    @nb.njit
+def met_shift(arg):
+    @nb.njit(["UniTuple(float32[:],2)(float32[:],float32[:],float32[:],float32[:],float32[:],int64[:],int64[:],float32[:],float32[:],float32)"])
     def met_shift_numba(
         met, mephi, jpt, jptcorr, jphi, jstarts, jstops, metuncx, metuncy, nsig,
     ):
@@ -119,12 +120,8 @@ def met_shift(arg, unclust_energy):
         mex, mey = RadToCart2D(met, mephi)
         for iev, (start, stop) in enumerate(zip(jstarts, jstops)):
             for iob in range(start, stop):
-                if jpt[iob] > unclust_energy:
-                    mex[iev] += jpx_old[iob]
-                    mey[iev] += jpy_old[iob]
-                if jptcorr[iob] > unclust_energy:
-                    mex[iev] -= jpx_new[iob]
-                    mey[iev] -= jpy_new[iob]
+                mex[iev] += (jpx_old[iob] - jpx_new[iob])
+                mey[iev] += (jpy_old[iob] - jpy_new[iob])
 
         mex += nsig*metuncx
         mey += nsig*metuncy
@@ -183,8 +180,8 @@ class ObjectFunctions(object):
         event.Electron_ptShift = ele_pt_shift()
         event.Photon_ptShift = photon_pt_shift()
         event.Tau_ptShift = lambda ev: ev.Tau_pt
-        event.MET_ptShift = met_shift(0, self.unclust_threshold)
-        event.MET_phiShift = met_shift(1, self.unclust_threshold)
+        event.MET_ptShift = met_shift(0)
+        event.MET_phiShift = met_shift(1)
         event.Jet_dphiMET = jet_dphimet()
 
         for objname, selection, xclean in self.selections:

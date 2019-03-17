@@ -12,8 +12,8 @@ from utils.Geometry import RadToCart2D, CartToRad2D
 def jer_formula(x, p0, p1, p2, p3):
     return np.sqrt(p0*np.abs(p0)/(x*x)+p1*p1*np.power(x,p3)+p2*p2)
 
-def met_shift(ev, unclust_energy):
-    @nb.njit
+def met_shift(ev):
+    @nb.njit(["UniTuple(float32[:],2)(float32[:],float32[:],float32[:],float32[:],float32[:],int64[:],int64[:])"])
     def met_shift_numba(met, mephi, jpt, jptshift, jphi, jstarts, jstops):
         jpx_old, jpy_old = RadToCart2D(jpt, jphi)
         jpx_new, jpy_new = RadToCart2D(jptshift, jphi)
@@ -21,12 +21,8 @@ def met_shift(ev, unclust_energy):
         mex, mey = RadToCart2D(met[:], mephi[:])
         for iev, (start, stop) in enumerate(zip(jstarts, jstops)):
             for iob in range(start, stop):
-                if jpt[iob] > unclust_energy:
-                    mex[iev] += jpx_old[iob]
-                    mey[iev] += jpy_old[iob]
-                if jptshift[iob]  > unclust_energy:
-                    mex[iev] -= jpx_new[iob]
-                    mey[iev] -= jpy_new[iob]
+                mex[iev] += (jpx_old[iob] - jpx_new[iob])
+                mey[iev] += (jpy_old[iob] - jpy_new[iob])
 
         return CartToRad2D(mex, mey)
     return met_shift_numba(
@@ -155,7 +151,7 @@ class JecVariations(object):
             event.MET_phiJESOnly = event.MET_phi[:]
 
             event.Jet_pt = (event.Jet_pt*event.Jet_JECjerSF)[:,:]
-            met, mephi = met_shift(event, self.unclust_threshold)
+            met, mephi = met_shift(event)
             event.MET_pt = met[:]
             event.MET_phi = mephi[:]
 
