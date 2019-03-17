@@ -169,8 +169,8 @@ class JecVariations(object):
         corr_up = np.array(list(df.iloc[indices]["corr_up"].values))
         corr_down = np.array(list(df.iloc[indices]["corr_down"].values))
 
-        corr_up = interpolate(event.Jet_ptJESOnly.content, pt, corr_up)
-        corr_down = interpolate(event.Jet_ptJESOnly.content, pt, corr_down)
+        corr_up = interpolate(event.Jet_ptJESOnly.content, pt, corr_up).astype(np.float32)
+        corr_down = interpolate(event.Jet_ptJESOnly.content, pt, corr_down).astype(np.float32)
 
         starts = event.Jet_eta.starts
         stops = event.Jet_eta.stops

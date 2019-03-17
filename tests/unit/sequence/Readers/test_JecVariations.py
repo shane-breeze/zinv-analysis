@@ -52,7 +52,7 @@ params = [{
     "jjersf":      [0.200500000000000, 1.271589764166470, 0.976571428571429],
     "jjersfdown":  [1.519638403990030, -0.061708613189990, 0.009142773551785],
     "jjersfup":    [-1., 0.050076915810078, -0.009142773551785],
-    "new_met":     [200., 236., 232.10981279053],
+    "new_met":     [200., 232.792, 232.10981279053],
     "new_mephi":   [0.9, 0.1, -0.75251459154],
     "jjestotdown": [-0.07725, -0.0144, -0.05163],
     "jjestotup":   [0.07725, 0.0144, 0.05163]
@@ -75,32 +75,27 @@ def test_jec_variations_event(
     event.config.dataset.idx = 2
 
     jet_pt = awk.JaggedArray(
-        np.array(starts, dtype=np.int32),
-        np.array(stopys, dtype=np.int32),
+        starts, stopys,
         np.array(jpt, dtype=np.float32),
     )
     jet_eta = awk.JaggedArray(
-        np.array(starts, dtype=np.int32),
-        np.array(stopys, dtype=np.int32),
+        starts, stopys,
         np.array(jeta, dtype=np.float32),
     )
     rho = np.array(rho, dtype=np.float32)
 
     jet_genjetidx = awk.JaggedArray(
-        np.array(starts, dtype=np.int32),
-        np.array(stopys, dtype=np.int32),
+        starts, stopys,
         np.array(jgjidx, dtype=np.int32),
     )
     genjet_pt = awk.JaggedArray(
-        np.array(starts, dtype=np.int32),
-        np.array(stopys, dtype=np.int32),
+        starts, stopys,
         np.array(gjpt, dtype=np.float32),
     )
     met_pt = np.array(met, dtype=np.float32)
     met_phi = np.array(mephi, dtype=np.float32)
     jet_phi = awk.JaggedArray(
-        np.array(starts, dtype=np.int32),
-        np.array(stopys, dtype=np.int32),
+        starts, stopys,
         np.array(jphi, dtype=np.float32),
     )
 
@@ -120,8 +115,7 @@ def test_jec_variations_event(
     assert np.allclose(
         event.Jet_ptResolution.content,
         awk.JaggedArray(
-            np.array(starts, dtype=np.int32),
-            np.array(stopys, dtype=np.int32),
+            starts, stopys,
             np.array(jptres, dtype=np.float32),
         ).content,
         rtol=1e-6, equal_nan=True,
@@ -130,8 +124,7 @@ def test_jec_variations_event(
     assert np.allclose(
         event.Jet_JECjerSF.content,
         awk.JaggedArray(
-            np.array(starts, dtype=np.int32),
-            np.array(stopys, dtype=np.int32),
+            starts, stopys,
             np.array(jjersf, dtype=np.float32),
         ).content,
         rtol=1e-6, equal_nan=True,
@@ -140,8 +133,7 @@ def test_jec_variations_event(
     assert np.allclose(
         event.Jet_JECjerSFDown.content,
         awk.JaggedArray(
-            np.array(starts, dtype=np.int32),
-            np.array(stopys, dtype=np.int32),
+            starts, stopys,
             np.array(jjersfdown, dtype=np.float32),
         ).content,
         rtol=1e-5, equal_nan=True,
@@ -150,8 +142,7 @@ def test_jec_variations_event(
     assert np.allclose(
         event.Jet_JECjerSFUp.content,
         awk.JaggedArray(
-            np.array(starts, dtype=np.int32),
-            np.array(stopys, dtype=np.int32),
+            starts, stopys,
             np.array(jjersfup, dtype=np.float32),
         ).content,
         rtol=1e-5, equal_nan=True,
@@ -160,8 +151,7 @@ def test_jec_variations_event(
     assert np.allclose(
         event.Jet_pt.content,
         awk.JaggedArray(
-            np.array(starts, dtype=np.int32),
-            np.array(stopys, dtype=np.int32),
+            starts, stopys,
             np.array(np.array(jpt)*np.array(jjersf), dtype=np.float32),
         ).content,
         rtol=1e-6, equal_nan=True,
@@ -182,8 +172,7 @@ def test_jec_variations_event(
     assert np.allclose(
         event.Jet_JECjesTotalUp.content,
         awk.JaggedArray(
-            np.array(starts, dtype=np.int32),
-            np.array(stopys, dtype=np.int32),
+            starts, stopys,
             np.array(jjestotup, dtype=np.float32),
         ).content,
         rtol=1e-6, equal_nan=True,
@@ -192,8 +181,7 @@ def test_jec_variations_event(
     assert np.allclose(
         event.Jet_JECjesTotalDown.content,
         awk.JaggedArray(
-            np.array(starts, dtype=np.int32),
-            np.array(stopys, dtype=np.int32),
+            starts, stopys,
             np.array(jjestotdown, dtype=np.float32),
         ).content,
         rtol=1e-6, equal_nan=True,
