@@ -6,7 +6,7 @@ from cachetools import cachedmethod
 from cachetools.keys import hashkey
 from functools import partial
 
-from utils.Geometry import RadToCart2D, CartToRad2D
+from utils.Geometry import RadToCart2D, CartToRad2D, BoundPhi
 
 @nb.njit
 def pt_shift_numba(pt, nsig, up, down):
@@ -33,6 +33,30 @@ def jet_pt_shift():
         return fjet_pt_shift(ev, ev.iblock, nsig, source)
 
     return return_jet_pt_shift
+
+def jet_dphimet():
+    @nb.njit
+    def dphi_met(mephi, jphi, starts, stops):
+        dphi = np.pi*np.ones_like(jphi, dtype=np.float32)
+        for iev, (start, stop) in enumerate(zip(starts, stops)):
+            for iob in range(start, stop):
+                dphi[iob] = np.abs(BoundPhi(jphi[iob]-mephi[iev]))
+        return dphi
+
+    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fjet_dphimet'))
+    def fjet_dphimet(ev, evidx, nsig, source):
+        jphi = ev.Jet.phi
+        return dphi_met(
+            ev.MET_phiShift(ev), jphi.content, jphi.starts, jphi.stops,
+        )
+
+    def return_jet_dphimet(ev):
+        source, nsig = ev.source, ev.nsig
+        if source not in ev.attribute_variation_sources:
+            source, nsig = '', 0.
+        return fjet_dphimet(ev, ev.iblock, nsig, source)
+
+    return return_jet_dphimet
 
 def muon_pt_shift():
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fmuon_pt_shift'))
@@ -161,6 +185,7 @@ class ObjectFunctions(object):
         event.Tau_ptShift = lambda ev: ev.Tau_pt
         event.MET_ptShift = met_shift(0, self.unclust_threshold)
         event.MET_phiShift = met_shift(1, self.unclust_threshold)
+        event.Jet_dphiMET = jet_dphimet()
 
         for objname, selection, xclean in self.selections:
             if xclean:

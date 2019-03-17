@@ -228,7 +228,6 @@ def evaluate_lepton_charge():
 
     return return_evaluate_lepton_charge
 
-
 class EventFunctions(object):
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
