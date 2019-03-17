@@ -8,7 +8,7 @@ from functools import partial
 from utils.NumbaFuncs import weight_numba
 
 def evaluate_pdf_variations():
-    @nb.njit
+    @nb.njit(["float32[:](float32[:],float32[:],int64[:],int64[:])"])
     def rel_stddev(nominal, pdfs, starts, stops):
         rel_err = np.zeros_like(nominal, dtype=np.float32)
         for iev, (start, stop) in enumerate(zip(starts, stops)):

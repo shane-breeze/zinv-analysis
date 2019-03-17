@@ -18,22 +18,8 @@ def evaluate_met_trigger(cats, xcents, params):
             if nmuons[iev] not in cats_:
                 continue
             cat = cats_.index(nmuons[iev])
+            output[iev] = interp(met[iev], xcents_[cat].astype(np.float32), incorr[cat].astype(np.float32))
 
-            cmet = met[iev]
-            cxc = xcents_[cat]
-            cic = incorr[cat]
-
-            if cmet < cxc[0]:
-                output[iev] = cic[0]
-            elif cmet >= cxc[-1]:
-                output[iev] = cic[-1]
-            else:
-                for ix in range(cxc.shape[0]-1):
-                    if cxc[ix] <= cmet < cxc[ix+1]:
-                        output[iev] = (cmet-cxc[ix])*(cic[ix+1]-cic[ix])/(cxc[ix+1]-cxc[ix]) + cic[ix]
-                        break
-                else:
-                    output[iev] = np.nan
         return output
 
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'met_trigger_numba_cached'))

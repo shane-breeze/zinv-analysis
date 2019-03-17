@@ -16,8 +16,8 @@ def evaluate_qcdewk_weight(theory_uncs):
             up = getattr(ev, 'WeightQcdEwk_{}Up'.format(source))
             down = getattr(ev, 'WeightQcdEwk_{}Down'.format(source))
         except AttributeError:
-            up = 0.
-            down = 0.
+            up = np.zeros_like(central, dtype=np.float32)
+            down = np.zeros_like(central, dtype=np.float32)
         return weight_numba(central, nsig, up, down)
 
     def return_evaluate_qcdewk_weight(ev):
@@ -102,7 +102,7 @@ class WeightQcdEwk(object):
 
     def event(self, event):
         if self.parent not in self.input_paths:
-            weights = np.ones(event.size)
+            weights = np.ones(event.size, dtype=np.float32)
             event.WeightQcdEwkNominal = weights
             for variation in self.variations[1:]:
                 setattr(

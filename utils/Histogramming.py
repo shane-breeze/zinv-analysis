@@ -119,7 +119,7 @@ class Histograms(object):
         weights1 = weight
         weights2 = weight**2
 
-        bins = [np.array(b) for b in config["bins"]]
+        bins = [np.array(b, dtype=np.float32) for b in config["bins"]]
         hist_bins = bins
         #variables = np.transpose(np.array(variables))
         #hist_counts, _ = np.histogramdd(variables, bins)

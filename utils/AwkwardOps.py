@@ -7,7 +7,7 @@ def get_nth_object(array, id_, ev_size):
     return new_array
 
 def jagged_prod(jagged_array):
-    @nb.njit
+    @nb.njit(["float32[:](float32[:],int64[:],int64[:])"])
     def jagged_prod_numba(contents, starts, ends):
         prod = np.ones_like(starts, dtype=np.float32)
         for iev, (start, end) in enumerate(zip(starts, ends)):
