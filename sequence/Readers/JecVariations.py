@@ -55,7 +55,7 @@ class JecVariations(object):
         )
 
     def begin(self, event):
-        np.random.seed(123456)
+        np.random.seed(123456+event.config.dataset.idx)
 
         # Regex the variations
         comp_jes_regex = re.compile(self.jes_regex)

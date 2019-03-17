@@ -1,7 +1,7 @@
 import oyaml as yaml
 
 class Dataset(object):
-    args = ["name", "parent", "isdata", "xsection", "lumi", "energy",
+    args = ["name", "parent", "isdata", "xsection", "lumi", "energy", "idx",
             "sumweights", "files", "associates", "tree"]
     def __init__(self, **kwargs):
         kwargs.setdefault("associates", [])
@@ -30,9 +30,10 @@ def get_datasets(path):
         if d not in temp_datasets:
             temp_datasets.append(d)
 
-    for dataset in temp_datasets:
+    for idx, dataset in enumerate(temp_datasets):
         dataset_kwargs = datasets_dict["datasets"][dataset]
         dataset_kwargs.update(default)
+        dataset_kwargs["idx"] = idx
         datasets.append(Dataset(**dataset_kwargs))
 
     # Associate samples

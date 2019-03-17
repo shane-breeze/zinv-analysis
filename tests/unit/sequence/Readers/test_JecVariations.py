@@ -13,6 +13,7 @@ class DummyEvent(object):
         self.source = ''
         self.cache = {}
         self.attribute_variation_sources = ["jesTotal", "jerSF", "unclust", "jesAbsoluteStat"]
+        self.config = mock.MagicMock()
 
 @pytest.fixture()
 def event():
@@ -71,6 +72,7 @@ def test_jec_variations_event(
     def norm(*args, **kwargs):
         return 0.5
     np.random.normal = mock.Mock(side_effect=norm)
+    event.config.dataset.idx = 2
 
     jet_pt = awk.JaggedArray(
         np.array(starts, dtype=np.int32),
