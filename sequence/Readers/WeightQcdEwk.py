@@ -108,7 +108,7 @@ class WeightQcdEwk(object):
                 setattr(
                     event,
                     "WeightQcdEwk_{}".format(variation),
-                    np.zeros(event.size),
+                    np.zeros(event.size, dtype=np.float32),
                 )
         else:
             indices = get_bin_indices(
@@ -123,7 +123,7 @@ class WeightQcdEwk(object):
                 setattr(
                     event,
                     "WeightQcdEwk_{}".format(variation),
-                    (corrections[variation]/corrections[""]).values - 1.
+                    ((corrections[variation]/corrections[""]).values - 1.).astype(np.float32),
                 )
 
 def read_input(path, histname):
