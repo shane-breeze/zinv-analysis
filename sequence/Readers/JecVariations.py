@@ -7,8 +7,8 @@ import re
 from utils.NumbaFuncs import get_bin_indices, event_to_object_var, interpolate
 from utils.Geometry import RadToCart2D, CartToRad2D
 
-@nb.vectorize([nb.float32(nb.float32,nb.float32,nb.float32,nb.float32,nb.float32),
-               nb.float64(nb.float64,nb.float64,nb.float64,nb.float64,nb.float64)])
+@nb.njit(["float32[:](float32[:],float32[:],float32[:],float32[:],float32[:])",
+          "float64[:](float64[:],float64[:],float64[:],float64[:],float64[:])"])
 def jer_formula(x, p0, p1, p2, p3):
     return np.sqrt(p0*np.abs(p0)/(x*x)+p1*p1*np.power(x,p3)+p2*p2)
 
@@ -87,12 +87,12 @@ class JecVariations(object):
             1,
         )[:,0]
         df = self.jers.iloc[indices]
-        params = df[["param0", "param1", "param2", "param3"]].values
+        params = df[["param0", "param1", "param2", "param3"]].values.astype(np.float32)
         ptbounds = df[["pt_low", "pt_high"]].values
         event.Jet_ptResolution = awk.JaggedArray(
             event.Jet_pt.starts, event.Jet_pt.stops,
             jer_formula(
-                np.minimum(np.maximum(event.Jet_pt.content, ptbounds[:,0]), ptbounds[:,1]),
+                np.minimum(np.maximum(event.Jet_pt.content, ptbounds[:,0]), ptbounds[:,1]).astype(np.float32),
                 params[:,0], params[:,1], params[:,2], params[:,3],
             ),
         )
