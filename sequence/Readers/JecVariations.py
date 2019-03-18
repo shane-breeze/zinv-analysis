@@ -5,7 +5,7 @@ import awkward as awk
 import re
 
 from utils.NumbaFuncs import get_bin_indices, event_to_object_var, interpolate
-from utils.Geometry import RadToCart2D, CartToRad2D
+from utils.Geometry import RadToCart2D, CartToRad2D, DeltaR2
 
 @nb.njit(["float32[:](float32[:],float32[:],float32[:],float32[:],float32[:])",
           "float64[:](float64[:],float64[:],float64[:],float64[:],float64[:])"])
@@ -30,6 +30,41 @@ def met_shift(ev):
         ev.Jet_pt.content, ev.Jet_phi.content,
         ev.Jet_pt.starts, ev.Jet_pt.stops,
     )
+
+def match_jets_from_genjets(event, maxdr, ndpt):
+    @nb.njit
+    def numba_function(
+        jpt, jeta, jphi, jres, jsta, jsto,
+        gjpt, gjeta, gjphi, gjsta, gjsto,
+    ):
+        match_idx = -1*np.ones_like(jpt, dtype=np.int64)
+        for iev, (jb, je, gjb, gje) in enumerate(zip(jsta, jsto, gjsta, gjsto)):
+            for ijs in range(jb, je):
+                for igjs in range(gjb, gje):
+                    within_dr2 = DeltaR2(
+                        jeta[ijs]-gjeta[igjs],
+                        jphi[ijs]-gjphi[igjs],
+                    ) < maxdr**2
+                    within_dpt = np.abs(jpt[ijs]-gjpt[igjs]) < ndpt*jres[ijs]*jpt[ijs]
+                    if within_dr2 and within_dpt:
+                        match_idx[ijs] = igjs-gjb
+                        break
+
+        return match_idx
+
+    return awk.JaggedArray(
+        event.Jet.pt.starts,
+        event.Jet.pt.stops,
+        numba_function(
+            event.Jet.pt.content, event.Jet.eta.content, event.Jet.phi.content,
+            event.Jet_ptResolution.content,
+            event.Jet.pt.starts, event.Jet.pt.stops,
+            event.GenJet.pt.content, event.GenJet.eta.content,
+            event.GenJet.phi.content,
+            event.GenJet.pt.starts, event.GenJet.pt.stops,
+        ),
+    )
+
 
 class JecVariations(object):
     def __init__(self, **kwargs):
@@ -110,9 +145,10 @@ class JecVariations(object):
         jersfs_down = np.ones_like(event.Jet_pt.content, dtype=np.float32)
 
         # match gen jets
-        gidx = event.Jet_genJetIdx
-        gsize = event.GenJet_pt.counts
-        mask = (gidx>=0) & (gidx<gsize)
+        gidx = match_jets_from_genjets(
+            event, self.maxdr_jets_with_genjets, self.ndpt_jets_with_genjets,
+        )
+        mask = (gidx>=0)
         indices = (event.GenJet_pt.starts+gidx[mask]).content
         gpt_matched = event.GenJet_pt.content[indices]
 
