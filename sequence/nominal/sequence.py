@@ -46,6 +46,8 @@ jec_variations = Readers.JecVariations(
     apply_jer_corrections = True,
     jes_regex = "jes(?P<source>.*)",
     unclust_threshold = 15.,
+    maxdr_jets_with_genjets = 0.2,
+    ndpt_jets_with_genjets = 3.,
     data = False,
 )
 
