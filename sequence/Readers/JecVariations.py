@@ -57,7 +57,7 @@ def match_jets_from_genjets(event, maxdr, ndpt):
         event.Jet.pt.stops,
         numba_function(
             event.Jet.pt.content, event.Jet.eta.content, event.Jet.phi.content,
-            event.Jet.ptResolution.content,
+            event.Jet_ptResolution.content,
             event.Jet.pt.starts, event.Jet.pt.stops,
             event.GenJet.pt.content, event.GenJet.eta.content,
             event.GenJet.phi.content,
