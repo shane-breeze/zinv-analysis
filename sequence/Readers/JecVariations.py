@@ -13,7 +13,7 @@ def jer_formula(x, p0, p1, p2, p3):
     return np.sqrt(p0*np.abs(p0)/(x*x)+p1*p1*np.power(x,p3)+p2*p2)
 
 def met_shift(ev):
-    @nb.njit
+    @nb.njit(["UniTuple(float32[:],2)(float32[:],float32[:],float32[:],float32[:],float32[:],int64[:],int64[:])"])
     def met_shift_numba(met, mephi, jpt, jptshift, jphi, jstarts, jstops):
         jpx_old, jpy_old = RadToCart2D(jpt, jphi)
         jpx_new, jpy_new = RadToCart2D(jptshift, jphi)
