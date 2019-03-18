@@ -11,7 +11,7 @@ from functools import partial
 from utils.Lambda import Lambda
 from utils.NumbaFuncs import weight_numba, get_bin_indices
 
-def evaluate_object_weights(df, bins_vars, add_syst, name):
+def evaluate_object_weights(df, bins_vars, add_syst, name, nuisances):
     @nb.njit
     def weighted_mean_numba(objattr, w, k, dkup, dkdown, addsyst, nweight):
         wsum = np.zeros_like(objattr, dtype=np.float32)
@@ -29,7 +29,7 @@ def evaluate_object_weights(df, bins_vars, add_syst, name):
         mean = wksum / wsum
         unc_up = np.sqrt((wdkupsum / wsum**2) + addsyst**2)
         unc_down = -1.*np.sqrt((wdkdownsum / wsum**2) + addsyst**2)
-        return mean, unc_up, unc_down
+        return mean.astype(np.float32), unc_up.astype(np.float32), unc_down.astype(np.float32)
 
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_object_weights'))
     def fevaluate_object_weights(ev, evidx, nsig, source, name_):
@@ -56,7 +56,13 @@ def evaluate_object_weights(df, bins_vars, add_syst, name):
             weight_numba(sf, nsig, sfup, sfdown),
         )
 
-    return lambda ev: fevaluate_object_weights(ev, ev.iblock, ev.nsig, ev.source, name)
+    def return_evaluate_object_weights(ev):
+        source, nsig = ev.source, ev.nsig
+        if source not in nuisances:
+            source, nsig = '', 0.
+        return fevaluate_object_weights(ev, ev.iblock, nsig, source, name)
+
+    return return_evaluate_object_weights
 
 class WeightObjects(object):
     def __init__(self, **kwargs):
@@ -106,7 +112,7 @@ class WeightObjects(object):
                     corrector["df"],
                     [self.lambda_functions[v] for v in corrector["binning_variables"]],
                     self.lambda_functions[corrector["add_syst"]],
-                    vname,
+                    vname, corrector["nuisances"],
                 ),
             )
 

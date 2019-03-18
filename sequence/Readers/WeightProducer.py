@@ -23,7 +23,14 @@ class WeightProducer(object):
             input_dict = yaml.load(f)
 
         weights_dict = input_dict["weights"]
-        event.variation_sources = input_dict["variations"]
+        wvars = input_dict["weight_variations"]
+        avars = input_dict["attribute_variations"]
+        if self.nuisances is not None:
+            self.weight_variation_sources = [v for v in wvars if v in self.nuisances]
+            self.attribute_variation_sources = [v for v in avars if v in self.nuisances]
+        else:
+            self.weight_variation_sources = wvars
+            self.attribute_variation_sources = avars
         data_or_mc = "Data" if event.config.dataset.isdata else "MC"
 
         self.lambda_functions = {
@@ -46,6 +53,13 @@ class WeightProducer(object):
 
                 for region in regiondicts["Regions"]:
                     setattr(event, "Weight_{}_{}_{}".format(dataset, region, data_or_mc), weighter)
+
+        event.weight_variation_sources = self.weight_variation_sources
+        event.attribute_variation_sources = self.attribute_variation_sources
+
+    def event(self, event):
+        event.weight_variation_sources = self.weight_variation_sources
+        event.attribute_variation_sources = self.attribute_variation_sources
 
     def end(self):
         self.lambda_functions = None

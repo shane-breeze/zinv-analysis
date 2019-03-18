@@ -8,7 +8,7 @@ from functools import partial
 
 from utils.NumbaFuncs import get_bin_indices, weight_numba
 
-def evaluate_qcdewk_weight():
+def evaluate_qcdewk_weight(theory_uncs):
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_qcdewk_weight'))
     def fevaluate_qcdewk_weight(ev, evidx, nsig, source):
         central = ev.WeightQcdEwkNominal
@@ -16,11 +16,17 @@ def evaluate_qcdewk_weight():
             up = getattr(ev, 'WeightQcdEwk_{}Up'.format(source))
             down = getattr(ev, 'WeightQcdEwk_{}Down'.format(source))
         except AttributeError:
-            up = 0.
-            down = 0.
+            up = np.zeros_like(central, dtype=np.float32)
+            down = np.zeros_like(central, dtype=np.float32)
         return weight_numba(central, nsig, up, down)
 
-    return lambda ev: fevaluate_qcdewk_weight(ev, ev.iblock, ev.nsig, ev.source)
+    def return_evaluate_qcdewk_weight(ev):
+        source, nsig = ev.source, ev.nsig
+        if source not in theory_uncs:
+            source, nsig = '', 0.
+        return fevaluate_qcdewk_weight(ev, ev.iblock, nsig, source)
+
+    return return_evaluate_qcdewk_weight
 
 class WeightQcdEwk(object):
     def __init__(self, **kwargs):
@@ -30,11 +36,11 @@ class WeightQcdEwk(object):
         if event.config.dataset.isdata:
             return
 
-        event.WeightQcdEwk = evaluate_qcdewk_weight()
+        event.WeightQcdEwk = evaluate_qcdewk_weight(self.variation_names)
 
         self.variations = [""]\
-                + [n+"Up" for n in self.nuisances]\
-                + [n+"Down" for n in self.nuisances]
+                + [n+"Up" for n in self.variation_names]\
+                + [n+"Down" for n in self.variation_names]
 
         self.parent = event.config.dataset.parent
         if self.parent not in self.input_paths:
@@ -67,19 +73,19 @@ class WeightQcdEwk(object):
 
         # nominal
         columns = [""]
-        for nuisance in self.nuisances:
-            input_df[nuisance] = 0
+        for var in self.variation_names:
+            input_df[var] = 0
         input_df[""] = input_df.eval(self.formula)
 
         # Up/down variations
-        for nuisance in self.nuisances:
-            input_df[nuisance] = 1
-            input_df[nuisance+"Up"] = input_df.eval(self.formula)
-            input_df[nuisance] = -1
-            input_df[nuisance+"Down"] = input_df.eval(self.formula)
-            input_df[nuisance] = 0
-            columns.append(nuisance+"Up")
-            columns.append(nuisance+"Down")
+        for var in self.variation_names:
+            input_df[var] = 1
+            input_df[var+"Up"] = input_df.eval(self.formula)
+            input_df[var] = -1
+            input_df[var+"Down"] = input_df.eval(self.formula)
+            input_df[var] = 0
+            columns.append(var+"Up")
+            columns.append(var+"Down")
         input_df = input_df[columns]
 
         if self.overflow:
@@ -96,7 +102,7 @@ class WeightQcdEwk(object):
 
     def event(self, event):
         if self.parent not in self.input_paths:
-            weights = np.ones(event.size)
+            weights = np.ones(event.size, dtype=np.float32)
             event.WeightQcdEwkNominal = weights
             for variation in self.variations[1:]:
                 setattr(

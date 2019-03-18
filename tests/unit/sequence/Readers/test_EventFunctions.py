@@ -11,6 +11,7 @@ class DummyEvent(object):
         self.nsig = 0
         self.source = ''
         self.cache = {}
+        self.attribute_variation_sources = []
 
 @pytest.fixture()
 def event():
@@ -36,11 +37,7 @@ def test_metnox(event, module):
             contents = np.array([-0.2, 0.9], dtype=np.float32)
         else:
             contents = np.array([40., 201.], dtype=np.float32)
-        return awk.JaggedArray(
-            np.array([0, 1], dtype=np.int32),
-            np.array([1, 2], dtype=np.int32),
-            contents,
-        )
+        return awk.JaggedArray([0, 1], [1, 2], contents)
     event.MuonSelection = mock.Mock(side_effect=muon_selection)
 
     def ele_selection(self, attr):
@@ -48,11 +45,7 @@ def test_metnox(event, module):
             contents = np.array([-1.5, -1.3], dtype=np.float32)
         else:
             contents = np.array([26., 91.], dtype=np.float32)
-        return awk.JaggedArray(
-            np.array([0, 0], dtype=np.int32),
-            np.array([0, 2], dtype=np.int32),
-            contents,
-        )
+        return awk.JaggedArray([0, 0], [0, 2], contents)
     event.ElectronSelection = mock.Mock(side_effect=ele_selection)
 
     metnox_pt = event.METnoX_pt(event)
@@ -80,8 +73,8 @@ def test_mindphi(event, module):
     def jet_selection(self, attr):
         assert attr == 'phi'
         return awk.JaggedArray(
-            np.array([0, 0, 1, 3, 6, 10], dtype=np.int32),
-            np.array([0, 1, 3, 6, 10, 15], dtype=np.int32),
+            [0, 0, 1, 3, 6, 10],
+            [0, 1, 3, 6, 10, 15],
             np.array([
                 0.0,
                 0.0, 0.5,
@@ -132,11 +125,7 @@ def test_mtw(event, module):
         else:
             assert False
 
-        return awk.JaggedArray(
-            np.array([0, 0, 1, 3, 3], dtype=np.int32),
-            np.array([0, 1, 3, 3, 4], dtype=np.int32),
-            content,
-        )
+        return awk.JaggedArray([0, 0, 1, 3, 3], [0, 1, 3, 3, 4], content)
     def ele_selection(self, attr):
         if attr == "ptShift":
             content = np.array([40., 45.], dtype=np.float32)
@@ -145,11 +134,7 @@ def test_mtw(event, module):
         else:
             assert False
 
-        return awk.JaggedArray(
-            np.array([0, 0, 0, 0, 1], dtype=np.int32),
-            np.array([0, 0, 0, 1, 2], dtype=np.int32),
-            content,
-        )
+        return awk.JaggedArray([0, 0, 0, 0, 1], [0, 0, 0, 1, 2], content)
 
     event.MET_ptShift = mock.Mock(side_effect=met_ptshift)
     event.MET_phiShift = mock.Mock(side_effect=met_phishift)
@@ -178,11 +163,7 @@ def test_mll(event, module):
         else:
             assert False
 
-        return awk.JaggedArray(
-            np.array([0, 0, 2, 2], dtype=np.int32),
-            np.array([0, 2, 2, 4], dtype=np.int32),
-            content,
-        )
+        return awk.JaggedArray([0, 0, 2, 2], [0, 2, 2, 4], content)
     def ele_selection(self, attr):
         if attr == "ptShift":
             content = np.array([40., 45., 50., 55.], dtype=np.float32)
@@ -195,11 +176,7 @@ def test_mll(event, module):
         else:
             assert False
 
-        return awk.JaggedArray(
-            np.array([0, 0, 0, 2], dtype=np.int32),
-            np.array([0, 0, 2, 4], dtype=np.int32),
-            content,
-        )
+        return awk.JaggedArray([0, 0, 0, 2], [0, 0, 2, 4], content)
 
     event.MuonSelection = mock.Mock(side_effect=muon_selection)
     event.ElectronSelection = mock.Mock(side_effect=ele_selection)
@@ -217,15 +194,13 @@ def test_lepton_charge(event, module):
     def muon_selection(self, attr):
         assert attr == 'charge'
         return awk.JaggedArray(
-            np.array([0, 0, 1, 1], dtype=np.int32),
-            np.array([0, 1, 1, 2], dtype=np.int32),
+            [0, 0, 1, 1], [0, 1, 1, 2],
             np.array([1, -1], dtype=np.int32),
         )
     def ele_selection(self, attr):
         assert attr == 'charge'
         return awk.JaggedArray(
-            np.array([0, 0, 0, 1], dtype=np.int32),
-            np.array([0, 0, 1, 2], dtype=np.int32),
+            [0, 0, 0, 1], [0, 0, 1, 2],
             np.array([-1, 1], dtype=np.int32),
         )
 
