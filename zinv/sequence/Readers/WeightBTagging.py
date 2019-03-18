@@ -82,7 +82,7 @@ class WeightBTagging(object):
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
-        df = pd.read_csv(self.calibration_file, sep=',\s+')
+        df = pd.read_csv(self.calibration_file, sep=',\s+', engine='python')
         params = np.vstack(df["params"].apply(lambda x: eval(x[1:-1])))
         df["eqtype"] = params[:,0]
         df["xlow"] = params[:,1]
