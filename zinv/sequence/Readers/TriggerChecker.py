@@ -53,4 +53,3 @@ class TriggerChecker(object):
                     "Is{}Triggered".format(dataset),
                     evaluate_triggers(trigger_list),
                 )
-        event.IsTriggered = getattr(event, "Is{}Triggered".format(dataset))
