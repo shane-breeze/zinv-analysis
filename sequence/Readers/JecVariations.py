@@ -7,8 +7,8 @@ import re
 from utils.NumbaFuncs import get_bin_indices, event_to_object_var, interpolate
 from utils.Geometry import RadToCart2D, CartToRad2D
 
-@nb.vectorize([nb.float32(nb.float32,nb.float32,nb.float32,nb.float32,nb.float32),
-               nb.float64(nb.float64,nb.float64,nb.float64,nb.float64,nb.float64)])
+@nb.vectorize(["float32[:](float32[:],float32[:],float32[:],float32[:],float32[:])",
+               "float64[:](float64[:],float64[:],float64[:],float64[:],float64[:])"])
 def jer_formula(x, p0, p1, p2, p3):
     return np.sqrt(p0*np.abs(p0)/(x*x)+p1*p1*np.power(x,p3)+p2*p2)
 
