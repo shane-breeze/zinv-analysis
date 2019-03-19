@@ -6,7 +6,7 @@ except ImportError:
     import pickle
 
 from Histogrammer import HistReader, HistCollector
-from drawing.dist_multicomp_v2 import dist_multicomp_v2
+from zinv.drawing.dist_multicomp_v2 import dist_multicomp_v2
 
 class GStarCorrectionReader(HistReader):
     def begin(self, event):

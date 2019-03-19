@@ -7,8 +7,8 @@ datapath = os.path.join(toppath, "data")
 collpath = os.path.join(toppath, "sequence", "Collectors")
 drawpath = os.path.join(toppath, "drawing")
 
-import Readers
-import Collectors
+import zinv.sequence.Readers as Readers
+import zinv.sequence.Collectors as Collectors
 
 event_tools = Readers.EventTools(
     name = "event_tools",

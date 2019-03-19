@@ -3,7 +3,7 @@ import copy
 import cPickle as pickle
 
 from Histogrammer import Config, HistReader, HistCollector
-from drawing.dist_2d import dist_2d
+from zinv.drawing.dist_2d import dist_2d
 
 Hist2DReader = HistReader
 

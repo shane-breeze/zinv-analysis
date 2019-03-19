@@ -5,7 +5,7 @@ import operator
 try: import cPickle as pickle
 except ImportError: import pickle
 
-from drawing.dist_comp import dist_comp
+from zinv.drawing.dist_comp import dist_comp
 from Histogrammer import HistReader, HistCollector, Config
 
 class QcdEwkCorrectionsReader(HistReader):
