@@ -210,7 +210,7 @@ configs:
         categories:
             - "all"
         variables:
-            - "ev: get_nth_object((ev.JetSelection(ev, 'pt')-ev.JetSelection(ev, 'ptJESOnly'))/ev.JetSelection(ev, 'ptJesOnly'), 0, ev.size)"
+            - "ev: get_nth_object((ev.JetSelection(ev, 'pt')-ev.JetSelection(ev, 'ptJESOnly'))/ev.JetSelection(ev, 'ptJESOnly'), 0, ev.size)"
         bins:
             - [-1., 1., 51]
         weights:
