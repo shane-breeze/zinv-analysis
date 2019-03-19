@@ -2,7 +2,7 @@ import pytest
 import mock
 import numpy as np
 
-from sequence.Readers import EventTools
+from zinv.sequence.Readers import EventTools
 
 class DummyEvent(object):
     def __init__(self):

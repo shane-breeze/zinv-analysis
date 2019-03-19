@@ -3,7 +3,7 @@ import mock
 import numpy as np
 import awkward as awk
 
-from sequence.Readers import ObjectCrossCleaning
+from zinv.sequence.Readers import ObjectCrossCleaning
 
 class DummyColl(object):
     def __init__(self):

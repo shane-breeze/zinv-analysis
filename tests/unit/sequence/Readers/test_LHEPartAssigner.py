@@ -3,7 +3,7 @@ import mock
 import numpy as np
 import awkward as awk
 
-from sequence.Readers import LHEPartAssigner, GenPartAssigner
+from zinv.sequence.Readers import LHEPartAssigner, GenPartAssigner
 
 class DummyEvent(object):
     def __init__(self):
