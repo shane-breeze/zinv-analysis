@@ -17,6 +17,7 @@ class DummyEvent(object):
         self.cache = {}
         self.attribute_variation_sources = [
             "Var1", "muonPtScale", "eleEnergyScale", "photonEnergyScale",
+            "jesTotal", "jerSF", "unclust",
         ]
 
         self.Jet = DummyColl()
@@ -442,11 +443,9 @@ def test_objfunc_tptshift(module, event, inputs, outputs):
             "source":   '',
             "met":      [200., 300., 400.],
             "mephi":    [0.3, 0.6, 0.9],
-            "jstarts":  [0, 1, 2],
-            "jstops":   [1, 2, 4],
-            "jpt":      [20., 40., 60., 80.],
-            "jptshift": [20., 40., 60., 80.],
-            "jphi":     [-0.3, 0.8, -1.1, 2.5],
+            "jpt":      [[20.], [40.], [60., 80.]],
+            "jptshift": [[20.], [40.], [60., 80.]],
+            "jphi":     [[-0.3], [0.8], [-1.1, 2.5]],
             "evvars": {
                 "MetUnclustEnUpDeltaX": [10., 15., 25.],
                 "MetUnclustEnUpDeltaY": [5., 7., 13.],
@@ -459,45 +458,39 @@ def test_objfunc_tptshift(module, event, inputs, outputs):
             "source":   'Var1',
             "met":      [200., 300., 400.],
             "mephi":    [0.3, 0.6, 0.9],
-            "jstarts":  [0, 1, 2],
-            "jstops":   [1, 2, 4],
-            "jpt":      [16., 40., 60., 80.],
-            "jptshift": [14., 80., 45., 121.],
-            "jphi":     [-0.3, 0.8, -1.1, 2.5],
+            "jpt":      [[16.], [40.], [60., 80.]],
+            "jptshift": [[14.], [80.], [45., 121.]],
+            "jphi":     [[-0.3], [0.8], [-1.1, 2.5]],
             "evvars": {
                 "MetUnclustEnUpDeltaX": [10., 15., 25.],
                 "MetUnclustEnUpDeltaY": [5., 7., 13.],
             },
         }, {
-            "metshift": [213.396691481902, 260.918382127075, 398.714177256099],
-            "mephishift": [0.257651731212511, 0.569538357995496, 0.762572497967355],
+            "metshift": [201.653833318208, 260.918382127075, 398.714177256099],
+            "mephishift": [0.29439985429023, 0.569538357995496, 0.762572497967355],
         }], [{
             "nsig":     1,
             "source":   'unclust',
             "met":      [200., 300., 400.],
             "mephi":    [0.3, 0.6, 0.9],
-            "jstarts":  [0, 1, 2],
-            "jstops":   [1, 2, 4],
-            "jpt":      [16., 40., 60., 80.],
-            "jptshift": [16., 40., 60., 80.],
-            "jphi":     [-0.3, 0.8, -1.1, 2.5],
+            "jpt":      [[16.], [40.], [60., 80.]],
+            "jptshift": [[16.], [40.], [60., 80.]],
+            "jphi":     [[-0.3], [0.8], [-1.1, 2.5]],
             "evvars": {
                 "MetUnclustEnUpDeltaX": [10., 15., 25.],
                 "MetUnclustEnUpDeltaY": [5., 7., 13.],
             },
         }, {
             "metshift": [211.038826687946, 316.343988282449, 425.878855104992],
-            "mephishift": [0.308631127377874, 0.591489263592354, 0.872988464087041],
+            "mephishift": [0.30863112737787, 0.591489263592354, 0.872988464087041],
         }], [{
             "nsig":     -1,
             "source":   'unclust',
             "met":      [200., 300., 400.],
             "mephi":    [0.3, 0.6, 0.9],
-            "jstarts":  [0, 1, 2],
-            "jstops":   [1, 2, 4],
-            "jpt":      [16., 40., 60., 80.],
-            "jptshift": [16., 40., 60., 80.],
-            "jphi":     [-0.3, 0.8, -1.1, 2.5],
+            "jpt":      [[16.], [40.], [60., 80.]],
+            "jptshift": [[16.], [40.], [60., 80.]],
+            "jphi":     [[-0.3], [0.8], [-1.1, 2.5]],
             "evvars": {
                 "MetUnclustEnUpDeltaX": [10., 15., 25.],
                 "MetUnclustEnUpDeltaY": [5., 7., 13.],
@@ -510,18 +503,16 @@ def test_objfunc_tptshift(module, event, inputs, outputs):
             "source":   'unclust',
             "met":      [200., 300., 400.],
             "mephi":    [0.3, 0.6, 0.9],
-            "jstarts":  [0, 1, 2],
-            "jstops":   [1, 2, 4],
-            "jpt":      [16., 40., 60., 80.],
-            "jptshift": [14., 80., 45., 121.],
-            "jphi":     [-0.3, 0.8, -1.1, 2.5],
+            "jpt":      [[16.], [40.], [60., 80.]],
+            "jptshift": [[14.], [80.], [45., 121.]],
+            "jphi":     [[-0.3], [0.8], [-1.1, 2.5]],
             "evvars": {
                 "MetUnclustEnUpDeltaX": [10., 15., 25.],
                 "MetUnclustEnUpDeltaY": [5., 7., 13.],
             },
         }, {
-            "metshift": [224.352309434740, 277.334010882431, 425.843625873921],
-            "mephishift": [0.267845027761373, 0.561628679459254, 0.744090959514257],
+            "metshift": [212.682763563916, 277.334010882431, 425.843625873921],
+            "mephishift": [0.30325459685886, 0.561628679459254, 0.744090959514257],
         }],
     )
 )
@@ -536,10 +527,9 @@ def test_objfunc_metshift(module, event, inputs, outputs):
     event.MET_phi = mephi
     event.MET.phi = mephi
 
-    starts, stops = inputs["jstarts"], inputs["jstops"]
-    jpt = awk.JaggedArray(starts, stops, inputs["jpt"])
-    jptshift = awk.JaggedArray(starts, stops, inputs["jptshift"])
-    jphi = awk.JaggedArray(starts, stops, inputs["jphi"])
+    jpt = awk.JaggedArray.fromiter(inputs["jpt"]).astype(np.float32)
+    jptshift = awk.JaggedArray.fromiter(inputs["jptshift"]).astype(np.float32)
+    jphi = awk.JaggedArray.fromiter(inputs["jphi"]).astype(np.float32)
     event.Jet.pt = jpt
     event.Jet_pt = jpt
     event.Jet.phi = jphi
