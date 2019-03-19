@@ -311,9 +311,10 @@ hist_reader = Collectors.HistReader(
         "DYJetsToLL": {
             "DYJetsToEE": ["ev: ev.LeptonIsElectron"],
             "DYJetsToMuMu": ["ev: ev.LeptonIsMuon"],
-            "DYJetsToTauLTauL": ["ev: ev.LeptonIsTau & (ev.nGenTauL==2)"],
-            "DYJetsToTauLTauH": ["ev: ev.LeptonIsTau & (ev.nGenTauL==1)"],
-            "DYJetsToTauHTauH": ["ev: ev.LeptonIsTau & (ev.nGenTauL==0)"],
+            "DYJetsToTauTau": ["ev: ev.LeptonIsTau"],
+            #"DYJetsToTauLTauL": ["ev: ev.LeptonIsTau & (ev.nGenTauL==2)"],
+            #"DYJetsToTauLTauH": ["ev: ev.LeptonIsTau & (ev.nGenTauL==1)"],
+            #"DYJetsToTauHTauH": ["ev: ev.LeptonIsTau & (ev.nGenTauL==0)"],
         },
         "WJetsToLNu": {
             "WJetsToENu": ["ev: ev.LeptonIsElectron"],
@@ -386,9 +387,10 @@ systematics_reader = Collectors.SystematicsReader(
         "DYJetsToLL": {
             "DYJetsToEE": ["ev: ev.LeptonIsElectron"],
             "DYJetsToMuMu": ["ev: ev.LeptonIsMuon"],
-            "DYJetsToTauLTauL": ["ev: ev.LeptonIsTau & (ev.nGenTauL==2)"],
-            "DYJetsToTauLTauH": ["ev: ev.LeptonIsTau & (ev.nGenTauL==1)"],
-            "DYJetsToTauHTauH": ["ev: ev.LeptonIsTau & (ev.nGenTauL==0)"],
+            "DYJetsToTauTau": ["ev: ev.LeptonIsTau"],
+            #"DYJetsToTauLTauL": ["ev: ev.LeptonIsTau & (ev.nGenTauL==2)"],
+            #"DYJetsToTauLTauH": ["ev: ev.LeptonIsTau & (ev.nGenTauL==1)"],
+            #"DYJetsToTauHTauH": ["ev: ev.LeptonIsTau & (ev.nGenTauL==0)"],
         },
         "WJetsToLNu": {
             "WJetsToENu": ["ev: ev.LeptonIsElectron"],
