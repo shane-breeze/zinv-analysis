@@ -1,5 +1,7 @@
 # Z invisible analysis
 
+[![CircleCI](https://circleci.com/gh/shane-breeze/zinv-analysis.svg?style=svg)](https://circleci.com/gh/shane-breeze/zinv-analysis)
+
 Setup with
 
 ```
