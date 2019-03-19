@@ -7,6 +7,7 @@ class DummyScribbler(object):
     def __init__(self):
         self.data = False
         self.dummy_attribute = "dummy attribute"
+        self.name = "Dummy"
 
     def begin(self, event):
         self.begin_called = True
