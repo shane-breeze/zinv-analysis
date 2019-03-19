@@ -6,11 +6,11 @@ from cachetools import cachedmethod
 from cachetools.keys import hashkey
 from functools import partial
 
-from zinv.utils.Geometry import RadToCart2D, CartToRad2D
+from zinv.utils.Geometry import RadToCart2D, CartToRad2D, BoundPhi
 
-@nb.njit
+@nb.njit(["float32[:](float32[:], float32, float32[:], float32[:])"])
 def pt_shift_numba(pt, nsig, up, down):
-    return pt*(1 + (nsig>=0)*nsig*up - (nsig<0)*nsig*down)
+    return (pt*(1 + (nsig>=0)*nsig*up - (nsig<0)*nsig*down)).astype(np.float32)
 
 def jet_pt_shift():
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fjet_pt_shift'))
@@ -20,17 +20,44 @@ def jet_pt_shift():
             up = getattr(ev.Jet, 'JEC{}Up'.format(source)).content
             down = getattr(ev.Jet, 'JEC{}Down'.format(source)).content
         except AttributeError:
-            up = 0.
-            down = 0.
+            up = np.zeros_like(nominal.content, dtype=np.float32)
+            down = np.zeros_like(nominal.content, dtype=np.float32)
         return awk.JaggedArray(nominal.starts, nominal.stops, pt_shift_numba(
             nominal.content, nsig, up, down,
         ))
 
     def return_jet_pt_shift(ev):
-        source = ev.source if ev.source in ev.attribute_variation_sources else ''
-        return fjet_pt_shift(ev, ev.iblock, ev.nsig, source)
+        source, nsig = ev.source, ev.nsig
+        if source not in ev.attribute_variation_sources:
+            source, nsig = '', 0.
+        return fjet_pt_shift(ev, ev.iblock, nsig, source)
 
     return return_jet_pt_shift
+
+def jet_dphimet():
+    @nb.njit(["float32[:](float32[:], float32[:], int64[:], int64[:])"])
+    def dphi_met(mephi, jphi, starts, stops):
+        dphi = np.pi*np.ones_like(jphi, dtype=np.float32)
+        for iev, (start, stop) in enumerate(zip(starts, stops)):
+            for iob in range(start, stop):
+                dphi[iob] = np.abs(BoundPhi(jphi[iob]-mephi[iev]))
+
+        return dphi.astype(np.float32)
+
+    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fjet_dphimet'))
+    def fjet_dphimet(ev, evidx, nsig, source):
+        jphi = ev.Jet.phi
+        return dphi_met(
+            ev.MET_phiShift(ev), jphi.content, jphi.starts, jphi.stops,
+        )
+
+    def return_jet_dphimet(ev):
+        source, nsig = ev.source, ev.nsig
+        if source not in ev.attribute_variation_sources:
+            source, nsig = '', 0.
+        return fjet_dphimet(ev, ev.iblock, nsig, source)
+
+    return return_jet_dphimet
 
 def muon_pt_shift():
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fmuon_pt_shift'))
@@ -41,8 +68,10 @@ def muon_pt_shift():
         ))
 
     def ret_func(ev):
-        source = ev.source if ev.source == "muonPtScale" else ''
-        return fmuon_pt_shift(ev, ev.iblock, ev.nsig, source)
+        source, nsig = ev.source, ev.nsig
+        if source not in ['muonPtScale']:
+            source, nsig = '', 0.
+        return fmuon_pt_shift(ev, ev.iblock, nsig, source)
 
     return ret_func
 
@@ -55,8 +84,10 @@ def ele_pt_shift():
         ))
 
     def ret_func(ev):
-        source = ev.source if ev.source == "eleEnergyScale" else ""
-        return fele_pt_shift(ev, ev.iblock, ev.nsig, source)
+        source, nsig = ev.source, ev.nsig
+        if source not in ['eleEnergyScale']:
+            source, nsig = '', 0.
+        return fele_pt_shift(ev, ev.iblock, nsig, source)
 
     return ret_func
 
@@ -71,13 +102,15 @@ def photon_pt_shift():
         return result
 
     def ret_func(ev):
-        source = ev.source if ev.source == "photonEnergyScale" else ""
-        return fphoton_pt_shift(ev, ev.iblock, ev.nsig, source)
+        source, nsig = ev.source, ev.nsig
+        if source not in ['photonEnergyScale']:
+            source, nsig = '', 0.
+        return fphoton_pt_shift(ev, ev.iblock, nsig, source)
 
     return ret_func
 
-def met_shift(arg, unclust_energy):
-    @nb.njit
+def met_shift(arg):
+    @nb.njit(["UniTuple(float32[:],2)(float32[:],float32[:],float32[:],float32[:],float32[:],int64[:],int64[:],float32[:],float32[:],float32)"])
     def met_shift_numba(
         met, mephi, jpt, jptcorr, jphi, jstarts, jstops, metuncx, metuncy, nsig,
     ):
@@ -87,12 +120,8 @@ def met_shift(arg, unclust_energy):
         mex, mey = RadToCart2D(met, mephi)
         for iev, (start, stop) in enumerate(zip(jstarts, jstops)):
             for iob in range(start, stop):
-                if jpt[iob] > unclust_energy:
-                    mex[iev] += jpx_old[iob]
-                    mey[iev] += jpy_old[iob]
-                if jptcorr[iob] > unclust_energy:
-                    mex[iev] -= jpx_new[iob]
-                    mey[iev] -= jpy_new[iob]
+                mex[iev] += (jpx_old[iob] - jpx_new[iob])
+                mey[iev] += (jpy_old[iob] - jpy_new[iob])
 
         mex += nsig*metuncx
         mey += nsig*metuncy
@@ -108,9 +137,15 @@ def met_shift(arg, unclust_energy):
             (source=="unclust")*ev.MET_MetUnclustEnUpDeltaX,
             (source=="unclust")*ev.MET_MetUnclustEnUpDeltaY,
             nsig,
-        )[arg_]
+        )[arg_].astype(np.float32)
 
-    return lambda ev: fmet_shift(ev, ev.iblock, ev.nsig, ev.source, arg)
+    def return_met_shift(ev):
+        source, nsig = ev.source, ev.nsig
+        if source not in ev.attribute_variation_sources:
+            source, nsig = '', 0.
+        return fmet_shift(ev, ev.iblock, nsig, source, arg)
+
+    return return_met_shift
 
 def obj_selection(objname, selection, xclean=False):
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fobj_selection'))
@@ -126,9 +161,11 @@ def obj_selection(objname, selection, xclean=False):
         return obj[mask]
 
     def return_obj_selection(ev, attr):
-        source = ev.source if ev.source in ev.attribute_variation_sources else ''
+        source, nsig = ev.source, ev.nsig
+        if source not in ev.attribute_variation_sources:
+            source, nsig = '', 0.
         return fobj_selection(
-            ev, ev.iblock, ev.nsig, source, objname, selection, xclean, attr,
+            ev, ev.iblock, nsig, source, objname, selection, xclean, attr,
         )
 
     return return_obj_selection
@@ -143,8 +180,9 @@ class ObjectFunctions(object):
         event.Electron_ptShift = ele_pt_shift()
         event.Photon_ptShift = photon_pt_shift()
         event.Tau_ptShift = lambda ev: ev.Tau_pt
-        event.MET_ptShift = met_shift(0, self.unclust_threshold)
-        event.MET_phiShift = met_shift(1, self.unclust_threshold)
+        event.MET_ptShift = met_shift(0)
+        event.MET_phiShift = met_shift(1)
+        event.Jet_dphiMET = jet_dphimet()
 
         for objname, selection, xclean in self.selections:
             if xclean:

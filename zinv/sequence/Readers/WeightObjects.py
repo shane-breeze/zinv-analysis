@@ -29,7 +29,7 @@ def evaluate_object_weights(df, bins_vars, add_syst, name, nuisances):
         mean = wksum / wsum
         unc_up = np.sqrt((wdkupsum / wsum**2) + addsyst**2)
         unc_down = -1.*np.sqrt((wdkdownsum / wsum**2) + addsyst**2)
-        return mean, unc_up, unc_down
+        return mean.astype(np.float32), unc_up.astype(np.float32), unc_down.astype(np.float32)
 
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_object_weights'))
     def fevaluate_object_weights(ev, evidx, nsig, source, name_):
@@ -57,8 +57,10 @@ def evaluate_object_weights(df, bins_vars, add_syst, name, nuisances):
         )
 
     def return_evaluate_object_weights(ev):
-        source = ev.source if ev.source in nuisances else ''
-        return fevaluate_object_weights(ev, ev.iblock, ev.nsig, source, name)
+        source, nsig = ev.source, ev.nsig
+        if source not in nuisances:
+            source, nsig = '', 0.
+        return fevaluate_object_weights(ev, ev.iblock, nsig, source, name)
 
     return return_evaluate_object_weights
 

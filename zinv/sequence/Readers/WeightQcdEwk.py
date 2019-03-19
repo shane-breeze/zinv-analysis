@@ -16,13 +16,15 @@ def evaluate_qcdewk_weight(theory_uncs):
             up = getattr(ev, 'WeightQcdEwk_{}Up'.format(source))
             down = getattr(ev, 'WeightQcdEwk_{}Down'.format(source))
         except AttributeError:
-            up = 0.
-            down = 0.
+            up = np.zeros_like(central, dtype=np.float32)
+            down = np.zeros_like(central, dtype=np.float32)
         return weight_numba(central, nsig, up, down)
 
     def return_evaluate_qcdewk_weight(ev):
-        source = ev.source if ev.source in theory_uncs else ''
-        return fevaluate_qcdewk_weight(ev, ev.iblock, ev.nsig, source)
+        source, nsig = ev.source, ev.nsig
+        if source not in theory_uncs:
+            source, nsig = '', 0.
+        return fevaluate_qcdewk_weight(ev, ev.iblock, nsig, source)
 
     return return_evaluate_qcdewk_weight
 
@@ -100,13 +102,13 @@ class WeightQcdEwk(object):
 
     def event(self, event):
         if self.parent not in self.input_paths:
-            weights = np.ones(event.size)
+            weights = np.ones(event.size, dtype=np.float32)
             event.WeightQcdEwkNominal = weights
             for variation in self.variations[1:]:
                 setattr(
                     event,
                     "WeightQcdEwk_{}".format(variation),
-                    np.zeros(event.size),
+                    np.zeros(event.size, dtype=np.float32),
                 )
         else:
             indices = get_bin_indices(
@@ -116,12 +118,12 @@ class WeightQcdEwk(object):
                 1,
             )[:,0]
             corrections = self.input_df.iloc[indices]
-            event.WeightQcdEwkNominal = corrections[""].values
+            event.WeightQcdEwkNominal = corrections[""].values.astype(np.float32)
             for variation in self.variations[1:]:
                 setattr(
                     event,
                     "WeightQcdEwk_{}".format(variation),
-                    (corrections[variation]/corrections[""]).values - 1.
+                    ((corrections[variation]/corrections[""]).values - 1.).astype(np.float32),
                 )
 
 def read_input(path, histname):

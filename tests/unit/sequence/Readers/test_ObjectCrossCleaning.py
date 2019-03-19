@@ -46,19 +46,19 @@ def test_objxclean_attr(module, event):
     c1_starts = [0, 1, 3]
     c1_stopys = [1, 3, 6]
     event.C1.eta = awk.JaggedArray(
-        c1_starts, c1_stopys, [0.3, 0.9, 1.2, 0.6 ,1.5, 1.8],
+        c1_starts, c1_stopys, np.array([0.3, 0.9, 1.2, 0.6 ,1.5, 1.8], dtype=np.float32),
     )
     event.C1.phi = awk.JaggedArray(
-        c1_starts, c1_stopys, [0.15, 0.75, 1.05, 0.45, 1.35, 1.65],
+        c1_starts, c1_stopys, np.array([0.15, 0.75, 1.05, 0.45, 1.35, 1.65], dtype=np.float32),
     )
 
     rc1_starts = [0, 0, 1]
     rc1_stopys = [0, 1, 2]
     def rc1_call(ev, attr):
         if attr == "eta":
-            content = [1.1, 2.5]
+            content = np.array([1.1, 2.5], dtype=np.float32)
         elif attr == "phi":
-            content = [0.78, 1.65]
+            content = np.array([0.78, 1.65], dtype=np.float32)
         else:
             assert False
         return awk.JaggedArray(rc1_starts, rc1_stopys, content)
@@ -68,9 +68,9 @@ def test_objxclean_attr(module, event):
     rc2_stopys = [0, 0, 1]
     def rc2_call(ev, attr):
         if attr == "eta":
-            content = [1.45]
+            content = np.array([1.45], dtype=np.float32)
         elif attr == "phi":
-            content = [1.38]
+            content = np.array([1.38], dtype=np.float32)
         else:
             assert False
         return awk.JaggedArray(rc2_starts, rc2_stopys, content)

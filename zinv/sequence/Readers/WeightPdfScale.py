@@ -8,9 +8,9 @@ from functools import partial
 from zinv.utils.NumbaFuncs import weight_numba
 
 def evaluate_pdf_variations():
-    @nb.njit
+    @nb.njit(["float32[:](float32[:],float32[:],int64[:],int64[:])"])
     def rel_stddev(nominal, pdfs, starts, stops):
-        rel_err = np.zeros_like(nominal)
+        rel_err = np.zeros_like(nominal, dtype=np.float32)
         for iev, (start, stop) in enumerate(zip(starts, stops)):
             rel_err[iev] = np.std(pdfs[start:stop]*nominal[iev])/nominal[iev]
         return rel_err
@@ -31,8 +31,10 @@ def evaluate_pdf_variations():
         return weight
 
     def ret_func(ev):
-        source = ev.source if ev.source=="pdf" else ""
-        return fevaluate_pdf_variations(ev, ev.iblock, ev.nsig, source)
+        source, nsig = ev.source, ev.nsig
+        if source not in ["pdf"]:
+            source, nsig = '', 0.
+        return fevaluate_pdf_variations(ev, ev.iblock, nsig, source)
 
     return ret_func
 
@@ -49,8 +51,10 @@ def evaluate_scale_variations(name, positions):
         return weight
 
     def ret_func(ev):
-        source = ev.source if ev.source==name else ""
-        return fevaluate_scale_variations(ev, ev.iblock, ev.nsig, ev.source, name)
+        source, nsig = ev.source, ev.nsig
+        if source not in [name]:
+            source, nsig = '', 0.
+        return fevaluate_scale_variations(ev, ev.iblock, nsig, ev.source, name)
 
     return ret_func
 

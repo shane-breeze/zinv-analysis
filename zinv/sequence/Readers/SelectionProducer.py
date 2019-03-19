@@ -14,8 +14,10 @@ def evaluate_selection(name, cutlist):
         return reduce(operator.add, cutlist, Lambda("ev: np.ones(ev.size, dtype=np.bool8)"))(ev)
 
     def return_evaluate_selection(ev):
-        source = ev.source if ev.source in ev.attribute_variation_sources else ''
-        return fevaluate_selection(ev, ev.iblock, ev.nsig, source, name)
+        source, nsig = ev.source, ev.nsig
+        if source not in ev.attribute_variation_sources:
+            source, nsig = '', 0.
+        return fevaluate_selection(ev, ev.iblock, nsig, source, name)
 
     return return_evaluate_selection
 

@@ -20,8 +20,10 @@ def evaluate_skim(objname, name, cutlist):
         )
 
     def return_evaluate_skim(ev):
-        source = ev.source if ev.source in ev.attribute_variation_sources else ''
-        return fevaluate_skim(ev, ev.iblock, ev.nsig, source, name, objname)
+        source, nsig = ev.source, ev.nsig
+        if source not in ev.attribute_variation_sources:
+            source, nsig = '', 0.
+        return fevaluate_skim(ev, ev.iblock, nsig, source, name, objname)
 
     return return_evaluate_skim
 
@@ -33,8 +35,10 @@ def evaluate_this_not_that(this, that):
         return this_attr & (~that_attr)
 
     def return_evaluate_this_not_that(ev):
-        source = ev.source if ev.source in ev.attribute_variation_sources else ''
-        return fevaluate_this_not_that(ev, ev.iblock, ev.nsig, source, this, that)
+        source, nsig = ev.source, ev.nsig
+        if source not in ev.attribute_variation_sources:
+            source, nsig = '', 0.
+        return fevaluate_this_not_that(ev, ev.iblock, nsig, source, this, that)
 
     return return_evaluate_this_not_that
 

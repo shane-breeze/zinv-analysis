@@ -5,15 +5,15 @@ import awkward as awk
 import re
 
 from zinv.utils.NumbaFuncs import get_bin_indices, event_to_object_var, interpolate
-from zinv.utils.Geometry import RadToCart2D, CartToRad2D
+from zinv.utils.Geometry import RadToCart2D, CartToRad2D, DeltaR2
 
-@nb.vectorize([nb.float32(nb.float32,nb.float32,nb.float32,nb.float32,nb.float32),
-               nb.float64(nb.float64,nb.float64,nb.float64,nb.float64,nb.float64)])
+@nb.njit(["float32[:](float32[:],float32[:],float32[:],float32[:],float32[:])",
+          "float64[:](float64[:],float64[:],float64[:],float64[:],float64[:])"])
 def jer_formula(x, p0, p1, p2, p3):
     return np.sqrt(p0*np.abs(p0)/(x*x)+p1*p1*np.power(x,p3)+p2*p2)
 
-def met_shift(ev, unclust_energy):
-    @nb.njit
+def met_shift(ev):
+    @nb.njit(["UniTuple(float32[:],2)(float32[:],float32[:],float32[:],float32[:],float32[:],int64[:],int64[:])"])
     def met_shift_numba(met, mephi, jpt, jptshift, jphi, jstarts, jstops):
         jpx_old, jpy_old = RadToCart2D(jpt, jphi)
         jpx_new, jpy_new = RadToCart2D(jptshift, jphi)
@@ -21,12 +21,8 @@ def met_shift(ev, unclust_energy):
         mex, mey = RadToCart2D(met[:], mephi[:])
         for iev, (start, stop) in enumerate(zip(jstarts, jstops)):
             for iob in range(start, stop):
-                if jpt[iob] > unclust_energy:
-                    mex[iev] += jpx_old[iob]
-                    mey[iev] += jpy_old[iob]
-                if jptshift[iob]  > unclust_energy:
-                    mex[iev] -= jpx_new[iob]
-                    mey[iev] -= jpy_new[iob]
+                mex[iev] += (jpx_old[iob] - jpx_new[iob])
+                mey[iev] += (jpy_old[iob] - jpy_new[iob])
 
         return CartToRad2D(mex, mey)
     return met_shift_numba(
@@ -34,6 +30,41 @@ def met_shift(ev, unclust_energy):
         ev.Jet_pt.content, ev.Jet_phi.content,
         ev.Jet_pt.starts, ev.Jet_pt.stops,
     )
+
+def match_jets_from_genjets(event, maxdr, ndpt):
+    @nb.njit
+    def numba_function(
+        jpt, jeta, jphi, jres, jsta, jsto,
+        gjpt, gjeta, gjphi, gjsta, gjsto,
+    ):
+        match_idx = -1*np.ones_like(jpt, dtype=np.int64)
+        for iev, (jb, je, gjb, gje) in enumerate(zip(jsta, jsto, gjsta, gjsto)):
+            for ijs in range(jb, je):
+                for igjs in range(gjb, gje):
+                    within_dr2 = DeltaR2(
+                        jeta[ijs]-gjeta[igjs],
+                        jphi[ijs]-gjphi[igjs],
+                    ) < maxdr**2
+                    within_dpt = np.abs(jpt[ijs]-gjpt[igjs]) < ndpt*jres[ijs]*jpt[ijs]
+                    if within_dr2 and within_dpt:
+                        match_idx[ijs] = igjs-gjb
+                        break
+
+        return match_idx
+
+    return awk.JaggedArray(
+        event.Jet.pt.starts,
+        event.Jet.pt.stops,
+        numba_function(
+            event.Jet.pt.content, event.Jet.eta.content, event.Jet.phi.content,
+            event.Jet_ptResolution.content,
+            event.Jet.pt.starts, event.Jet.pt.stops,
+            event.GenJet.pt.content, event.GenJet.eta.content,
+            event.GenJet.phi.content,
+            event.GenJet.pt.starts, event.GenJet.pt.stops,
+        ),
+    )
+
 
 class JecVariations(object):
     def __init__(self, **kwargs):
@@ -55,7 +86,7 @@ class JecVariations(object):
         )
 
     def begin(self, event):
-        np.random.seed(123456)
+        np.random.seed(123456+event.config.dataset.idx)
 
         # Regex the variations
         comp_jes_regex = re.compile(self.jes_regex)
@@ -91,12 +122,12 @@ class JecVariations(object):
             1,
         )[:,0]
         df = self.jers.iloc[indices]
-        params = df[["param0", "param1", "param2", "param3"]].values
+        params = df[["param0", "param1", "param2", "param3"]].values.astype(np.float32)
         ptbounds = df[["pt_low", "pt_high"]].values
         event.Jet_ptResolution = awk.JaggedArray(
             event.Jet_pt.starts, event.Jet_pt.stops,
             jer_formula(
-                np.minimum(np.maximum(event.Jet_pt.content, ptbounds[:,0]), ptbounds[:,1]),
+                np.minimum(np.maximum(event.Jet_pt.content, ptbounds[:,0]), ptbounds[:,1]).astype(np.float32),
                 params[:,0], params[:,1], params[:,2], params[:,3],
             ),
         )
@@ -114,9 +145,10 @@ class JecVariations(object):
         jersfs_down = np.ones_like(event.Jet_pt.content, dtype=np.float32)
 
         # match gen jets
-        gidx = event.Jet_genJetIdx
-        gsize = event.GenJet_pt.counts
-        mask = (gidx>=0) & (gidx<gsize)
+        gidx = match_jets_from_genjets(
+            event, self.maxdr_jets_with_genjets, self.ndpt_jets_with_genjets,
+        )
+        mask = (gidx>=0)
         indices = (event.GenJet_pt.starts+gidx[mask]).content
         gpt_matched = event.GenJet_pt.content[indices]
 
@@ -155,7 +187,7 @@ class JecVariations(object):
             event.MET_phiJESOnly = event.MET_phi[:]
 
             event.Jet_pt = (event.Jet_pt*event.Jet_JECjerSF)[:,:]
-            met, mephi = met_shift(event, self.unclust_threshold)
+            met, mephi = met_shift(event)
             event.MET_pt = met[:]
             event.MET_phi = mephi[:]
 
@@ -173,8 +205,8 @@ class JecVariations(object):
         corr_up = np.array(list(df.iloc[indices]["corr_up"].values))
         corr_down = np.array(list(df.iloc[indices]["corr_down"].values))
 
-        corr_up = interpolate(event.Jet_ptJESOnly.content, pt, corr_up)
-        corr_down = interpolate(event.Jet_ptJESOnly.content, pt, corr_down)
+        corr_up = interpolate(event.Jet_ptJESOnly.content, pt, corr_up).astype(np.float32)
+        corr_down = interpolate(event.Jet_ptJESOnly.content, pt, corr_down).astype(np.float32)
 
         starts = event.Jet_eta.starts
         stops = event.Jet_eta.stops

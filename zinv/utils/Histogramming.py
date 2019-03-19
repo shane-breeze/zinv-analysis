@@ -47,8 +47,6 @@ class Histograms(object):
                 full_selection = config["selection"][:]
                 if parent in selection:
                     full_selection += selection[parent]
-                #if self.isdata:
-                #    full_selection = ["ev: ev.Is{}Triggered(ev)".format(config["dataset"])] + full_selection
 
                 new_config = copy.deepcopy(config)
                 new_config["process"] = parent
@@ -114,23 +112,22 @@ class Histograms(object):
             try:
                 variables.append(self.lambda_functions[v](event).astype(np.float32))
             except AttributeError:
-                temp = np.empty(ev.size, dtype=float)
+                temp = np.empty(event.size, dtype=float)
                 temp[:] = np.nan
                 variables.append(temp.astype(np.float32))
 
         weights1 = weight
         weights2 = weight**2
 
-        variables = np.transpose(np.array(variables))
-        bins = [np.array(b) for b in config["bins"]]
-
+        bins = [np.array(b, dtype=np.float32) for b in config["bins"]]
         hist_bins = bins
+        #variables = np.transpose(np.array(variables))
         #hist_counts, _ = np.histogramdd(variables, bins)
         #hist_yields, _ = np.histogramdd(variables, bins, weights=weights1)
         #hist_variance, _ = np.histogramdd(variables, bins, weights=weights2)
-        hist_counts = histogram1d_numba(variables[0], bins[0][1:-1], np.ones_like(weights1))
-        hist_yields = histogram1d_numba(variables[0], bins[0][1:-1], weights1)
-        hist_variance = histogram1d_numba(variables[0], bins[0][1:-1], weights2)
+        hist_counts = histogram1d_numba(variables[0], bins[0][1:-1], np.ones_like(weights1, dtype=np.float32))
+        hist_yields = histogram1d_numba(variables[0], bins[0][1:-1], weights1.astype(np.float32))
+        hist_variance = histogram1d_numba(variables[0], bins[0][1:-1], weights2.astype(np.float32))
 
         #data = self.create_onedim_hists(
         #    hist_bins, hist_counts, hist_yields, hist_variance,

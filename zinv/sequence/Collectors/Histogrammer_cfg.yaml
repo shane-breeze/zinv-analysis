@@ -39,6 +39,15 @@ configs:
             - [-3.1416, 3.1416, 51]
         weights:
             - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
+    MET_ptJESOnly:
+        categories:
+            - "all"
+        variables:
+            - "ev: ev.MET_ptJESOnly"
+        bins:
+            - [0., 1500., 61]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     MET_pt:
         categories:
             - "all"
@@ -48,6 +57,15 @@ configs:
             - [0., 1500., 61]
         weights:
             - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
+    MET_phiJESOnly:
+        categories:
+            - "all"
+        variables:
+            - "ev: ev.MET_phiJESOnly"
+        bins:
+            - [-3.1416, 3.1416, 51]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     MET_phi:
         categories:
             - "all"
@@ -55,6 +73,24 @@ configs:
             - "ev: ev.MET_phiShift(ev)"
         bins:
             - [-3.1416, 3.1416, 51]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
+    MET_dpt:
+        categories:
+            - "all"
+        variables:
+            - "ev: (ev.MET_pt-ev.MET_ptJESOnly)/ev.MET_ptJESOnly"
+        bins:
+            - [-1., 1., 51]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
+    MET_dphi:
+        categories:
+            - "all"
+        variables:
+            - "ev: ev.MET_phi-ev.MET_phiJESOnly"
+        bins:
+            - [-1., 1., 51]
         weights:
             - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     CaloMET_pt:
@@ -170,6 +206,69 @@ configs:
             - [0., 1., 51]
         weights:
             - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
+    LeadJetSelection_dpt:
+        categories:
+            - "all"
+        variables:
+            - "ev: get_nth_object((ev.JetSelection(ev, 'pt')-ev.JetSelection(ev, 'ptJESOnly'))/ev.JetSelection(ev, 'ptJESOnly'), 0, ev.size)"
+        bins:
+            - [-1., 1., 51]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
+    LeadJetFwdSelection_pt:
+        categories:
+            - "all"
+        variables:
+            - "ev: get_nth_object(ev.JetFwdSelection(ev, 'pt'), 0, ev.size)"
+        bins:
+            - [0., 50., 51]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
+    LeadJetFwdSelection_eta:
+        categories:
+            - "all"
+        variables:
+            - "ev: get_nth_object(ev.JetFwdSelection(ev, 'eta'), 0, ev.size)"
+        bins:
+            - [-5., 5., 51]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
+    LeadJetFwdSelection_phi:
+        categories:
+            - "all"
+        variables:
+            - "ev: get_nth_object(ev.JetFwdSelection(ev, 'phi'), 0, ev.size)"
+        bins:
+            - [-3.1416, 3.1416, 51]
+        weights:
+            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
+              #    NearestJetSelectionMET_pt:
+              #        categories:
+              #            - "all"
+              #        variables:
+              #            - "ev: get_nth_object(ev.JetSelection(ev, 'ptShift')[ev.JetSelection(ev, 'dphiMET').argmin()], 0, ev.size)"
+              #        bins:
+              #            - [0., 800, 41]
+              #        weights:
+              #            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
+              #    NearestJetSelectionMET_eta:
+              #        categories:
+              #            - "all"
+              #        variables:
+              #            - "ev: get_nth_object(ev.JetSelection(ev, 'eta')[ev.JetSelection(ev, 'dphiMET').argmin()], 0, ev.size)"
+              #        bins:
+              #            - [-5., 5., 51]
+              #        weights:
+              #            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
+              #    NearestJetSelectionMET_phi:
+              #        categories:
+              #            - "all"
+              #        variables:
+              #            - "ev: get_nth_object(ev.JetSelection(ev, 'phi')[ev.JetSelection(ev, 'dphiMET').argmin()], 0, ev.size)"
+              #        bins:
+              #            - [-3.1416, 3.1416, 51]
+              #        weights:
+              #            - ["", 0, "", "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
     SecondJetSelection_pt:
         categories:
             - "all"

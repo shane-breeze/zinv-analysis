@@ -10,7 +10,7 @@ from zinv.utils.Geometry import (BoundPhi, RadToCart2D, CartToRad2D,
                                  LorTHPMToXYZE, LorXYZEToTHPM)
 
 def evaluate_metnox(arg):
-    @nb.njit
+    @nb.njit(["UniTuple(float32[:],2)(float32[:],float32[:],float32[:],float32[:],int64[:],int64[:],float32[:],float32[:],int64[:],int64[:])"])
     def metnox_numba(
         met, mephi,
         mupt, muphi, mustarts, mustops,
@@ -36,16 +36,18 @@ def evaluate_metnox(arg):
             ev.MuonSelection(ev, 'phi').starts, ev.MuonSelection(ev, 'phi').stops,
             ev.ElectronSelection(ev, 'ptShift').content, ev.ElectronSelection(ev, 'phi').content,
             ev.ElectronSelection(ev, 'phi').starts, ev.ElectronSelection(ev, 'phi').stops,
-        )[arg_]
+        )[arg_].astype(np.float32)
 
     def return_evaluate_metnox(ev):
-        source = ev.source if ev.source in ev.attribute_variation_sources else ''
-        return fevaluate_metnox(ev, ev.iblock, ev.nsig, source, arg)
+        source, nsig = ev.source, ev.nsig
+        if source not in ev.attribute_variation_sources:
+            source, nsig = '', 0.
+        return fevaluate_metnox(ev, ev.iblock, nsig, source, arg)
 
     return return_evaluate_metnox
 
 def evaluate_mindphi(njets):
-    @nb.njit
+    @nb.njit(["float32[:](float32[:],int64[:],int64[:],int64,float32[:])"])
     def mindphi_numba(jphi, jstarts, jstops, njets_, mephi):
         dphi = np.zeros_like(mephi, dtype=np.float32)
         for iev, (start, stops) in enumerate(zip(jstarts, jstops)):
@@ -66,13 +68,15 @@ def evaluate_mindphi(njets):
         )
 
     def return_evaluate_mindphi(ev):
-        source = ev.source if ev.source in ev.attribute_variation_sources else ''
-        return fevaluate_mindphi(ev, ev.iblock, ev.nsig, source, njets)
+        source, nsig = ev.source, ev.nsig
+        if source not in ev.attribute_variation_sources:
+            source, nsig = '', 0.
+        return fevaluate_mindphi(ev, ev.iblock, nsig, source, njets)
 
     return return_evaluate_mindphi
 
 def evaluate_met_dcalo():
-    @nb.njit
+    @nb.njit(["float32[:](float32[:],float32[:],float32[:])"])
     def met_dcalo_numba(pfmet, calomet, metnox):
         return np.abs(pfmet-calomet)/metnox
 
@@ -83,17 +87,19 @@ def evaluate_met_dcalo():
         )
 
     def return_evaluate_met_dcalo(ev):
-        source = ev.source if ev.source in ev.attribute_variation_sources else ''
-        return fevaluate_met_dcalo(ev, ev.iblock, ev.nsig, source)
+        source, nsig = ev.source, ev.nsig
+        if source not in ev.attribute_variation_sources:
+            source, nsig = '', 0.
+        return fevaluate_met_dcalo(ev, ev.iblock, nsig, source)
 
     return return_evaluate_met_dcalo
 
 def evaluate_mtw():
-    @nb.njit
+    @nb.njit(["float32(float32,float32)"])
     def mtw_numba(ptprod, dphi):
         return np.sqrt(2*ptprod*(1-np.cos(dphi)))
 
-    @nb.njit
+    @nb.njit(["float32[:](float32[:],float32[:],float32[:],float32[:],int64[:],int64[:],float32[:],float32[:],int64[:],int64[:])"])
     def event_mtw_numba(
         met, mephi,
         mupt, muphi, mustarts, mustops,
@@ -129,13 +135,15 @@ def evaluate_mtw():
         )
 
     def return_evaluate_mtw(ev):
-        source = ev.source if ev.source in ev.attribute_variation_sources else ''
-        return fevaluate_mtw(ev, ev.iblock, ev.nsig, source)
+        source, nsig = ev.source, ev.nsig
+        if source not in ev.attribute_variation_sources:
+            source, nsig = '', 0.
+        return fevaluate_mtw(ev, ev.iblock, nsig, source)
 
     return return_evaluate_mtw
 
 def evaluate_mll():
-    @nb.njit
+    @nb.njit(["float32[:](float32[:],float32[:],float32[:],float32[:],int64[:],int64[:],float32[:],float32[:],float32[:],float32[:],int64[:],int64[:],int64)"])
     def event_mll_numba(
         mpt, meta, mphi, mmass, mstas, mstos,
         ept, eeta, ephi, emass, estas, estos,
@@ -181,13 +189,15 @@ def evaluate_mll():
         )
 
     def return_evaluate_mll(ev):
-        source = ev.source if ev.source in ev.attribute_variation_sources else ''
-        return fevaluate_mll(ev, ev.iblock, ev.nsig, source)
+        source, nsig = ev.source, ev.nsig
+        if source not in ev.attribute_variation_sources:
+            source, nsig = '', 0.
+        return fevaluate_mll(ev, ev.iblock, nsig, source)
 
     return return_evaluate_mll
 
 def evaluate_lepton_charge():
-    @nb.njit
+    @nb.njit(["int32[:](int32[:],int64[:],int64[:],int32[:],int64[:],int64[:],int64)"])
     def lepton_charge_numba(mcharge, mstas, mstos, echarge, estas, estos, evsize):
         charge = np.zeros(evsize, dtype=np.int32)
         for iev, (msta, msto, esta, esto) in enumerate(zip(
@@ -211,11 +221,12 @@ def evaluate_lepton_charge():
         )
 
     def return_evaluate_lepton_charge(ev):
-        source = ev.source if ev.source in ev.attribute_variation_sources else ''
-        return fevaluate_lepton_charge(ev, ev.iblock, ev.nsig, source)
+        source, nsig = ev.source, ev.nsig
+        if source not in ev.attribute_variation_sources:
+            source, nsig = '', 0.
+        return fevaluate_lepton_charge(ev, ev.iblock, nsig, source)
 
     return return_evaluate_lepton_charge
-
 
 class EventFunctions(object):
     def __init__(self, **kwargs):

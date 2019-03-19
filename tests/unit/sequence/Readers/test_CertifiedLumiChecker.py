@@ -8,8 +8,8 @@ class DummyEvent(object):
     def __init__(self):
         self.iblock = 0
         self.cache = {}
-        self.run = np.array([0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 3])
-        self.luminosityBlock = np.array([0, 1, 2, 4, 5, 6, 0, 8, 9, 10, 100])
+        self.run = np.array([0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 3], dtype=np.int32)
+        self.luminosityBlock = np.array([0, 1, 2, 4, 5, 6, 0, 8, 9, 10, 100], dtype=np.int32)
 
 @pytest.fixture()
 def event():

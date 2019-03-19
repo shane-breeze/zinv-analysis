@@ -11,6 +11,12 @@ JetSelection:
         - "ev: np.abs(ev.Jet.eta)<2.4"
         - "ev: ev.Jet.jetId>=1"
         - "ev: (ev.Jet.puId>=1) | (ev.Jet_ptShift(ev)>50.)"
+JetFwdSelection:
+    original: "Jet"
+    selections:
+        - "ev: np.abs(ev.Jet.eta)>=2.4"
+        - "ev: ev.Jet.jetId>=1"
+        - "ev: (ev.Jet.puId>=1) | (ev.Jet_ptShift(ev)>50.)"
 JetBVeto:
     original: "Jet"
     selections:

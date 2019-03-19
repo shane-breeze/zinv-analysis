@@ -13,7 +13,7 @@ from zinv.utils.NumbaFuncs import weight_numba, get_bin_indices
 dict_apply = np.vectorize(lambda d, x: d[x])
 
 def btag_formula(x, df):
-    @nb.njit
+    @nb.njit(["float32[:](float32[:],int32[:],float32[:],float32[:],float32[:],float32[:],float32[:],float32[:],float32[:],float32[:],float32[:])"])
     def btag_formula_numba(x_, eqtype, xlow, xhigh, p0, p1, p2, p3, p4, p5, p6):
         xtest = np.minimum(np.maximum(x_, xlow), xhigh)
         sf = np.ones_like(xtest, dtype=np.float32)
@@ -22,9 +22,12 @@ def btag_formula(x, df):
         sf[eqtype==2] = ((p0 + p1/(xtest**2) + p2*xtest)*(1 + (p4 + p5*xtest + p6*xtest**2)))[eqtype==2]
         return sf
     return btag_formula_numba(
-        x, df["eqtype"].values, df["xlow"].values, df["xhigh"].values,
-        df["p0"].values, df["p1"].values, df["p2"].values, df["p3"].values,
-        df["p4"].values, df["p5"].values, df["p6"].values,
+        x, df["eqtype"].values.astype(np.int32),
+        df["xlow"].values.astype(np.float32), df["xhigh"].values.astype(np.float32),
+        df["p0"].values.astype(np.float32), df["p1"].values.astype(np.float32),
+        df["p2"].values.astype(np.float32), df["p3"].values.astype(np.float32),
+        df["p4"].values.astype(np.float32), df["p5"].values.astype(np.float32),
+        df["p6"].values.astype(np.float32),
     )
 
 def evaluate_btagsf(df, attrs, h2f):
@@ -66,8 +69,10 @@ def evaluate_btagsf(df, attrs, h2f):
         )
 
     def return_evaluate_btagsf(ev):
-        source = ev.source if ev.source in ev.attribute_variation_sources+["btagSF"] else ''
-        return fevaluate_btagsf(ev, ev.iblock, ev.nsig, source, tuple(attrs))
+        source, nsig = ev.source, ev.nsig
+        if source not in ev.attribute_variation_sources+["btagSF"]:
+            source, nsig = '', 0.
+        return fevaluate_btagsf(ev, ev.iblock, nsig, source, tuple(attrs))
 
     return return_evaluate_btagsf
 

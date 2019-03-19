@@ -124,12 +124,12 @@ def test_objfunc_jptshift(module, event, inputs, outputs):
     event.source = inputs["source"]
 
     event.Jet.pt = awk.JaggedArray(
-        inputs["starts"], inputs["stops"], inputs["jpt"],
+        inputs["starts"], inputs["stops"], np.array(inputs["jpt"], dtype=np.float32),
     )
 
     for key, val in inputs["evvars"].items():
         setattr(event.Jet, key, awk.JaggedArray(
-            inputs["starts"], inputs["stops"], val,
+            inputs["starts"], inputs["stops"], np.array(val, dtype=np.float32),
         ))
 
     module.begin(event)
@@ -197,11 +197,11 @@ def test_objfunc_muptshift(module, event, inputs, outputs):
     event.source = inputs["source"]
 
     event.Muon.pt = awk.JaggedArray(
-        inputs["starts"], inputs["stops"], inputs["mpt"],
+        inputs["starts"], inputs["stops"], np.array(inputs["mpt"], dtype=np.float32),
     )
 
     for key, val in inputs["evvars"].items():
-        jagarr = awk.JaggedArray(inputs["starts"], inputs["stops"], val)
+        jagarr = awk.JaggedArray(inputs["starts"], inputs["stops"], np.array(val, dtype=np.float32))
         setattr(event.Muon, key, jagarr)
         setattr(event, "Muon_{}".format(key), jagarr)
 
@@ -212,7 +212,7 @@ def test_objfunc_muptshift(module, event, inputs, outputs):
     assert np.array_equal(mptshift.stops, np.array(inputs["stops"]))
     assert np.allclose(
         mptshift.content,
-        np.array(outputs["mptshift"]),
+        np.array(outputs["mptshift"], dtype=np.float32),
         rtol=1e-6, equal_nan=True,
     )
 
@@ -270,11 +270,11 @@ def test_objfunc_eptshift(module, event, inputs, outputs):
     event.source = inputs["source"]
 
     event.Electron.pt = awk.JaggedArray(
-        inputs["starts"], inputs["stops"], inputs["ept"],
+        inputs["starts"], inputs["stops"], np.array(inputs["ept"], dtype=np.float32),
     )
 
     for key, val in inputs["evvars"].items():
-        jagarr = awk.JaggedArray(inputs["starts"], inputs["stops"], val)
+        jagarr = awk.JaggedArray(inputs["starts"], inputs["stops"], np.array(val, dtype=np.float32))
         setattr(event.Electron, key, jagarr)
         setattr(event, "Electron_{}".format(key), jagarr)
 
@@ -343,11 +343,11 @@ def test_objfunc_yptshift(module, event, inputs, outputs):
     event.source = inputs["source"]
 
     event.Photon.pt = awk.JaggedArray(
-        inputs["starts"], inputs["stops"], inputs["ypt"],
+        inputs["starts"], inputs["stops"], np.array(inputs["ypt"], dtype=np.float32),
     )
 
     for key, val in inputs["evvars"].items():
-        jagarr = awk.JaggedArray(inputs["starts"], inputs["stops"], val)
+        jagarr = awk.JaggedArray(inputs["starts"], inputs["stops"], np.array(val, dtype=np.float32))
         setattr(event.Photon, key, jagarr)
         setattr(event, "Photon_{}".format(key), jagarr)
 
@@ -415,12 +415,12 @@ def test_objfunc_tptshift(module, event, inputs, outputs):
     event.nsig = inputs["nsig"]
     event.source = inputs["source"]
 
-    tpt = awk.JaggedArray(inputs["starts"], inputs["stops"], inputs["tpt"])
+    tpt = awk.JaggedArray(inputs["starts"], inputs["stops"], np.array(inputs["tpt"], dtype=np.float32))
     event.Tau_pt = tpt
     event.Tau.pt = tpt
 
     for key, val in inputs["evvars"].items():
-        jagarr = awk.JaggedArray(inputs["starts"], inputs["stops"], val)
+        jagarr = awk.JaggedArray(inputs["starts"], inputs["stops"], np.array(val, dtype=np.float32))
         setattr(event.Tau, key, jagarr)
         setattr(event, "Tau_{}".format(key), jagarr)
 

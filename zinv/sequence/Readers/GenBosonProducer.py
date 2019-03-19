@@ -68,7 +68,7 @@ def create_genpart_boson(ev, gp_mask, gdl_idx):
         ev.GenDressedLepton.pt.stops,
     )
 
-@nb.njit
+@nb.njit(["UniTuple(float32[:],4)(float32[:],float32[:],float32[:],float32[:],int64[:],int64[:],int64[:],float32[:],float32[:],float32[:],float32[:],int64[:],int64[:])"])
 def create_genpart_boson_jit(
     gps_pt, gps_eta, gps_phi, gps_mass, gps_gdidx, gps_starts, gps_stops,
     gds_pt, gds_eta, gds_phi, gds_mass, gds_starts, gds_stops,
@@ -124,7 +124,7 @@ def genpart_matched_dressedlepton(ev, gpmask):
         ev.GenDressedLepton.pdgId.stops,
     )
 
-@nb.njit
+@nb.njit(["int64[:](int32[:],float32[:],float32[:],int64[:],int64[:],int32[:],float32[:],float32[:],int64[:],int64[:])"])
 def genpart_matched_dressedlepton_jit(
     gps_pdg, gps_eta, gps_phi, gps_starts, gps_stops,
     gds_pdg, gds_eta, gds_phi, gds_starts, gds_stops,
