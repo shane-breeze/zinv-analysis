@@ -13,8 +13,8 @@ import cPickle as pickle
 from scipy.special import wofz
 #from uncertainties import ufloat
 
-from drawing.dist_ratio import dist_ratio
-from drawing.dist_scatter_pull import dist_scatter_pull
+from zinv.drawing.dist_ratio import dist_ratio
+from zinv.drawing.dist_scatter_pull import dist_scatter_pull
 
 # Take the cfg module and drop unpicklables
 from Histogrammer import HistReader, HistCollector

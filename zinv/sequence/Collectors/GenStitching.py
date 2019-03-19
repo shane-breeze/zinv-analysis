@@ -5,7 +5,7 @@ import re
 try: import cPickle as pickle
 except ImportError: import pickle
 
-from drawing.dist_stitch import dist_stitch
+from zinv.drawing.dist_stitch import dist_stitch
 from zinv.utils.Histogramming import Histograms
 
 from Histogrammer import Config, HistReader, HistCollector

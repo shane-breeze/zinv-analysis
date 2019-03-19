@@ -32,10 +32,11 @@ def met_shift(ev):
     )
 
 def match_jets_from_genjets(event, maxdr, ndpt):
-    @nb.njit
+    @nb.njit(["int64[:](float32[:],float32[:],float32[:],float32[:],int64[:],int64[:],float32[:],float32[:],float32[:],int64[:],int64[:],float32,float32)"])
     def numba_function(
         jpt, jeta, jphi, jres, jsta, jsto,
         gjpt, gjeta, gjphi, gjsta, gjsto,
+        maxdr_, ndpt_,
     ):
         match_idx = -1*np.ones_like(jpt, dtype=np.int64)
         for iev, (jb, je, gjb, gje) in enumerate(zip(jsta, jsto, gjsta, gjsto)):
@@ -44,8 +45,8 @@ def match_jets_from_genjets(event, maxdr, ndpt):
                     within_dr2 = DeltaR2(
                         jeta[ijs]-gjeta[igjs],
                         jphi[ijs]-gjphi[igjs],
-                    ) < maxdr**2
-                    within_dpt = np.abs(jpt[ijs]-gjpt[igjs]) < ndpt*jres[ijs]*jpt[ijs]
+                    ) < maxdr_**2
+                    within_dpt = np.abs(jpt[ijs]-gjpt[igjs]) < ndpt_*jres[ijs]*jpt[ijs]
                     if within_dr2 and within_dpt:
                         match_idx[ijs] = igjs-gjb
                         break
@@ -62,6 +63,7 @@ def match_jets_from_genjets(event, maxdr, ndpt):
             event.GenJet.pt.content, event.GenJet.eta.content,
             event.GenJet.phi.content,
             event.GenJet.pt.starts, event.GenJet.pt.stops,
+            maxdr, ndpt,
         ),
     )
 
