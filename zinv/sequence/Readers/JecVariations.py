@@ -142,53 +142,58 @@ class JecVariations(object):
             1,
         )[:,0]
         ressfs = self.jersfs.iloc[indices][["corr", "corr_up", "corr_down"]].values
-        jersfs = np.ones_like(event.Jet_pt.content, dtype=np.float32)
-        jersfs_up = np.ones_like(event.Jet_pt.content, dtype=np.float32)
-        jersfs_down = np.ones_like(event.Jet_pt.content, dtype=np.float32)
+        cjer = np.ones_like(event.Jet_pt.content, dtype=np.float32)
+        cjer_up = np.ones_like(event.Jet_pt.content, dtype=np.float32)
+        cjer_down = np.ones_like(event.Jet_pt.content, dtype=np.float32)
 
         # match gen jets
         gidx = match_jets_from_genjets(
             event, self.maxdr_jets_with_genjets, self.ndpt_jets_with_genjets,
         )
+        event.Jet_genJetIdx = gidx
+        event.Jet_sjer = awk.JaggedArray(
+            event.Jet.pt.starts, event.Jet.pt.stops, ressfs[:,0],
+        )
         mask = (gidx>=0)
         indices = (event.GenJet_pt.starts+gidx[mask]).content
         gpt_matched = event.GenJet_pt.content[indices]
+        mask = mask.content
 
-        gen_var = 1.-gpt_matched/event.Jet_pt[mask].content
-        jersfs[mask.content] = 1. + (ressfs[mask.content,0]-1.)*gen_var
-        jersfs_up[mask.content] = 1. + (ressfs[mask.content,1]-1.)*gen_var
-        jersfs_down[mask.content] = 1. + (ressfs[mask.content,2]-1.)*gen_var
+        gen_var = np.abs(1.-gpt_matched/event.Jet_pt.content[mask])
+        gaus_var = np.random.normal(0., gen_var)
+        cjer[mask] = 1. + (ressfs[mask,0]-1.)*gaus_var
+        cjer_up[mask] = 1. + (ressfs[mask,1]-1.)*gaus_var
+        cjer_down[mask] = 1. + (ressfs[mask,2]-1.)*gaus_var
 
         # unmatched gen jets
-        gaus_var = np.random.normal(0., event.Jet_ptResolution[gidx<0].content)
-        ressfs_mod = ressfs[(gidx<0).content]**2-1.
+        gaus_var = np.random.normal(0., event.Jet_ptResolution.content[~mask])
+        ressfs_mod = ressfs[~mask]**2-1.
         ressfs_mod[ressfs_mod<0.] = 0.
-        jersfs[(gidx<0).content] = 1. + gaus_var*np.sqrt(ressfs_mod[:,0])
-        jersfs_up[(gidx<0).content] = 1. + gaus_var*np.sqrt(ressfs_mod[:,1])
-        jersfs_down[(gidx<0).content] = 1. + gaus_var*np.sqrt(ressfs_mod[:,2])
+        cjer[~mask] = 1. + gaus_var*np.sqrt(ressfs_mod[:,0])
+        cjer_up[~mask] = 1. + gaus_var*np.sqrt(ressfs_mod[:,1])
+        cjer_down[~mask] = 1. + gaus_var*np.sqrt(ressfs_mod[:,2])
 
         # negative checks
-        jersfs[jersfs<0.] = 0.
-        jersfs_up[jersfs_up<0.] = 0.
-        jersfs_down[jersfs_down<0.] = 0.
+        cjer[cjer<0.] = 0.
+        cjer_up[cjer_up<0.] = 0.
+        cjer_down[cjer_down<0.] = 0.
+
+        cjer_up[cjer>0.] = (cjer_up/cjer-1.)[cjer>0.]
+        cjer_up[cjer==0.] = 0.
+        cjer_down[cjer>0.] = (cjer_down/cjer-1.)[cjer>0.]
+        cjer_down[cjer==0.] = 0.
 
         # write to event
         starts, stops = event.Jet_pt.starts, event.Jet_pt.stops
-        event.Jet_JECjerSF = awk.JaggedArray(starts, stops, jersfs)
-        event.Jet_JECjerSFUp = awk.JaggedArray(
-            starts, stops,
-            np.divide(jersfs_up, jersfs, out=np.ones_like(jersfs), where=(jersfs!=0.))-1.,
-        )
-        event.Jet_JECjerSFDown = awk.JaggedArray(
-            starts, stops,
-            np.divide(jersfs_down, jersfs, out=np.ones_like(jersfs), where=(jersfs!=0.))-1.,
-        )
+        jet_cjer = awk.JaggedArray(starts, stops, cjer)
+        event.Jet_JECjerSFUp = awk.JaggedArray(starts, stops, cjer_up)
+        event.Jet_JECjerSFDown = awk.JaggedArray(starts, stops, cjer_down)
         if self.apply_jer_corrections:
             event.Jet_ptJESOnly = event.Jet_pt[:,:]
             event.MET_ptJESOnly = event.MET_pt[:]
             event.MET_phiJESOnly = event.MET_phi[:]
 
-            event.Jet_pt = (event.Jet_pt*event.Jet_JECjerSF)[:,:]
+            event.Jet_pt = (event.Jet_pt*jet_cjer)[:,:]
             met, mephi = met_shift(event)
             event.MET_pt = met[:]
             event.MET_phi = mephi[:]
