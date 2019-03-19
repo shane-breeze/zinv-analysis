@@ -54,26 +54,26 @@ def event_module_run(module, event):
         return 0.5
     np.random.normal = mock.Mock(side_effect=norm)
     inputs = {
-        "jpt":    [[], [16.], [60., 70.]],
-        "jeta":   [[], [-3.1], [0.5, 3.1]],
-        "jphi":   [[], [0.1], [0.3, 0.5]],
-        "gjpt":   [[], [17.], [65., 75.]],
+        "jpt":    [[], [16.],   [60., 70.]],
+        "jeta":   [[], [-3.1],  [0.5, 3.1]],
+        "jphi":   [[], [0.1],   [0.3, 0.5]],
+        "gjpt":   [[], [17.],   [65., 75.]],
         "gjeta":  [[], [-3.11], [1.0, 3.09]],
-        "gjphi":  [[], [0.1], [0.3, 0.5]],
-        "rho":    [0., 20., 50.],
+        "gjphi":  [[], [0.1],   [0.3, 0.5]],
+        "rho":    [0.,   20.,  50.],
         "met":    [200., 220., 240.],
-        "mephi":  [0.9, 0.1, -0.7],
+        "mephi":  [0.9,  0.1,  -0.7],
     }
     outputs = {
-        "jpt":         [[], [15.672], [76.2953858499882, 68.36000000000003]],
-        "jptres":      [[], [0.456227396877664], [0.131449148093119, 0.179063214239771]],
-        "jjersf":      [[], [0.9795], [1.271589764166470, 0.976571428571429]],
-        "jjersfdown":  [[], [0.00797600816743227], [-0.061708613189990, 0.009142773551785]],
-        "jjersfup":    [[], [-0.00797600816743238], [0.050076915810078, -0.009142773551785]],
-        "jjestotdown": [[], [-0.07725], [-0.0144, -0.05163]],
-        "jjestotup":   [[], [0.07725], [0.0144, 0.05163]],
-        "met":         [200., 220.328, 232.10981279053],
-        "mephi":       [0.9, 0.1, -0.75251459154],
+        "jpt":         [[], [18.624],            [76.29538585,    81.48]],
+        "jptres":      [[], [0.456227396877664], [0.13144913,     0.179063214239771]],
+        "jjersf":      [[], [1.164],             [1.271589764,    1.164]],
+        "jjersfdown":  [[], [-0.05369415808],    [-0.06170861319, -0.05369415808]],
+        "jjersfup":    [[], [0.05369415808],     [0.05007691581,  0.05369415808]],
+        "jjestotdown": [[], [-0.07725],          [-0.0144,        -0.05163]],
+        "jjestotup":   [[], [0.07725],           [0.0144,         0.05163]],
+        "met":         [200., 217.376, 228.3443658],
+        "mephi":       [0.9,  0.1,     -0.8071129825],
     }
     event.config.dataset.idx = 2
 
@@ -119,14 +119,6 @@ def test_jec_variations_ptres(event_module_run):
     assert np.allclose(
         event_module_run.Jet_ptResolution.content,
         awk.JaggedArray.fromiter(outputs["jptres"]).astype(np.float32).content,
-        rtol=1e-6, equal_nan=True,
-    )
-
-def test_jec_variations_jersf(event_module_run):
-    outputs = event_module_run.outputs
-    assert np.allclose(
-        event_module_run.Jet_JECjerSF.content,
-        awk.JaggedArray.fromiter(outputs["jjersf"]).astype(np.float32).content,
         rtol=1e-6, equal_nan=True,
     )
 
