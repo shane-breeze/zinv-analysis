@@ -209,6 +209,11 @@ vmem_dict = {
 }
 
 def run(sequence, datasets, options):
+    predetermined_nevents_in_file = {
+        d.files[idx]: d.file_nevents[idx]
+        for d in datasets
+        for idx in range(len(d.files))
+    }
     process = AtUproot(
         options.outdir,
         quiet = options.quiet,
@@ -219,6 +224,7 @@ def run(sequence, datasets, options):
         nevents_per_block = options.blocksize,
         profile = options.profile,
         profile_out_path = "profile.txt",
+        predetermined_nevents_in_file = predetermined_nevents_in_file,
     )
 
     # Change parallel options (SGE not supported in standard `build_parallel`)
