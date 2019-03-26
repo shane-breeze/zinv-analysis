@@ -7,24 +7,27 @@ from functools import partial
 
 from zinv.utils.NumbaFuncs import weight_numba
 
-def evaluate_pdf_variations():
+def evaluate_pdf_variations(valid):
     @nb.njit(["float32[:](float32[:],float32[:],int64[:],int64[:])"])
     def rel_stddev(nominal, pdfs, starts, stops):
         rel_err = np.zeros_like(nominal, dtype=np.float32)
         for iev, (start, stop) in enumerate(zip(starts, stops)):
-            rel_err[iev] = np.std(pdfs[start:stop]*nominal[iev])/nominal[iev]
+            if nominal[iev] != 0.:
+                rel_err[iev] = np.std(pdfs[start:stop]*nominal[iev])/nominal[iev]
+            else:
+                rel_err[iev] = 0.
         return rel_err
 
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_pdf_variations'))
-    def fevaluate_pdf_variations(ev, evidx, nsig, source):
-        if source == "pdf":
+    def fevaluate_pdf_variations(ev, evidx, nsig, source, valid_):
+        if source == "pdf" and valid_:
             pdf_relstddev = rel_stddev(
                 ev.LHEWeight_originalXWGTUP,
                 ev.LHEPdfWeight.content,
                 ev.LHEPdfWeight.starts,
                 ev.LHEPdfWeight.stops,
             )
-            weight = weight_numba(1., nsig, pdf_relstddev, -pdf_relstddev)
+            weight = weight_numba(np.ones(ev.size, dtype=np.float32), nsig, pdf_relstddev, -pdf_relstddev)
         else:
             weight = np.ones(ev.size, dtype=np.float32)
         ev.delete_branches(["LHEWeight_originalXWGTUP", "LHEPdfWeight"])
@@ -34,12 +37,12 @@ def evaluate_pdf_variations():
         source, nsig = ev.source, ev.nsig
         if source not in ["pdf"]:
             source, nsig = '', 0.
-        return fevaluate_pdf_variations(ev, ev.iblock, nsig, source)
+        return fevaluate_pdf_variations(ev, ev.iblock, nsig, source, valid)
 
     return ret_func
 
 def evaluate_scale_variations(name, positions):
-    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, ''))
+    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_scale_variations'))
     def fevaluate_scale_variations(ev, evidx, nsig, source, name_):
         if source == name_:
             up = ev.LHEScaleWeight[:,positions[0]]
@@ -54,7 +57,27 @@ def evaluate_scale_variations(name, positions):
         source, nsig = ev.source, ev.nsig
         if source not in [name]:
             source, nsig = '', 0.
-        return fevaluate_scale_variations(ev, ev.iblock, nsig, ev.source, name)
+        return fevaluate_scale_variations(ev, ev.iblock, nsig, source, name)
+
+    return ret_func
+
+def evaluate_scale_variations_old(valid):
+    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_scale_variations_old'))
+    def fevaluate_scale_variations_old(ev, evidx, nsig, source, valid_):
+        if source == "scale" and valid_:
+            up = ev.LHEScaleWeight.max(axis=1)
+            down = ev.LHEScaleWeight.min(axis=1)
+            weight = weight_numba(1., nsig, up, down)
+        else:
+            weight = np.ones(ev.size, dtype=np.float32)
+        ev.delete_branches(["LHEScaleWeight"])
+        return weight
+
+    def ret_func(ev):
+        source, nsig = ev.source, ev.nsig
+        if source not in "scale":
+            source, nsig = '', 0.
+        return fevaluate_scale_variations_old(ev, ev.iblock, nsig, source, valid)
 
     return ret_func
 
@@ -72,7 +95,12 @@ class WeightPdfScale(object):
         self.__dict__.update(kwargs)
 
     def begin(self, event):
-        event.WeightPdfVariations = evaluate_pdf_variations()
-        event.WeightFactorScale = evaluate_scale_variations("factor", (5, 3))
-        event.WeightRenormScale = evaluate_scale_variations("renorm", (7, 1))
-        event.WeightFactorXRenormScale = evaluate_scale_variations("factorXrenorm", (8, 0))
+        if event.config.dataset.name in ["TTJets_Inclusive"] or event.config.dataset.parent in ["QCD"]:
+            event.WeightPdfVariations = evaluate_pdf_variations(False)
+            event.WeightQCDScale = evaluate_scale_variations_old(False)
+        else:
+            event.WeightPdfVariations = evaluate_pdf_variations(True)
+            event.WeightQCDScale = evaluate_scale_variations_old(True)
+        #event.WeightFactorScale = evaluate_scale_variations("factor", (5, 3))
+        #event.WeightRenormScale = evaluate_scale_variations("renorm", (7, 1))
+        #event.WeightFactorXRenormScale = evaluate_scale_variations("factorXrenorm", (8, 0))
