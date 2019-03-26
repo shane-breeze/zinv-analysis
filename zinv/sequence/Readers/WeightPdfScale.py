@@ -14,8 +14,6 @@ def evaluate_pdf_variations(valid):
         for iev, (start, stop) in enumerate(zip(starts, stops)):
             if nominal[iev] != 0.:
                 rel_err[iev] = np.std(pdfs[start:stop]*nominal[iev])/nominal[iev]
-            else:
-                rel_err[iev] = 0.
         return rel_err
 
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_pdf_variations'))
