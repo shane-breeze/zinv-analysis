@@ -193,7 +193,7 @@ vmem_dict = {
     "ZZTo2L2Nu_ext1": 12,
     "ZZTo2Q2Nu":      12,
     "ZZTo4L":         12,
-    "ZZTo4Q":         12,
+    "ZZTo4Q":         18,
     "ZGToLLG":       12,
     "ZGToLLG_ext1":  12,
     "WGToQQG":       12,

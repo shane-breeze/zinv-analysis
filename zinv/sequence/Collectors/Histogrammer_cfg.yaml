@@ -246,7 +246,7 @@ configs:
               #        categories:
               #            - "all"
               #        variables:
-              #            - "ev: get_nth_object(ev.JetSelection(ev, 'ptShift')[ev.JetSelection(ev, 'dphiMET').argmin()], 0, ev.size)"
+              #            - "ev: ev.JetSelection(ev, 'ptShift').content[ev.JetSelection(ev, 'dphiMET').argmin().content]"
               #        bins:
               #            - [0., 800, 41]
               #        weights:
@@ -255,7 +255,7 @@ configs:
               #        categories:
               #            - "all"
               #        variables:
-              #            - "ev: get_nth_object(ev.JetSelection(ev, 'eta')[ev.JetSelection(ev, 'dphiMET').argmin()], 0, ev.size)"
+              #            - "ev: ev.JetSelection(ev, 'eta').content[ev.JetSelection(ev, 'dphiMET').argmin().content]"
               #        bins:
               #            - [-5., 5., 51]
               #        weights:
@@ -264,7 +264,7 @@ configs:
               #        categories:
               #            - "all"
               #        variables:
-              #            - "ev: get_nth_object(ev.JetSelection(ev, 'phi')[ev.JetSelection(ev, 'dphiMET').argmin()], 0, ev.size)"
+              #            - "ev: ev.JetSelection(ev, 'phi')[ev.JetSelection(ev, 'dphiMET').argmin().content]"
               #        bins:
               #            - [-3.1416, 3.1416, 51]
               #        weights:
