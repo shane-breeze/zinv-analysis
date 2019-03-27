@@ -17,6 +17,8 @@ class DummyEvent(object):
         self.attribute_variation_sources = []
         self.cache = {}
 
+        self.Electron = DummyColl()
+
 @pytest.fixture()
 def path():
     toppath = os.path.abspath(os.environ["TOPDIR"])
@@ -28,7 +30,7 @@ def event():
     return DummyEvent()
 
 @pytest.fixture()
-def module_electrons(path):
+def module(path):
     return WeightObjects(
         correctors = [
             {
@@ -63,90 +65,63 @@ def module_electrons(path):
         ],
     )
 
-@pytest.fixture()
-def module_muons(path):
-    return WeightObjects(
-        correctors = [
-            {
-                "name": "muonIdTight",
-                "collection": "Muon",
-                "binning_variables": ("ev: np.abs(ev.Muon.eta)", "ev: ev.Muon_ptShift(ev)"),
-                "weighted_paths": [(19.7, path+"/muons/muon_id_loose_runBCDEF.txt"),
-                                   (16.2, path+"/muons/muon_id_loose_runGH.txt")],
-                "add_syst": "ev: 0.01*awk.JaggedArray.ones_like(ev.Muon.eta)",
-                "nuisances": ["muonIdTight", "muonPtScale"],
-            }, {
-                "name": "muonIdLoose",
-                "collection": "Muon",
-                "binning_variables": ("ev: np.abs(ev.Muon.eta)", "ev: ev.Muon_ptShift(ev)"),
-                "weighted_paths": [(19.7, path+"/muons/muon_id_loose_runBCDEF.txt"),
-                                   (16.2, path+"/muons/muon_id_loose_runGH.txt")],
-                "add_syst": "ev: 0.01*awk.JaggedArray.ones_like(ev.Muon.eta)",
-                "nuisances": ["muonIdLoose", "muonPtScale"],
-            }, {
-                "name": "muonIsoTight",
-                "collection": "Muon",
-                "binning_variables": ("ev: np.abs(ev.Muon.eta)", "ev: ev.Muon_ptShift(ev)"),
-                "weighted_paths": [(19.7, path+"/muons/muon_iso_tight_tightID_runBCDEF.txt"),
-                                   (16.2, path+"/muons/muon_iso_tight_tightID_runGH.txt")],
-                "add_syst": "ev: 0.005*awk.JaggedArray.ones_like(ev.Muon.eta)",
-                "nuisances": ["muonIsoTight", "muonPtScale"],
-            }, {
-                "name": "muonIsoLoose",
-                "collection": "Muon",
-                "binning_variables": ("ev: np.abs(ev.Muon.eta)", "ev: ev.Muon_ptShift(ev)"),
-                "weighted_paths": [(19.7, path+"/muons/muon_iso_loose_looseID_runBCDEF.txt"),
-                                   (16.2, path+"/muons/muon_iso_loose_looseID_runGH.txt")],
-                "add_syst": "ev: 0.005*awk.JaggedArray.ones_like(ev.Muon.eta)",
-                "nuisances": ["muonIsoLoose", "muonPtScale"],
-            }, {
-                "name": "muonTrig",
-                "collection": "Muon",
-                "binning_variables": ("ev: np.abs(ev.Muon.eta)", "ev: ev.Muon_ptShift(ev)"),
-                "weighted_paths": [(19.7, path + "/muons/muon_trigger_IsoMu24_OR_IsoTkMu24_runBCDEF.txt"),
-                                   (16.2, path + "/muons/muon_trigger_IsoMu24_OR_IsoTkMu24_runGH.txt")],
-                "add_syst": "ev: 0.005*awk.JaggedArray.ones_like(ev.Muon.eta)",
-                "nuisances": ["muonTrig", "muonPtScale"],
-            },
-        ],
+def test_weightobjects_init(module):
+    assert hasattr(module, "correctors")
+
+@pytest.mark.parametrize(
+    "inputs,outputs", (
+        [{
+            "name":   "eleIdIsoTight",
+            "eleeta": [[0.1], [-3., -0.5, 0.5, 3], [-1e6, 1e6], [0.1, 0.3]],
+            "elept":  [[10.], [20., 30., 40., 50], [100., 120.], [-1e6, 1e6]],
+            "nsig":   0.,
+            "source": "",
+        }, {
+            "sf": [[9.4587630033e-01], [8.8245934248e-01, 9.5299839973e-01, 9.7981154919e-01, 9.3766236305e-01], [1.0510855913e+00, 1.0213568211e+00], [9.4587630033e-01, 1.0118906498e+00]],
+        }], [{
+            "name":   "eleIdIsoVeto",
+            "eleeta": [[0.1], [-3., -0.5, 0.5, 3], [-1e6, 1e6], [0.1, 0.3]],
+            "elept":  [[10.], [20., 30., 40., 50], [100., 120.], [-1e6, 1e6]],
+            "nsig":   1.,
+            "source": "eleIdIsoVeto",
+        }, {
+            "sf": [[9.96433724056E-01], [9.85382607704E-01, 9.94656152779E-01, 9.91259808420E-01, 1.00426236358E+00], [1.04882350978E+00, 1.04453718557E+00], [9.96433724056E-01, 1.01499641427E+00]],
+        }], [{
+            "name":   "eleReco",
+            "eleeta": [[0.1], [-3., -0.5, 0.5, 3], [-1e6, 1e6], [0.1, 0.3]],
+            "elept":  [[10.], [20., 30., 40., 50], [100., 120.], [-1e6, 1e6]],
+            "nsig":   -1.,
+            "source": "eleReco",
+        }, {
+            "sf": [[9.73408456347E-01], [1.29357287767E+00, 9.78643468014E-01, 9.81689022011E-01, 8.90130249373E-01], [1.29019777985E+00, 8.87807785202E-01], [9.73408456347E-01, 9.77046870735E-01]],
+        }],
+    )
+)
+def test_weightobjects_begin(module, event, inputs, outputs):
+    event.source = inputs["source"]
+    event.nsig = inputs["nsig"]
+
+    module.begin(event)
+
+    eleeta = awk.JaggedArray.fromiter(inputs["eleeta"]).astype(np.float32)
+    event.Electron.eta = eleeta
+    event.Electron_eta = eleeta
+
+    elept = awk.JaggedArray.fromiter(inputs["elept"]).astype(np.float32)
+    event.Electron.ptShift = mock.Mock(side_effect=lambda ev: elept)
+    event.Electron_ptShift = mock.Mock(side_effect=lambda ev: elept)
+
+    sf = getattr(event, "Electron_Weight{}SF".format(inputs["name"]))(event)
+    osf = awk.JaggedArray.fromiter(outputs["sf"]).astype(np.float32)
+
+    print(sf)
+    print(osf)
+    assert np.array_equal(sf.starts, osf.starts)
+    assert np.array_equal(sf.stops, osf.stops)
+    assert np.allclose(
+        sf.content, osf.content, rtol=1e-6, equal_nan=True,
     )
 
-@pytest.fixture()
-def module_taus(path):
-    return WeightObjects(
-        correctors = [
-            {
-                "name": "tauIdTight",
-                "collection": "Tau",
-                "binning_variables": ("ev: ev.Tau_ptShift(ev)",),
-                "weighted_paths": [(1, path+"/taus/tau_id_tight.txt")],
-                "add_syst": "ev: 0.05*awk.JaggedArray.ones_like(ev.Tau.eta)",
-                "nuisances": ["tauIdTight", "tauEnergyScale"],
-            },
-        ],
-    )
-
-@pytest.fixture()
-def module_photons(path):
-    return WeightObjects(
-        correctors = [
-            {
-                "name": "photonIdLoose",
-                "collection": "Photon",
-                "binning_variables": ("ev: ev.Photon.eta", "ev: ev.Photon_ptShift(ev)"),
-                "weighted_paths": [(1, path+"/photons/photon_cutbasedid_loose.txt")],
-                "add_syst": "ev: awk.JaggedArray.zeros_like(ev.Photon.eta)",
-                "nuisances": ["photonIdLoose", "photonEnergyScale"],
-            }, {
-                "name": "photonPixelSeedVeto",
-                "collection": "Photon",
-                "binning_variables": ("ev: ev.Photon.r9", "ev: np.abs(ev.Photon.eta)", "ev: ev.Photon_ptShift(ev)"),
-                "weighted_paths": [(1, path+"/photons/photon_pixelseedveto.txt")],
-                "add_syst": "ev: awk.JaggedArray.zeros_like(ev.Photon.eta)",
-                "nuisances": ["photonPixelSeedVeto", "photonEnergyScale"],
-            },
-        ],
-    )
-
-#def test_weightobjects_init(module_electrons):
-
+def test_weightobjects_end(module):
+    assert module.end() is None
+    assert module.lambda_functions is None

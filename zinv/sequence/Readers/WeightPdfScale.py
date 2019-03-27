@@ -63,9 +63,9 @@ def evaluate_scale_variations_old(valid):
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_scale_variations_old'))
     def fevaluate_scale_variations_old(ev, evidx, nsig, source, valid_):
         if source == "scale" and valid_:
-            up = ev.LHEScaleWeight.max(axis=1)
-            down = ev.LHEScaleWeight.min(axis=1)
-            weight = weight_numba(1., nsig, up, down)
+            up = ev.LHEScaleWeight.max() - 1.
+            down = ev.LHEScaleWeight.min() - 1.
+            weight = weight_numba(np.ones(ev.size, dtype=np.float32), nsig, up, down)
         else:
             weight = np.ones(ev.size, dtype=np.float32)
         ev.delete_branches(["LHEScaleWeight"])
