@@ -25,3 +25,6 @@ jobs:
 
             - store_artifacts:
                 path: cov_html
+
+            - codecov/upload:
+                path: cov_html
