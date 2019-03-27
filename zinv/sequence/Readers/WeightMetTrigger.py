@@ -32,15 +32,15 @@ def evaluate_met_trigger(cats, xcents, params):
     def fevaluate_met_trigger(ev, evidx, nsig, source):
         wmet = met_trigger_numba_cached(ev, evidx, 0)
 
+        up = np.zeros_like(wmet)
+        down = np.zeros_like(wmet)
+        zero_mask = (wmet!=0.)
         if source == "metTrigStat":
-            up = met_trigger_numba_cached(ev, evidx, 1)
-            down = met_trigger_numba_cached(ev, evidx, 2)
+            up[zero_mask] = met_trigger_numba_cached(ev, evidx, 1)[zero_mask]/wmet[zero_mask] - 1.
+            down[zero_mask] = met_trigger_numba_cached(ev, evidx, 2)[zero_mask]/wmet[zero_mask] - 1.
         elif source == "metTrigSyst":
-            up = met_trigger_numba_cached(ev, evidx, 3)
-            down = met_trigger_numba_cached(ev, evidx, 4)
-        else:
-            up = np.zeros_like(wmet)
-            down = np.zeros_like(wmet)
+            up[zero_mask] = met_trigger_numba_cached(ev, evidx, 3)[zero_mask]/wmet[zero_mask] - 1.
+            down[zero_mask] = met_trigger_numba_cached(ev, evidx, 4)[zero_mask]/wmet[zero_mask] - 1.
 
         return weight_numba(wmet, nsig, up, down)
 
@@ -72,12 +72,25 @@ class WeightMetTrigger(object):
             self.systup.append(df["syst_up"].values)
             self.systdown.append(df["syst_down"].values)
 
+        self.xcents = np.array(self.xcents, dtype=np.float32)
+        self.corr = np.array(self.corr, dtype=np.float32)
+        self.statup = np.array(self.statup, dtype=np.float32)
+        self.statdown = np.array(self.statdown, dtype=np.float32)
+        self.systup = np.array(self.systup, dtype=np.float32)
+        self.systdown = np.array(self.systdown, dtype=np.float32)
+
     def begin(self, event):
-        params = (self.corr, self.statup, self.statdown, self.systup, self.systdown)
+        params = (
+            self.corr,
+            self.corr*(1.+self.statup),
+            self.corr*(1.-self.statdown),
+            self.corr*(1.+self.systup),
+            self.corr*(1.-self.systdown),
+        )
         event.WeightMETTrig = evaluate_met_trigger(self.cats, self.xcents, params)
 
 def read_file(path):
-    df = pd.read_table(path, sep='\s+')[[
+    df = pd.read_csv(path, sep='\s+')[[
         "x_low", "x_high", "val", "err_down", "err_up", "syst_up", "syst_down",
     ]]
     df["x_cent"] = df.eval("(x_low+x_high)/2.")
