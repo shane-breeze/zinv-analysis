@@ -93,7 +93,7 @@ class WeightPdfScale(object):
         self.__dict__.update(kwargs)
 
     def begin(self, event):
-        if event.config.dataset.name in ["TTJets_Inclusive"] or event.config.dataset.parent in ["QCD"]:
+        if event.config.dataset.parent in self.parents_to_skip:
             event.WeightPdfVariations = evaluate_pdf_variations(False)
             event.WeightQCDScale = evaluate_scale_variations_old(False)
         else:
