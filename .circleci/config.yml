@@ -5,9 +5,10 @@ orbs:
 jobs:
     build:
         docker:
-            # specify the version you desire here
             - image: circleci/python:2.7.15
         working_directory: ~/repo
+        environment:
+            CODECOV_TOKEN: "9a0dee71-741b-4d72-89c7-bcdc54e12668"
         steps:
             - checkout
             - run:
@@ -25,3 +26,4 @@ jobs:
 
             - codecov/upload:
                 file: coverage.xml
+
