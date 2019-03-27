@@ -3,15 +3,12 @@ codecov:
         require_ci_to_pass: yes
 
 coverage:
-    ignore:
-        - "numba/cuda/.*"
-        - "numba/hsa/.*"
+    precision: 2
+    round: down
+    range: "20...100"
 
     status:
-        project:
-            default:
-                target: auto
-                threshold: "20%"
+        project: yes
         patch: yes
         changes: no
 
