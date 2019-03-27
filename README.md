@@ -1,5 +1,7 @@
 [![CircleCI](https://circleci.com/gh/shane-breeze/zinv-analysis.svg?style=shield)](https://circleci.com/gh/shane-breeze/zinv-analysis)
 
+[![codecov](https://codecov.io/gh/shane-breeze/zinv-analysis/branch/master/graph/badge.svg)](https://codecov.io/gh/shane-breeze/zinv-analysis)
+
 # Z invisible analysis
 
 Setup with
