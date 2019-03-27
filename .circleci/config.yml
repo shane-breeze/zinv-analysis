@@ -7,21 +7,22 @@ jobs:
         docker:
             # specify the version you desire here
             - image: circleci/python:2.7.15
-
+        parallelism: 4
         working_directory: ~/repo
-
         steps:
             - checkout
             - run:
                 name: install dependencies
                 command: pip install --user -r requirements.txt
 
-            # run tests
             - run:
                 name: run tests
                 command: |
                     source setup.sh
-                    python -m pytest --cov-report html:cov_html --cov=zinv tests/
+                    python -m pytest --junitxml=junit/test-results.xml --cov-report=xml --cov-report html:cov_html --cov=zinv tests/
 
             - store_artifacts:
                 path: cov_html
+
+            - codecov/upload:
+                file: coverage/*.json
