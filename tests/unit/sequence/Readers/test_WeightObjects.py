@@ -147,3 +147,6 @@ def module_photons(path):
             },
         ],
     )
+
+#def test_weightobjects_init(module_electrons):
+
