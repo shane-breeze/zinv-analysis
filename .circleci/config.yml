@@ -24,6 +24,4 @@ jobs:
                 path: cov_html
 
             - codecov/upload:
-                environment:
-                    CODECOV_TOKEN: "9a0dee71-741b-4d72-89c7-bcdc54e12668"
                 file: coverage.xml
