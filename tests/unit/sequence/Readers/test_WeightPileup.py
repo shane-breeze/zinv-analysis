@@ -38,7 +38,7 @@ def test_weightpileup_init(module, path):
     assert module.correction_file == path + "/pileup/nTrueInt_corrections.txt"
     assert module.variable == "Pileup_nTrueInt"
 
-@pytest.mark.parameterize(
+@pytest.mark.parametrize(
     "inputs,outputs", (
         [{
             "nTrueInt": [-10, 0, 1, 5, 10, 50, 100, 1000],
@@ -67,10 +67,14 @@ def test_weightpileup_init(module, path):
         }],
     )
 )
-def test_weightpileup_begin(module, event, inputs outputs):
+def test_weightpileup_begin(module, event, inputs, outputs):
+    event.nsig = inputs["nsig"]
+    event.source = inputs["source"]
     module.begin(event)
     event.Pileup_nTrueInt = np.array(inputs["nTrueInt"], dtype=np.float32)
     wpu = event.WeightPU(event)
     owpu = np.array(outputs["wpu"], dtype=np.float32)
 
+    print(wpu)
+    print(owpu)
     assert np.allclose(wpu, owpu, rtol=1e-6, equal_nan=True)

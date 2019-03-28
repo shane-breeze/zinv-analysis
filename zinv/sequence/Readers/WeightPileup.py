@@ -13,6 +13,7 @@ def evaluate_pu(var, corrs):
     def fevaluate_pu(ev, evidx, nsig, source, var_):
         mins = corrs["nTrueInt"].values.astype(np.float32)
         maxs = mins[:]+1
+        mins[0] = -np.inf
         maxs[-1] = np.inf
         indices = get_bin_indices([getattr(ev, var_)], [mins], [maxs], 1)[:,0]
         ev_corrs = corrs.iloc[indices]
