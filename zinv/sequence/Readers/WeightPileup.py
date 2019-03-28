@@ -35,10 +35,10 @@ class WeightPileup(object):
         self.__dict__.update(kwargs)
 
     def begin(self, event):
-        self.dfc = read_file(self.correction_file, overflow_bins=["nTrueInt"])
+        self.dfc = read_file(self.correction_file)
         event.WeightPU = evaluate_pu(self.variable, self.dfc)
 
-def read_file(path, overflow_bins=[]):
-    df = pd.read_table(path, sep='\s+')[["nTrueInt", "corr", "corr_down", "corr_up"]]
-    #df.loc[df["nTrueInt"]==df["nTrueInt"].max(), "nTrueInt"] = np.inf
-    return df
+def read_file(path):
+    return pd.read_csv(path, sep='\s+')[
+        ["nTrueInt", "corr", "corr_down", "corr_up"]
+    ]
