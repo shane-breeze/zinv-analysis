@@ -13,6 +13,7 @@ def evaluate_pu(var, corrs):
     def fevaluate_pu(ev, evidx, nsig, source, var_):
         mins = corrs["nTrueInt"].values.astype(np.float32)
         maxs = mins[:]+1
+        mins[0] = -np.inf
         maxs[-1] = np.inf
         indices = get_bin_indices([getattr(ev, var_)], [mins], [maxs], 1)[:,0]
         ev_corrs = corrs.iloc[indices]
@@ -35,10 +36,10 @@ class WeightPileup(object):
         self.__dict__.update(kwargs)
 
     def begin(self, event):
-        self.dfc = read_file(self.correction_file, overflow_bins=["nTrueInt"])
+        self.dfc = read_file(self.correction_file)
         event.WeightPU = evaluate_pu(self.variable, self.dfc)
 
-def read_file(path, overflow_bins=[]):
-    df = pd.read_table(path, sep='\s+')[["nTrueInt", "corr", "corr_down", "corr_up"]]
-    #df.loc[df["nTrueInt"]==df["nTrueInt"].max(), "nTrueInt"] = np.inf
-    return df
+def read_file(path):
+    return pd.read_csv(path, sep='\s+')[
+        ["nTrueInt", "corr", "corr_down", "corr_up"]
+    ]
