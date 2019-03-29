@@ -95,14 +95,14 @@ def reformat(df, cfg):
     bins = [-np.infty]+list(binning)+[np.infty]
     df = rebin(df, bins, binvar)
 
-    if "lhePdf" in cfg["systematics"]:
-        df = process_syst(df, syst="lhePdf",
-                          how_up=lambda x: x.mean()+x.std(),
-                          how_down=lambda x: x.mean()*x.mean()/(x.mean()+x.std()))
-    if "lheScale" in cfg["systematics"]:
-        df = process_syst(df, syst="lheScale",
-                          how_up=lambda x: x.max(),
-                          how_down=lambda x: x.min())
+    #if "lhePdf" in cfg["systematics"]:
+    #    df = process_syst(df, syst="lhePdf",
+    #                      how_up=lambda x: x.mean()+x.std(),
+    #                      how_down=lambda x: x.mean()*x.mean()/(x.mean()+x.std()))
+    #if "lheScale" in cfg["systematics"]:
+    #    df = process_syst(df, syst="lheScale",
+    #                      how_up=lambda x: x.max(),
+    #                      how_down=lambda x: x.min())
 
     # Rename
     dfs = []
