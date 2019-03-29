@@ -9,7 +9,7 @@ selections:
              & (ev.Flag_BadPFMuonFilter>0.5)
              & (ev.Flag_BadGlobalMuon>0.5)
              & (ev.Flag_CloneGlobalMuon>0.5)
-             & ((ev.Flag_eeBadScFilter>0.5) | (np.ones(ev.size)*(~ev.config.dataset.isdata)))"
+             & ((ev.Flag_eeBadScFilter>0.5) | (np.ones(ev.size, dtype=np.int32)*(~ev.config.dataset.isdata)))"
     met_selection: "ev: ev.METnoX_pt(ev) > 200."
     met_low_selection: "ev: ev.METnoX_pt(ev) <= 200."
     dphi_jet_met_selection: "ev: ev.MinDPhiJ1234METnoX(ev) > 0.5"

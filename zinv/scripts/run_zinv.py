@@ -116,7 +116,7 @@ vmem_dict = {
     "DYJetsToLL_Pt-650ToInf_ext1": 12,
     "DYJetsToLL_Pt-650ToInf_ext2": 12,
     "G1Jet_Pt-50To100":       12,
-    "G1Jet_Pt-50To100_ext1":  12,
+    "G1Jet_Pt-50To100_ext1":  18,
     "G1Jet_Pt-100To250":      12,
     "G1Jet_Pt-100To250_ext1": 12,
     "G1Jet_Pt-100To250_ext2": 18,
