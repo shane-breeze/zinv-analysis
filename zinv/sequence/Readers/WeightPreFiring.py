@@ -94,13 +94,15 @@ def evaluate_prefiring_weight(funcs, jetmap, photmap, syst):
         )
         return weight_numba(
             prob, nsig,
-            (source=="prefiring")*probup/prob,
-            (source=="prefiring")*probdown/prob,
+            (source=="prefiring")*(probup/prob-1.),
+            (source=="prefiring")*(probdown/prob-1.),
         )
 
     def ret_func(ev):
-        source = ev.source if ev.source == "prefiring" else ""
-        return fevaluate_prefiring_weight(ev, ev.iblock, ev.nsig, source)
+        source, nsig = ev.source, ev.nsig
+        if ev.source != "prefiring":
+            source, nsig = "", 0.
+        return fevaluate_prefiring_weight(ev, ev.iblock, nsig, source)
 
     return ret_func
 
@@ -120,10 +122,10 @@ class WeightPreFiring(object):
         )
 
     def end(self):
-        self.functions = {}
+        self.functions = None
 
 def get_maps(path):
-    df = pd.read_table(path, sep='\s+')
+    df = pd.read_csv(path, sep='\s+')
     df.loc[df["yupp"]==df["yupp"].max(), "yupp"] = np.inf # overflow pt (y-axis)
     return df
 

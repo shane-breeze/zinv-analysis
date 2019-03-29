@@ -79,7 +79,7 @@ class WeightObjects(object):
                              for bin_pair in file_form
                              for bin_label in bin_pair] + ["corr", "unc_up", "unc_down"]
 
-                df = pd.read_table(path, sep='\s+')
+                df = pd.read_csv(path, sep='\s+')
                 df.columns = file_form
                 df = df.sort_values(file_form).reset_index(drop=True)
 
@@ -117,4 +117,4 @@ class WeightObjects(object):
             )
 
     def end(self):
-        self.lambda_functions = {}
+        self.lambda_functions = None
