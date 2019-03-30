@@ -26,8 +26,12 @@ class WeightProducer(object):
         wvars = input_dict["weight_variations"]
         avars = input_dict["attribute_variations"]
         if self.nuisances is not None:
-            self.weight_variation_sources = [v for v in wvars if v in self.nuisances]
-            self.attribute_variation_sources = [v for v in avars if v in self.nuisances]
+            self.weight_variation_sources = [
+                v for v in wvars if v in self.nuisances
+            ]
+            self.attribute_variation_sources = [
+                v for v in avars if v in self.nuisances
+            ]
         else:
             self.weight_variation_sources = wvars
             self.attribute_variation_sources = avars
