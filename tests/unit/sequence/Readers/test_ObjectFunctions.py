@@ -147,6 +147,49 @@ def test_objfunc_jptshift(module, event, inputs, outputs):
 @pytest.mark.parametrize(
     "inputs,outputs", (
         [{
+            "jphi": [[0.4, 0.5], [], [1., 1.2]],
+            "mephi": [0.3, 0.6, 0.9],
+            "source": "",
+            "nsig": 0.,
+        }, {
+            "jdphimet": [[0.1, 0.2], [], [0.1, 0.3]],
+        }], [{
+            "jphi": [[0.4, 0.5], [], [1., 1.2]],
+            "mephi": [0.3, 0.6, 0.9],
+            "source": "jesTotal",
+            "nsig": 1.,
+        }, {
+            "jdphimet": [[0.1, 0.2], [], [0.1, 0.3]],
+        }],
+    )
+)
+def test_jet_dphimet(module, event, inputs, outputs):
+    event.nsig = inputs["nsig"]
+    event.source = inputs["source"]
+
+    module.begin(event)
+
+    mephi = np.array(inputs["mephi"], dtype=np.float32)
+    event.MET.phiShift = mock.Mock(side_effect=lambda ev: mephi)
+    event.MET_phiShift = mock.Mock(side_effect=lambda ev: mephi)
+
+    jphi = awk.JaggedArray.fromiter(inputs["jphi"]).astype(np.float32)
+    event.Jet.phi = jphi
+    event.Jet_phi = jphi
+
+    jdphimet = event.Jet_dphiMET(event)
+    ojdphimet = awk.JaggedArray.fromiter(outputs["jdphimet"]).astype(np.float32)
+    assert np.array_equal(jdphimet.starts, ojdphimet.starts)
+    assert np.array_equal(jdphimet.stops, ojdphimet.stops)
+    assert np.allclose(
+        jdphimet.content,
+        ojdphimet.content,
+        rtol=1e-6, equal_nan=True,
+    )
+
+@pytest.mark.parametrize(
+    "inputs,outputs", (
+        [{
             "nsig":   0,
             "source": '',
             "starts": [0, 1, 2],

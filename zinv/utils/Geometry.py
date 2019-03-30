@@ -1,7 +1,7 @@
 import numpy as np
 import numba as nb
 
-@nb.vectorize(["float32(float32)"])
+@nb.vectorize(["float32(float32)","float64(float64)"])
 def BoundPhi(phi):
     if phi >= np.pi:
         phi -= 2*np.pi

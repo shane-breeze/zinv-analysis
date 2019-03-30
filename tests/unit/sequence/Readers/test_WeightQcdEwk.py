@@ -77,14 +77,43 @@ def test_weightqcdewk_init(module, path):
 
 @pytest.mark.parametrize(
     "inputs,outputs", (
-        [{"parent": "ZJetsToNuNu"}, {"result": True}],
-        [{"parent": "WJetsToLNu"}, {"result": True}],
-        [{"parent": "DYJetsToLL"}, {"result": True}],
-        [{"parent": "Other"}, {"result":False}],
+        [{
+            "parent": "ZJetsToNuNu",
+            "underflow": True,
+            "overflow": True,
+        }, {
+            "result": True,
+        }], [{
+            "parent": "ZJetsToNuNu",
+            "underflow": False,
+            "overflow": False,
+        }, {
+            "result": True,
+        }], [{
+            "parent": "WJetsToLNu",
+            "underflow": True,
+            "overflow": True,
+        }, {
+            "result": True,
+        }], [{
+            "parent": "DYJetsToLL",
+            "underflow": True,
+            "overflow": True,
+        }, {
+            "result": True,
+        }], [{
+            "parent": "Other",
+            "underflow": True,
+            "overflow": True,
+        }, {
+            "result":False,
+        }],
     )
 )
 def test_weightqcdewk_begin(module, event, inputs, outputs):
     event.config.dataset.parent = inputs["parent"]
+    module.underflow = inputs["underflow"]
+    module.overflow = inputs["overflow"]
     module.begin(event)
     assert hasattr(module, "input_df") == outputs["result"]
 
