@@ -273,10 +273,10 @@ weight_qcd_ewk = Readers.WeightQcdEwk(
               " /(K_NLO + d1k_qcd*d1K_NLO + d2k_qcd*d2K_NLO + d3k_qcd*d3K_NLO))"\
               "*(1 + kappa_EW + d1k_ew*d1kappa_EW + isz*(d2k_ew_z*d2kappa_EW + d3k_ew_z*d3kappa_EW)"\
                                                  "+ isw*(d2k_ew_w*d2kappa_EW + d3k_ew_w*d3kappa_EW))"\
-              "+ dk_mix*dK_NLO_mix",
+              "+ dk_mix*dK_NNLO_mix",
     params = ["K_NLO", "d1K_NLO", "d2K_NLO", "d3K_NLO", "K_NNLO", "d1K_NNLO",
               "d2K_NNLO", "d3K_NNLO", "kappa_EW", "d1kappa_EW", "d2kappa_EW",
-              "d3kappa_EW", "dK_NLO_mix"],
+              "d3kappa_EW", "dK_NNLO_mix"],
     variation_names = ["d1k_qcd", "d2k_qcd", "d3k_qcd", "d1k_ew", "d2k_ew_z",
                        "d2k_ew_w", "d3k_ew_z", "d3k_ew_w", "dk_mix"],
 #    formula = "1 + kappa_EW + d1k_ew*d1kappa_EW + isz*(d2k_ew_z*d2kappa_EW + d3k_ew_z*d3kappa_EW)"\

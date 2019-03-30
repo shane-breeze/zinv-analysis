@@ -33,9 +33,6 @@ class WeightQcdEwk(object):
         self.__dict__.update(kwargs)
 
     def begin(self, event):
-        if event.config.dataset.isdata:
-            return
-
         event.WeightQcdEwk = evaluate_qcdewk_weight(self.variation_names)
 
         self.variations = [""]\
@@ -98,7 +95,6 @@ class WeightQcdEwk(object):
             input_df = input_df.append(ser)
             input_df.iloc[-1,:] = 1
         self.input_df = input_df.sort_index()
-        #self.input_df = input_df.reset_index()
 
     def event(self, event):
         if self.parent not in self.input_paths:
