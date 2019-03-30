@@ -403,7 +403,7 @@ systematics_reader = Collectors.SystematicsReader(
 )
 systematics_collector = Collectors.SystematicsCollector(
     name = "systematics_collector",
-    plot = True,
+    plot = False,
     cfg = os.path.join(collpath, "Systematics_cfg.yaml"),
     drawing_cfg = os.path.join(drawpath, "config.yaml"),
 )

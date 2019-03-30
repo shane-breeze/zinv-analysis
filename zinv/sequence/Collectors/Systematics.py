@@ -52,6 +52,7 @@ class SystematicsCollector(HistCollector):
             df = df.set_index(level, append=True).reorder_levels(levels)
             return df
 
+        df = rename_level_values(df, "weight", {"": "nominal"})
         df = rename_level_values(df, "process", {
             "ZJetsToNuNu":      "znunu",      "DYJetsToMuMu":     "zmumu",
             "DYJetsToEE":       "zee",        "WJetsToENu":       "wlnu",
@@ -143,9 +144,9 @@ class SystematicsCollector(HistCollector):
 
             # mc stat
             df_unstack = df_group["yield"].unstack(level="key")
-            df_mcstat = np.sqrt(df_group["variance"].unstack(level="key")["nominal"])
-            df_unstack["mcstatUp"] = df_unstack["nominal"]+df_mcstat
-            df_unstack["mcstatDown"] = df_unstack["nominal"]-df_mcstat
+            #df_mcstat = np.sqrt(df_group["variance"].unstack(level="key")["nominal"])
+            #df_unstack["mcstatUp"] = df_unstack["nominal"]+df_mcstat
+            #df_unstack["mcstatDown"] = df_unstack["nominal"]-df_mcstat
 
             # process order from total yield
             process_order = df_unstack["nominal"].groupby("process").sum()\

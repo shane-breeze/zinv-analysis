@@ -171,4 +171,6 @@ class HistCollector(object):
             os.makedirs(self.outdir)
         histograms = Histograms()
         histograms.reload(os.path.join(outdir, self.name))
-        return self.draw(histograms)
+        if self.plot:
+            return self.draw(histograms)
+        return []
