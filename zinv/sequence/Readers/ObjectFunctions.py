@@ -47,8 +47,10 @@ def jet_dphimet():
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fjet_dphimet'))
     def fjet_dphimet(ev, evidx, nsig, source):
         jphi = ev.Jet.phi
-        return dphi_met(
-            ev.MET_phiShift(ev), jphi.content, jphi.starts, jphi.stops,
+        return awk.JaggedArray(
+            jphi.starts, jphi.stops, dphi_met(
+                ev.MET_phiShift(ev), jphi.content, jphi.starts, jphi.stops,
+            ),
         )
 
     def return_jet_dphimet(ev):
