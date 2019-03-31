@@ -8,7 +8,7 @@ from Lambda import Lambda
 import itertools
 import operator
 
-from .NumbaFuncs import histogram1d_numba
+from .NumbaFuncs import histogram1d_numba, histogramdd_numba
 
 class Histograms(object):
     def __init__(self):
@@ -121,43 +121,67 @@ class Histograms(object):
 
         bins = [np.array(b, dtype=np.float32) for b in config["bins"]]
         hist_bins = bins
-        #variables = np.transpose(np.array(variables))
-        #hist_counts, _ = np.histogramdd(variables, bins)
-        #hist_yields, _ = np.histogramdd(variables, bins, weights=weights1)
-        #hist_variance, _ = np.histogramdd(variables, bins, weights=weights2)
-        hist_counts = histogram1d_numba(variables[0], bins[0][1:-1], np.ones_like(weights1, dtype=np.float32))
-        hist_yields = histogram1d_numba(variables[0], bins[0][1:-1], weights1.astype(np.float32))
-        hist_variance = histogram1d_numba(variables[0], bins[0][1:-1], weights2.astype(np.float32))
-
-        #data = self.create_onedim_hists(
-        #    hist_bins, hist_counts, hist_yields, hist_variance,
-        #)
-        bin_names = [["bin{}_low".format(idx), "bin{}_upp".format(idx)]
-                     for idx in reversed(list(range(len(hist_bins))))]
-        bin_names = reduce(lambda x,y: x+y, bin_names)
-        #df = pd.DataFrame(data, columns=bin_names+["count", "yield", "variance"])
 
         mins = [b[:-1] for b in bins]
         maxs = [b[1:] for b in bins]
         mins = np.meshgrid(*mins)
         maxs = np.meshgrid(*maxs)
 
-        df = pd.DataFrame({
-            "bin0_low": mins[0],
-            "bin0_upp": maxs[0],
-            "count": hist_counts,
-            "yield": hist_yields,
-            "variance": hist_variance,
-        }, columns=bin_names+["count", "yield", "variance"])
+        if len(variables)==1:
+            hist_counts = histogram1d_numba(
+                variables[0], bins[0][1:-1],
+                np.ones_like(weights1, dtype=np.float32),
+            )
+            hist_yields = histogram1d_numba(
+                variables[0], bins[0][1:-1],
+                weights1.astype(np.float32),
+            )
+            hist_variance = histogram1d_numba(
+                variables[0], bins[0][1:-1],
+                weights2.astype(np.float32),
+            )
+
+            data = {
+                "bin0_low": mins[0],
+                "bin0_upp": maxs[0],
+                "count": hist_counts,
+                "yield": hist_yields,
+                "variance": hist_variance,
+            }
+        else:
+            hist_counts = histogramdd_numba(
+                variables, mins, maxs,
+                np.ones_like(weights1, dtype=np.float32),
+            )
+            hist_yields = histogramdd_numba(
+                variables, mins, maxs,
+                weights1.astype(np.float32),
+            )
+            hist_variance = histogramdd_numba(
+                variables, mins, maxs,
+                weights2.astype(np.float32),
+            )
+            data = self.create_onedim_hists(
+                hist_bins, hist_counts, hist_yields, hist_variance,
+            )
+        bin_names = [["bin{}_low".format(idx), "bin{}_upp".format(idx)]
+                     for idx in reversed(list(range(len(hist_bins))))]
+        bin_names = reduce(lambda x,y: x+y, bin_names)
+        df = pd.DataFrame(data, columns=bin_names+["count", "yield", "variance"])
 
         df["dataset"] = config["dataset"]
         df["region"] = config["region"]
         df["process"] = config["process"]
         df["weight"] = config["weightname"]
-        df["name"] = config["name"] if not isinstance(config["name"], list) else "__".join(config["name"])
+        df["name"] = config["name"]\
+                if not isinstance(config["name"], list)\
+                else "__".join(config["name"])
         for idx, variable in reversed(list(enumerate(config["variables"]))):
             df["variable{}".format(idx)] = variable
-        columns = [c for c in df.columns if c not in ["count", "yield", "variance"] and "bin" not in c]
+        columns = [
+            c for c in df.columns
+            if c not in ["count", "yield", "variance"] and "bin" not in c
+        ]
         columns += bin_names + ["count", "yield", "variance"]
         df = df[columns]
         return self.make_sparse_df(df)
@@ -166,7 +190,7 @@ class Histograms(object):
         return df.loc[df["count"]!=0]
 
     def make_dense_df(self, df):
-        pass
+        raise NotImplementedError
 
     def create_onedim_hists(self, bins, counts, yields, variance):
         counts_1d = counts.T.ravel()
