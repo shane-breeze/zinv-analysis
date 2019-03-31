@@ -606,18 +606,23 @@ def test_objfunc_metshift(module, event, inputs, outputs):
         [{
             "nsig":   0,
             "source": '',
-            "starts": [0, 1, 2, 4],
-            "stops":  [1, 2, 4, 6],
-            "pt":     [20., 30., 40., 50., 60., 70.],
-            "mask":   [True, False, True, False, True, True],
-            "xclean": [True, True, True, True, False, True],
+            "callable": False,
+            "pt":     [[20.], [30.], [40., 50.], [60., 70.]],
+            "mask":   [[True], [False], [True, False], [True, True]],
+            "xclean": [[True], [True], [True, True], [False, True]],
         }, {
-            "starts_noxclean": [0, 1, 1, 2],
-            "stops_noxclean":  [1, 1, 2, 4],
-            "pt_noxclean":     [20., 40., 60., 70.],
-            "starts_mask":     [0, 1, 1, 2],
-            "stops_mask":      [1, 1, 2, 3],
-            "pt_mask":         [20., 40., 70.],
+            "pt_noxclean":     [[20.], [], [40.], [60., 70.]],
+            "pt_mask":         [[20.], [], [40.], [70.]],
+        }], [{
+            "nsig":   1,
+            "source": 'Var1',
+            "callable": True,
+            "pt":     [[20.], [30.], [40., 50.], [60., 70.]],
+            "mask":   [[True], [False], [True, False], [True, True]],
+            "xclean": [[True], [True], [True, True], [False, True]],
+        }, {
+            "pt_noxclean":     [[20.], [], [40.], [60., 70.]],
+            "pt_mask":         [[20.], [], [40.], [70.]],
         }],
     )
 )
@@ -625,12 +630,18 @@ def test_objfunc_xclean(module, event, inputs, outputs):
     event.nsig = inputs["nsig"]
     event.source = inputs["source"]
 
-    mask = awk.JaggedArray(inputs["starts"], inputs["stops"], inputs["mask"])
-    xclean_mask = awk.JaggedArray(inputs["starts"], inputs["stops"], inputs["xclean"])
-    pt = awk.JaggedArray(inputs["starts"], inputs["stops"], inputs["pt"])
+    pt = awk.JaggedArray.fromiter(inputs["pt"]).astype(np.float32)
+    xclean_mask = awk.JaggedArray.fromiter(inputs["xclean"]).astype(np.bool8)
+    mask = awk.JaggedArray.fromiter(inputs["mask"]).astype(np.bool8)
+
+    def cpt(ev):
+        return pt
 
     for objname, selection, xclean in selections:
-        setattr(event, objname+"_pt", pt)
+        if inputs["callable"]:
+            setattr(event, objname+"_pt", pt)
+        else:
+            setattr(event, objname+"_pt", cpt)
         setattr(
             event, "{}_{}Mask".format(objname, selection),
             mock.Mock(side_effect=lambda ev: mask),
@@ -643,13 +654,12 @@ def test_objfunc_xclean(module, event, inputs, outputs):
                 mock.Mock(side_effect=lambda ev: xclean_mask),
             )
 
-    pt_noxclean = awk.JaggedArray(
-        outputs["starts_noxclean"], outputs["stops_noxclean"],
+    pt_noxclean = awk.JaggedArray.fromiter(
         outputs["pt_noxclean"],
-    )
-    pt_mask = awk.JaggedArray(
-        outputs["starts_mask"], outputs["stops_mask"], outputs["pt_mask"],
-    )
+    ).astype(np.float32)
+    pt_mask = awk.JaggedArray.fromiter(
+        outputs["pt_mask"],
+    ).astype(np.float32)
 
     module.begin(event)
     for objname, selection, xclean in selections:
