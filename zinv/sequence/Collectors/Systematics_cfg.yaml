@@ -24,7 +24,7 @@ configs:
         variables:
             - "ev: ev.METnoX_pt(ev)"
         bins:
-            - [0., 1500., 300]
+            - [0., 1500., 301]
         weights:
             - ["",                          0.,  "",                      "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]
             - ["eleEnergyScaleUp",          1.,  "eleEnergyScale",        "ev: ev.Weight_{dataset}_{cutflow}_{datamc}(ev)"]

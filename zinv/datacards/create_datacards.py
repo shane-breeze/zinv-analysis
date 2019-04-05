@@ -33,6 +33,18 @@ def open_df(cfg):
     with open(path, 'r') as f:
         _, df = pickle.load(f)
         df = df.reset_index("variable0", drop=True)
+
+    def rename_level_values(df, level, name_map):
+        levels = df.index.names
+        df = df.reset_index(level)
+        mask = df[level].isin(name_map.keys())
+        df.loc[mask, level] = df.loc[mask, level].map(name_map, na_action='ignore')
+        df = df[~df[level].isna()]
+        df = df.set_index(level, append=True).reorder_levels(levels)
+        return df
+
+    df = rename_level_values(df, "weight", {"": "nominal"})
+
     return df
 
 def smooth(x, y, err):
@@ -96,13 +108,11 @@ def reformat(df, cfg):
     df = rebin(df, bins, binvar)
 
     #if "lhePdf" in cfg["systematics"]:
-    #    df = process_syst(df, syst="lhePdf",
-    #                      how_up=lambda x: x.mean()+x.std(),
-    #                      how_down=lambda x: x.mean()*x.mean()/(x.mean()+x.std()))
-    #if "lheScale" in cfg["systematics"]:
-    #    df = process_syst(df, syst="lheScale",
-    #                      how_up=lambda x: x.max(),
-    #                      how_down=lambda x: x.min())
+    #    df = process_syst(
+    #        df, syst="lhePdf",
+    #        how_up=lambda x: (x**2).mean().sqrt()-x.mean(),
+    #        how_down=lambda x: (x**2).mean().sqrt()-x.mean(),
+    #    )
 
     # Rename
     dfs = []

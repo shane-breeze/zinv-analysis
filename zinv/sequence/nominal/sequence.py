@@ -115,7 +115,7 @@ weight_xsection_lumi = Readers.WeightXsLumi(
 )
 weight_pdf_scale = Readers.WeightPdfScale(
     name = "weight_pdf_scale",
-    parents_to_skip = ["SingleTop", "QCD"],
+    parents_to_skip = ["SingleTop", "QCD", "Diboson"],
     data = False,
 )
 weight_pu = Readers.WeightPileup(
