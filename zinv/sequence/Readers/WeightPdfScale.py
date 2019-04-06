@@ -12,7 +12,6 @@ pdf_regex = re.compile("^pdf(?P<id>[0-9]+)$")
 def evaluate_pdf_variations(valid):
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_pdf_variations'))
     def fevaluate_pdf_variations(ev, evidx, nsig, source, valid_):
-        #print(source, nsig)
         if valid_:
             nominal = np.ones(ev.size, dtype=np.float32)
             match = pdf_regex.search(source)

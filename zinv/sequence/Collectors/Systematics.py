@@ -17,7 +17,7 @@ class SystematicsReader(HistReader):
             weights = []
             for w in config["weights"]:
                 if w[0] == "pdfUp":
-                    for i in range(1, 100):
+                    for i in range(1, 101):
                         weights.append((
                             "pdf{}Up".format(i),
                             w[1],
@@ -25,7 +25,7 @@ class SystematicsReader(HistReader):
                             w[3],
                         ))
                 elif w[0] == "pdfDown":
-                    for i in range(1, 100):
+                    for i in range(1, 101):
                         weights.append((
                             "pdf{}Down".format(i),
                             w[1],
