@@ -11,7 +11,7 @@ from zinv.utils.Lambda import Lambda
 def expand_pdf(nuisance_list):
     if "pdf" in nuisance_list:
         nuisance_list.remove("pdf")
-        for i in range(1, 100):
+        for i in range(1, 101):
             nuisance_list.append("pdf{}".format(i))
     return nuisance_list
 
