@@ -11,6 +11,40 @@ from zinv.drawing.dist_facet import dist_facet
 from . import Config, HistReader, HistCollector
 
 class SystematicsReader(HistReader):
+    def create_histograms(self, cfg):
+        configs = {}
+        for name, config in cfg["configs"].items():
+            weights = []
+            for w in config["weights"]:
+                if w[0] == "pdfUp":
+                    for i in range(1, 100):
+                        weights.append((
+                            "pdf{}Up".format(i),
+                            w[1],
+                            "pdf{}".format(i),
+                            w[3],
+                        ))
+                elif w[0] == "pdfDown":
+                    for i in range(1, 100):
+                        weights.append((
+                            "pdf{}Down".format(i),
+                            w[1],
+                            "pdf{}".format(i),
+                            w[3],
+                        ))
+                else:
+                    weights.append(w)
+
+            configs[name] = {
+                "categories": config["categories"],
+                "variables": config["variables"],
+                "bins": config["bins"],
+                "weights": weights,
+            }
+
+        cfg["configs"] = configs
+        return super(SystematicsReader, self).create_histograms(cfg)
+
     def begin(self, event):
         # Only run for variations defined in the event
         new_configs = []
@@ -52,6 +86,7 @@ class SystematicsCollector(HistCollector):
             df = df.set_index(level, append=True).reorder_levels(levels)
             return df
 
+        df = rename_level_values(df, "weight", {"": "nominal"})
         df = rename_level_values(df, "process", {
             "ZJetsToNuNu":      "znunu",      "DYJetsToMuMu":     "zmumu",
             "DYJetsToEE":       "zee",        "WJetsToENu":       "wlnu",
@@ -143,9 +178,9 @@ class SystematicsCollector(HistCollector):
 
             # mc stat
             df_unstack = df_group["yield"].unstack(level="key")
-            df_mcstat = np.sqrt(df_group["variance"].unstack(level="key")["nominal"])
-            df_unstack["mcstatUp"] = df_unstack["nominal"]+df_mcstat
-            df_unstack["mcstatDown"] = df_unstack["nominal"]-df_mcstat
+            #df_mcstat = np.sqrt(df_group["variance"].unstack(level="key")["nominal"])
+            #df_unstack["mcstatUp"] = df_unstack["nominal"]+df_mcstat
+            #df_unstack["mcstatDown"] = df_unstack["nominal"]-df_mcstat
 
             # process order from total yield
             process_order = df_unstack["nominal"].groupby("process").sum()\

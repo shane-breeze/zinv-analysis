@@ -280,8 +280,11 @@ weight_variations:
     - "dk_mix"
     - "prefiring"
     - "pileup"
-    - "scale"
+    - "muf_scale"
+    - "mur_scale"
+    - "mufr_scale"
     - "pdf"
+    - "alphas"
 attribute_variations:
     - "eleEnergyScale"
     - "muonPtScale"
