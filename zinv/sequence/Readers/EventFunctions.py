@@ -42,6 +42,8 @@ def evaluate_metnox(arg):
         source, nsig = ev.source, ev.nsig
         if source not in ev.attribute_variation_sources:
             source, nsig = '', 0.
+        if source in ["muonPtScale", "eleEnergyScale"]:
+            source, nsig = '', 0.
         return fevaluate_metnox(ev, ev.iblock, nsig, source, arg)
 
     return return_evaluate_metnox

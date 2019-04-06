@@ -115,7 +115,7 @@ weight_xsection_lumi = Readers.WeightXsLumi(
 )
 weight_pdf_scale = Readers.WeightPdfScale(
     name = "weight_pdf_scale",
-    parents_to_skip = ["SingleTop", "QCD"],
+    parents_to_skip = ["SingleTop", "QCD", "Diboson"],
     data = False,
 )
 weight_pu = Readers.WeightPileup(
@@ -399,7 +399,7 @@ systematics_reader = Collectors.SystematicsReader(
 )
 systematics_collector = Collectors.SystematicsCollector(
     name = "systematics_collector",
-    plot = True,
+    plot = False,
     cfg = os.path.join(collpath, "Systematics_cfg.yaml"),
     drawing_cfg = os.path.join(drawpath, "config.yaml"),
 )

@@ -347,22 +347,29 @@ conversions:
                      ["MET", "SingleTau", "DYJetsToTauTau"]]
         new_labels: [["MET", "singletau", "bkg"]]
 parameters:
-    - ["kzll_mcstat", "param", "0", "1"]
-    - ["kgll_mcstat", "param", "0", "1"]
-    - ["kzmumu", "rateParam", "*", "zmumu", "1.0164589*(1+0.025340129*(@0<0)-0.005476561*(@0>=0))**(@0)*(1+0.001696478*(@1<0)-0.000764713*(@1>=0))**(@1)*(1+0.00081649300)**(@2)",  "lhePdf,lheScale,kzll_mcstat"]
-    - ["kzee",   "rateParam", "*", "zee",   "1.0164589*(1+0.025340129*(@0<0)-0.005476561*(@0>=0))**(@0)*(1+0.001696478*(@1<0)-0.000764713*(@1>=0))**(@1)*(1+0.00081649300)**(@2)",  "lhePdf,lheScale,kzll_mcstat"]
-    - ["kgll",   "rateParam", "*", "g*",    "0.015040019*(1+0.009749389*(@0<0)-0.005555179*(@0>=0))**(@0)*(1-0.001761234*(@1<0)+0.001456315*(@1>=0))**(@1)*(1+0.0014868245)**(@2)", "lhePdf,lheScale,kgll_mcstat"]
-    - ["rw",       "rateParam", "*", "wlnu",     "1",             "[0.1,2.0]"]
-    - ["rz",       "rateParam", "*", "znunu",    "1",             "[0.1,2.0]"]
-    - ["rz_dy",    "rateParam", "*", "dy*",      "sqrt(@0)",      "rz"]
-    - ["rz_zmumu", "rateParam", "*", "zmumu",    "(@0-sqrt(@0))", "rz"]
-    - ["rz_zee",   "rateParam", "*", "zee",      "(@0-sqrt(@0))", "rz"]
-    - ["rz_gstar", "rateParam", "*", "g*",       "(1-sqrt(@0))",  "rz"]
-    - ["rqcd",     "rateParam", "*", "qcd",      "1",             "[0.1,2.0]"]
-    - ["rw_qcd",   "rateParam", "*", "wlnu_qcd", "1",             "[0.1,2.0]"]
-    - ["*", "autoMCStats", "10", "1"]
+    - ["kzll_pdf_up",     "extArg",      "0.994523439"]
+    - ["kzll_pdf_down",   "extArg",      "1.025340129"]
+    - ["kzll_scale_up",   "extArg",      "0.999235287"]
+    - ["kzll_scale_down", "extArg",      "1.001696478"]
+    - ["kzll_mcstat",     "extArg",      "1.000816493"]
+    - ["kgll_pdf_up",     "extArg",      "0.994444821"]
+    - ["kgll_pdf_down",   "extArg",      "1.009749389"]
+    - ["kgll_scale_up",   "extArg",      "1.001456315"]
+    - ["kgll_scale_down", "extArg",      "0.998238766"]
+    - ["kgll_mcstat",     "extArg",      "1.001486825"]
+    - ["rw",              "rateParam",   "*",  "wlnu",     "1",                        "[0.1,2.0]"]
+    - ["rz",              "rateParam",   "*",  "znunu",    "1",                        "[0.1,2.0]"]
+    - ["rz_dy",           "rateParam",   "*",  "dy*",      "sqrt(@0)",                 "rz"]
+    - ["rz_zmumu",        "rateParam",   "*",  "zmumu",    "1.0164589*(@0-sqrt(@0))",  "rz"]
+    - ["rz_zee",          "rateParam",   "*",  "zee",      "1.0164589*(@0-sqrt(@0))",  "rz"]
+    - ["rz_gstar",        "rateParam",   "*",  "g*",       "0.015040019*(1-sqrt(@0))", "rz"]
+    - ["rqcd",            "rateParam",   "*",  "qcd",      "1",                        "[0.1,2.0]"]
+    - ["rw_qcd",          "rateParam",   "*",  "wlnu_qcd", "1",                        "[0.1,2.0]"]
+    - ["*",               "autoMCStats", "10", "1"]
 systematics:
     - "lumi"
+    - "scale"
+    - "pdf"
     - "metTrigStat"
     - "metTrigSyst"
     - "eleIdIsoTightSF"
@@ -389,8 +396,6 @@ systematics:
     - "dk_mix"
     - "prefiring"
     - "pileup"
-    - "scale"
-    - "pdf"
     - "eleEnergyScale"
     - "muonPtScale"
     - "photonEnergyScale"
