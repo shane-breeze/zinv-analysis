@@ -11,6 +11,40 @@ from zinv.drawing.dist_facet import dist_facet
 from . import Config, HistReader, HistCollector
 
 class SystematicsReader(HistReader):
+    def create_histograms(self, cfg):
+        configs = {}
+        for name, config in cfg["configs"].items():
+            weights = []
+            for w in config["weights"]:
+                if w[0] == "pdfUp":
+                    for i in range(1, 100):
+                        weights.append((
+                            "pdf{}Up".format(i),
+                            w[1],
+                            "pdf{}".format(i),
+                            w[3],
+                        ))
+                elif w[0] == "pdfDown":
+                    for i in range(1, 100):
+                        weights.append((
+                            "pdf{}Down".format(i),
+                            w[1],
+                            "pdf{}".format(i),
+                            w[3],
+                        ))
+                else:
+                    weights.append(w)
+
+            configs[name] = {
+                "categories": config["categories"],
+                "variables": config["variables"],
+                "bins": config["bins"],
+                "weights": weights,
+            }
+
+        cfg["configs"] = configs
+        return super(SystematicsReader, self).create_histograms(cfg)
+
     def begin(self, event):
         # Only run for variations defined in the event
         new_configs = []

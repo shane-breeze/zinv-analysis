@@ -8,6 +8,13 @@ from functools import partial
 
 from zinv.utils.Lambda import Lambda
 
+def expand_pdf(nuisance_list):
+    if "pdf" in nuisance_list:
+        nuisance_list.remove("pdf")
+        for i in range(1, 100):
+            nuisance_list.append("pdf{}".format(i))
+    return nuisance_list
+
 def evaluate_weights(name, weights):
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_weights'))
     def fevaluate_weights(ev, evidx, nsig, source, name_):
@@ -24,8 +31,10 @@ class WeightProducer(object):
 
         weights_dict = input_dict["weights"]
         wvars = input_dict["weight_variations"]
+        wvars = expand_pdf(wvars)
         avars = input_dict["attribute_variations"]
         if self.nuisances is not None:
+            self.nuisances = expand_pdf(self.nuisances)
             self.weight_variation_sources = [
                 v for v in wvars if v in self.nuisances
             ]
