@@ -7,3 +7,4 @@ from .Systematics import SystematicsReader, SystematicsCollector
 from .TriggerEfficiency import TriggerEfficiencyReader, TriggerEfficiencyCollector
 from .QcdEstimation import QcdEstimationReader, QcdEstimationCollector
 from .GStarCorrection import GStarCorrectionReader, GStarCorrectionCollector
+from .Sqlite import SqliteReader, SqliteCollector
