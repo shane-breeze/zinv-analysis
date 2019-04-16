@@ -2,7 +2,7 @@ import awkward as awk
 import numpy as np
 np.warnings.filterwarnings('ignore')
 
-from AwkwardOps import get_nth_object, jagged_prod
+from AwkwardOps import get_nth_object, get_attr_for_min_ref, jagged_prod
 
 class Lambda(object):
     def __init__(self, function):
