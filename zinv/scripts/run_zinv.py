@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os
 import sys
+from cachetools import LFUCache
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -8,6 +9,7 @@ from atuproot.atuproot_main import AtUproot
 from atsge.build_parallel import build_parallel
 from zinv.utils.grouped_run import grouped_run
 from zinv.utils.gittools import git_diff, git_revision_hash
+from zinv.utils.cache_funcs import get_size
 from zinv.datasets.datasets import get_datasets
 from zinv.sequence.config import build_sequence
 
@@ -53,6 +55,8 @@ def parse_args():
                         help="Number of files per process")
     parser.add_argument("--blocksize", default=1000000, type=int,
                         help="Number of events per block")
+    parser.add_argument("--cachesize", default=6*1024**3, type=int,
+                        help="Branch cache size")
     parser.add_argument("--quiet", default=False, action='store_true',
                         help="Keep progress report quiet")
     parser.add_argument("--profile", default=False, action='store_true',
@@ -224,16 +228,17 @@ def run(sequence, datasets, options):
         nevents_per_block = options.blocksize,
         profile = options.profile,
         profile_out_path = "profile.txt",
-        predetermined_nevents_in_file = predetermined_nevents_in_file,
+        predetermined_nevents_in_file = {}, #predetermined_nevents_in_file,
+        branch_cache = LFUCache(options.cachesize, get_size),
     )
 
     # Change parallel options (SGE not supported in standard `build_parallel`)
     process.parallel_mode = options.mode
     if options.mode == 'sge':
         dispatcher_options = {
-            "vmem": 6,
-            "walltime": 10800,
-            "vmem_dict": vmem_dict,
+            "vmem": 24,
+            "walltime": 3*60*60,
+            "vmem_dict": {}, #vmem_dict,
             "walltime_dict": {},
         }
         dropbox_options = {}
