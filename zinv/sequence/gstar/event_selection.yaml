@@ -1,0 +1,13 @@
+selections:
+    mll_selection: "ev: (ev.GenPartBoson_mass >= 71.) & (ev.GenPartBoson_mass < 111.)"
+grouped_selections: []
+cutflows:
+    None:
+        Data: []
+        MC: []
+    DoubleMuon:
+        Data: []
+        MC: ["mll_selection"]
+    DoubleElectron:
+        Data: []
+        MC: ["mll_selection"]
