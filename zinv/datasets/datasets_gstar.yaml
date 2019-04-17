@@ -1,8 +1,75 @@
+default: {energy: 13000, lumi: 35860}
 path: /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/{}/info.yaml
-default:
-    lumi: 35860
-    energy: 13000
 datasets:
-    - DYJetsToLL
-    - GStarJetsToLL
-    - ZJetsToLL
+    DYJetsToLL:
+        DAS: ""
+        files: [/vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_1.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_2.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_3.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_4.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_5.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_6.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_7.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_8.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_9.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_10.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_11.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_12.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_13.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_14.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_15.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_16.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_17.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_18.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_19.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_20.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_21.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_22.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_23.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_24.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_25.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_26.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_27.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_28.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_29.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_30.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_31.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_32.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_33.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_34.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_35.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_36.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_37.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_38.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_39.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_40.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_41.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_42.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_43.root,
+            /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_44.root]
+        isdata: false
+        nevents: 122055388
+        parent: DYJetsToLL
+        sumweights: 1917228220416.0
+        tree: Events
+        xsection: 5940.0
+    GStarJetsToLL:
+        DAS: ""
+        files: [/vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/GStarJetsToLL/trees/tree.root]
+        isdata: false
+        name: GStarJetsToLL
+        nevents: 3878310
+        parent: GStarJetsToLL
+        sumweights: 3177117184.0
+        tree: Events
+        xsection: 314.6
+    ZJetsToLL:
+        DAS: ""
+        files: [/vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/ZJetsToLL/trees/tree.root]
+        isdata: false
+        name: ZJetsToLL
+        nevents: 3701707
+        parent: ZJetsToLL
+        sumweights: 58882871296.0
+        tree: Events
+        xsection: 5817.0

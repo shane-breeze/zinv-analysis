@@ -20,10 +20,7 @@ jobs:
                 name: run tests
                 command: |
                     source setup.sh
-                    python -m pytest --cov-report=xml --cov-report html:cov_html --cov=zinv tests/
-
-            - store_artifacts:
-                path: cov_html
+                    python -m pytest --cov-report=xml --cov=zinv tests/
 
             - codecov/upload:
                 file: coverage.xml

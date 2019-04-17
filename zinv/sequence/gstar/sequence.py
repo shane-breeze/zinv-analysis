@@ -1,89 +1,74 @@
-import sys
-import os
-sys.path.append(os.path.abspath(os.path.dirname(__file__)))
-
-import Readers
-import Collectors
-from event_selection import event_selection
 from alphatwirl.loop import NullCollector
-
 import os
-datapath = os.path.join(os.environ["TOPDIR"], "data")
+import sys
+sys.path.append(os.path.abspath(os.path.dirname(__file__)))
+toppath = os.path.abspath(os.path.join(os.environ["TOPDIR"], "zinv"))
+datapath = os.path.join(toppath, "data")
+collpath = os.path.join(toppath, "sequence", "Collectors")
+drawpath = os.path.join(toppath, "drawing")
 
-collection_creator = Readers.CollectionCreator(
-    name = "collection_creator",
-    collections = ["GenPart", "GenDressedLepton", "LHEPart"],
-    variations = [],
+import zinv.sequence.Readers as Readers
+import zinv.sequence.Collectors as Collectors
+
+event_tools = Readers.EventTools(
+    name = "event_tools",
+    maxsize = int(2*1024**3), # 6 GB
 )
 
+# Initialise readers and collectors
+collection_creator = Readers.CollectionCreator(
+    name = "collection_creator",
+    collections = ["CaloMET", "MET", "Jet", "Electron", "Muon", "Photon", "Tau",
+                   "GenMET", "GenPart", "GenJet", "GenDressedLepton", "LHEPart"],
+)
+
+# Gen/Lhe level producers
 gen_boson_producer = Readers.GenBosonProducer(
     name = "gen_boson_producer",
     data = False,
 )
 lhe_part_assigner = Readers.LHEPartAssigner(
     name = "lhe_part_assigner",
+    old_parents = ["WJetsToLNu", "DYJetsToLL", "ZJetsToLL", "GStarJetsToLL"],
     data = False,
 )
 gen_part_assigner = Readers.GenPartAssigner(
     name = "gen_part_assigner",
+    old_parents = ["WJetsToLNu", "DYJetsToLL", "ZJetsToLL", "GStarJetsToLL"],
     data = False,
 )
 
-weight_creator = Readers.WeightCreator(
-    name = "weight_creator",
+sqlite_reader = Collectors.SqliteReader(
+    name = "sqlite_reader",
+    cfg = os.path.join(collpath, "Sqlite_cfg.yaml"),
 )
-weight_xsection_lumi = Readers.WeightXsLumi(
-    name = "weight_xsection_lumi",
-    data = False,
-)
-
-weight_qcd_ewk = Readers.WeightQcdEwk(
-    name = "weight_qcd_ewk",
-    input_paths = {
-        "ZJetsToNuNu":   (datapath+"/qcd_ewk/vvj.dat", "vvj_pTV_{}"),
-        "WJetsToLNu":    (datapath+"/qcd_ewk/evj.dat", "evj_pTV_{}"),
-        "DYJetsToLL":    (datapath+"/qcd_ewk/eej.dat", "eej_pTV_{}"),
-        "ZJetsToLL":     (datapath+"/qcd_ewk/eej.dat", "eej_pTV_{}"),
-        "GStarJetsToLL": (datapath+"/qcd_ewk/eej.dat", "eej_pTV_{}"),
-    },
-    underflow = True,
-    overflow = True,
-    formula = "((K_NNLO + d1k_qcd*d1K_NNLO + d2k_qcd*d2K_NNLO + d3k_qcd*d3K_NNLO)"\
-              " /(K_NLO + d1k_qcd*d1K_NLO + d2k_qcd*d2K_NLO + d3k_qcd*d3K_NLO))"\
-              "*(1 + kappa_EW + d1k_ew*d1kappa_EW + isz*(d2k_ew_z*d2kappa_EW + d3k_ew_z*d3kappa_EW)"\
-                                                 "+ isw*(d2k_ew_w*d2kappa_EW + d3k_ew_w*d3kappa_EW))"\
-              "+ dk_mix*dK_NLO_mix",
-    params = ["K_NLO", "d1K_NLO", "d2K_NLO", "d3K_NLO", "K_NNLO", "d1K_NNLO",
-              "d2K_NNLO", "d3K_NNLO", "kappa_EW", "d1kappa_EW", "d2kappa_EW",
-              "d3kappa_EW", "dK_NLO_mix"],
-    nuisances = ["d1k_qcd", "d2k_qcd", "d3k_qcd", "d1k_ew", "d2k_ew_z",
-                 "d2k_ew_w", "d3k_ew_z", "d3k_ew_w", "dk_mix"],
-)
-
-selection_producer = Readers.SelectionProducer(
-    name = "selection_producer",
-    event_selection = event_selection,
-)
-
-gstar_correction_reader = Collectors.GStarCorrectionReader(
-    name = "gstar_correction_reader",
-    cfg = Collectors.GStarCorrection_cfg,
-)
-gstar_correction_collector = Collectors.GStarCorrectionCollector(
-    name = "gstar_correction_collector",
-    plot = True,
-    cfg = Collectors.GStarCorrection_cfg,
+sqlite_collector = Collectors.SqliteCollector(
+    name = "sqlite_collector",
+    cfg = os.path.join(collpath, "Sqlite_cfg.yaml"),
 )
 
 sequence = [
-    # Readers
+    # Setup caching, nsig and source
+    (event_tools, NullCollector()),
+    # Creates object collections accessible through the event variable. e.g.
+    # event.Jet.pt rather than event.Jet_pt.
     (collection_creator, NullCollector()),
-    (gen_boson_producer, NullCollector()),
-    #(lhe_part_assigner, NullCollector()),
-    #(gen_part_assigner, NullCollector()),
-    (weight_creator, NullCollector()),
-    (weight_xsection_lumi, NullCollector()),
+    # selection and weight producers. They only create functions and hence can
+    # be placed near the start
+    (weight_producer, NullCollector()),
     (selection_producer, NullCollector()),
-    # Collectors
-    (gstar_correction_reader, gstar_correction_collector),
+    # # Try to keep GenPart branch stuff before everything else. It's quite big
+    # # and is deleted after use. Don't want to add the memory consumption of
+    # # this with all other branches
+    (gen_boson_producer, NullCollector()),
+    (lhe_part_assigner, NullCollector()),
+    (gen_part_assigner, NullCollector()),
+    # # Weighters. The generally just apply to MC and that logic is dealt with by
+    # # the ScribblerWrapper.
+    (weight_xsection_lumi, NullCollector()),
+    (weight_pdf_scale, NullCollector()),
+    (weight_qcd_ewk, NullCollector()),
+    # Add collectors (with accompanying readers) at the end so that all
+    # event attributes are available to them
+    (sqlite_reader, sqlite_collector),
 ]
