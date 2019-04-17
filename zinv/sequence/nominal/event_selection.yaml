@@ -70,7 +70,7 @@ selections:
     ngen_boson_selection:
         "ev: np.ones(ev.size, dtype=bool)
              if ev.config.dataset.parent not in 'EWKV2Jets'
-             else (ev.nGenBosons==1)"
+             else (ev.nGenBosons(ev)==1)"
 grouped_selections:
     data:
         - "lumi_selection"

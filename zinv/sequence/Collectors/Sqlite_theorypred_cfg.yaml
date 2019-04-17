@@ -82,7 +82,7 @@ attributes:
         MET_dpt: "ev: (ev.MET_pt-ev.MET_ptJESOnly)/ev.MET_ptJESOnly"
         MET_dphi: "ev: ev.MET_phi-ev.MET_phiJESOnly"
         LeadJetSelection_dpt: "ev: get_nth_object((ev.JetSelection(ev, 'pt')-ev.JetSelection(ev, 'ptJESOnly'))/ev.JetSelection(ev, 'ptJESOnly'), 0, ev.size)"
-        nGenBosonSelection: "ev: ev.nGenBosons"
+        nGenBosonSelection: "ev: ev.nGenBosons(ev)"
         LeptonIsElectron: "ev: getattr(ev, 'LeptonIsElectron', np.zeros(ev.size, dtype=np.bool8))"
         LeptonIsMuon: "ev: getattr(ev, 'LeptonIsMuon', np.zeros(ev.size, dtype=np.bool8))"
         LeptonIsTau: "ev: getattr(ev, 'LeptonIsTau', np.zeros(ev.size, dtype=np.bool8))"
