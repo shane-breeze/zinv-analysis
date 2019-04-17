@@ -1,71 +1,22 @@
-import re
 import numpy as np
-import numba as nb
-import operator
-from cachetools import cachedmethod
-from cachetools.keys import hashkey
-from functools import partial
 
-from zinv.utils.NumbaFuncs import weight_numba
-
-pdf_regex = re.compile("^pdf(?P<id>[0-9]+)$")
-def evaluate_pdf_variations(valid):
-    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_pdf_variations'))
-    def fevaluate_pdf_variations(ev, evidx, nsig, source, valid_):
-        if valid_:
-            nominal = np.ones(ev.size, dtype=np.float32)
-            match = pdf_regex.search(source)
-            if match:
-                pdfid = int(match.group("id"))
-                up = ev.LHEPdfWeight[:,pdfid] - 1.
-                down = -up
-            elif source == "alphas":
-                up = ev.LHEPdfWeight[:,101] - 1.
-                down = ev.LHEPdfWeight[:,102] - 1.
-            else:
-                up = np.zeros(ev.size, dtype=np.float32)
-                down = -up
-            weight = weight_numba(nominal, nsig, up, down)
-        else:
-            weight = np.ones(ev.size, dtype=np.float32)
-        return weight
-
-    def ret_func(ev):
-        source, nsig = ev.source, ev.nsig
-        match = pdf_regex.search(source)
-        if not (match or source=="alphas"):
-            source, nsig = '', 0.
-        return fevaluate_pdf_variations(ev, ev.iblock, nsig, source, valid)
+def evaluate_pdf_variations():
+    def ret_func(ev, pos):
+        pdf = np.ones(ev.size, dtype=np.float32)
+        if ev.hasbranch("LHEPdfWeight"):
+            mask = ev.nLHEPdfWeight>pos
+            pdf[mask] = ev.LHEPdfWeight[mask,pos]
+        return pdf
 
     return ret_func
 
-def evaluate_scale_variations(valid):
-    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_scale_variations'))
-    def fevaluate_scale_variations(ev, evidx, nsig, source, valid_):
-        if valid_:
-            nominal = np.ones(ev.size, dtype=np.float32)
-            if source == "muf_scale":
-                up = ev.LHEScaleWeight[:,5] - 1.
-                down = ev.LHEScaleWeight[:,3] - 1.
-            elif source == "mur_scale":
-                up = ev.LHEScaleWeight[:,7] - 1.
-                down = ev.LHEScaleWeight[:,1] - 1.
-            elif source == "mufr_scale":
-                up = ev.LHEScaleWeight[:,8] - 1.
-                down = ev.LHEScaleWeight[:,0] - 1.
-            else:
-                up = np.zeros(ev.size, dtype=np.float32)
-                down = np.zeros(ev.size, dtype=np.float32)
-            weight = weight_numba(nominal, nsig, up, down)
-        else:
-            weight = np.ones(ev.size, dtype=np.float32)
-        return weight
-
-    def ret_func(ev):
-        source, nsig = ev.source, ev.nsig
-        if source not in ["muf_scale", "mur_scale", "mufr_scale"]:
-            source, nsig = '', 0.
-        return fevaluate_scale_variations(ev, ev.iblock, nsig, source, valid)
+def evaluate_scale_variations():
+    def ret_func(ev, pos):
+        scale = np.ones(ev.size, dtype=np.float32)
+        if ev.hasbranch("LHEScaleWeight"):
+            mask = ev.nLHEScaleWeight>pos
+            scale[mask] = ev.LHEScaleWeight[mask,pos]
+        return scale
 
     return ret_func
 
@@ -93,10 +44,5 @@ class WeightPdfScale(object):
         self.__dict__.update(kwargs)
 
     def begin(self, event):
-        if event.config.dataset.parent in self.parents_to_skip\
-           or event.config.dataset.name in self.parents_to_skip:
-            event.WeightPdfVariations = evaluate_pdf_variations(False)
-            event.WeightQCDScale = evaluate_scale_variations(False)
-        else:
-            event.WeightPdfVariations = evaluate_pdf_variations(True)
-            event.WeightQCDScale = evaluate_scale_variations(True)
+        event.WeightPdfVariations = evaluate_pdf_variations()
+        event.WeightScaleVariations = evaluate_scale_variations()

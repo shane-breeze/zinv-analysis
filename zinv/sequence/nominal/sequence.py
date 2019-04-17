@@ -12,7 +12,7 @@ import zinv.sequence.Collectors as Collectors
 
 event_tools = Readers.EventTools(
     name = "event_tools",
-    maxsize = int(6*1024**3), # 6 GB
+    maxsize = int(2*1024**3), # 6 GB
 )
 
 # Initialise readers and collectors
@@ -115,7 +115,7 @@ weight_xsection_lumi = Readers.WeightXsLumi(
 )
 weight_pdf_scale = Readers.WeightPdfScale(
     name = "weight_pdf_scale",
-    parents_to_skip = ["SingleTop", "QCD", "Diboson"],
+    #parents_to_skip = ["SingleTop", "QCD", "Diboson"],
     data = False,
 )
 weight_pu = Readers.WeightPileup(
@@ -300,6 +300,15 @@ weight_producer = Readers.WeightProducer(
     name = "weight_producer",
 )
 
+sqlite_reader = Collectors.SqliteReader(
+    name = "sqlite_reader",
+    cfg = os.path.join(collpath, "Sqlite_cfg.yaml"),
+)
+sqlite_collector = Collectors.SqliteCollector(
+    name = "sqlite_collector",
+    cfg = os.path.join(collpath, "Sqlite_cfg.yaml"),
+)
+
 hist_reader = Collectors.HistReader(
     name = "hist_reader",
     cfg = os.path.join(collpath, "Histogrammer_cfg.yaml"),
@@ -471,12 +480,13 @@ sequence = [
     (weight_prefiring, NullCollector()),
     # Add collectors (with accompanying readers) at the end so that all
     # event attributes are available to them
-    (hist_reader, hist_collector),
+    (sqlite_reader, sqlite_collector),
+    #(hist_reader, hist_collector),
     #(hist2d_reader, hist2d_collector),
     #(gen_stitching_reader, gen_stitching_collector),
     #(met_response_resolution_reader, met_response_resolution_collector),
     #(qcd_ewk_corrections_reader, qcd_ewk_corrections_collector),
-    (systematics_reader, systematics_collector),
+    #(systematics_reader, systematics_collector),
     #(trigger_efficiency_reader, trigger_efficiency_collector),
     #(qcd_estimation_reader, qcd_estimation_collector),
 ]

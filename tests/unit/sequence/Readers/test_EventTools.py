@@ -9,7 +9,7 @@ from zinv.sequence.Readers.EventTools import get_size
 class DummyEvent(object):
     def __init__(self):
         self.MET_pt = np.array([1., 2.])
-        self._callable_cache = {}
+        self._nonbranch_cache = {}
 
 @pytest.fixture()
 def event():
@@ -28,7 +28,7 @@ def test_eventtools_begin(event, module):
     module.begin(event)
     assert event.nsig == 0
     assert event.source == ''
-    assert "cache" in event._callable_cache
+    assert "cache" in event._nonbranch_cache
 
 def test_eventtools_event(event, module_begin):
     event.cache = mock.MagicMock()

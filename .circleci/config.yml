@@ -14,7 +14,7 @@ jobs:
             - checkout
             - run:
                 name: install dependencies
-                command: pip install --user -r requirements.txt
+                command: pip install --user -r requirements.txt --quiet
 
             - run:
                 name: run tests

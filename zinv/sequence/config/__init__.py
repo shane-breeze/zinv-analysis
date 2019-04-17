@@ -12,6 +12,7 @@ def build_sequence(
         r.trigger_selection_path = os.path.abspath(ts_path)
         r.weight_sequence_path = os.path.abspath(ws_path)
         r.nuisances = nuisances
+        r.outdir = os.path.abspath(outdir)
         c.outdir = os.path.abspath(outdir)
     return [
         (ScribblerWrapper(reader), collector)
