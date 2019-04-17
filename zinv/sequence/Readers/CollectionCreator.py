@@ -1,4 +1,5 @@
 class Collection(object):
+    """Alias class for collections"""
     def __init__(self, name, event, ref_name=None):
         self.name = name
         self.event = event
