@@ -7,7 +7,6 @@ warnings.filterwarnings('ignore')
 
 from atuproot.atuproot_main import AtUproot
 from atsge.build_parallel import build_parallel
-from zinv.utils.grouped_run import grouped_run
 from zinv.utils.gittools import git_diff, git_revision_hash
 from zinv.utils.cache_funcs import get_size
 from zinv.datasets.datasets import get_datasets
@@ -67,11 +66,6 @@ def parse_args():
     parser.add_argument("--nuisances", default="", type=str,
                         help="Nuisances to process in the systematics "
                         "analyzer. Comma-delimited.")
-    parser.add_argument("--redraw", default=False, action='store_true',
-                        help="Overrides most options. Runs over collectors "
-                             "only to rerun the draw function on outdir")
-    parser.add_argument("--nodraw", default=False, action='store_true',
-                        help="Don't run drawing processes")
     return parser.parse_args()
 
 def generate_report(outdir):
@@ -264,38 +258,6 @@ def run(sequence, datasets, options):
 
     return process.run(datasets, sequence)
 
-def redraw(sequence, datasets, options):
-    return [
-        collector.reload(options.outdir)
-        for (reader, collector) in sequence
-        if hasattr(collector, "reload")
-    ]
-
-def parallel_draw(jobs, options):
-    if len(jobs)==0:
-        return
-    jobs = [job for subjobs in jobs for job in subjobs]
-    jobs = [jobs[i:i+len(jobs)/100+1]
-            for i in xrange(0, len(jobs), len(jobs)/100+1)]
-
-    parallel = build_parallel(
-        options.mode,
-        quiet = options.quiet,
-        processes = options.ncores,
-        dispatcher_options = {},
-    )
-    parallel.begin()
-    try:
-        parallel.communicationChannel.put_multiple([{
-            'task': grouped_run,
-            'args': args,
-            'kwargs': {},
-        } for args in jobs])
-        parallel.communicationChannel.receive()
-    except KeyboardInterrupt:
-        parallel.terminate()
-    parallel.end()
-
 if __name__ == "__main__":
     options = parse_args()
     if not os.path.exists(options.outdir):
@@ -324,17 +286,4 @@ if __name__ == "__main__":
     # Pass any other options through to the datasets
     #for d in datasets:
     #    d.systs = options.systs
-
-    if options.redraw:
-        jobs = redraw(sequence, datasets, options)
-    else:
-        jobs = run(sequence, datasets, options)
-        if jobs is not None and len(jobs)!=0:
-            jobs = [reduce(lambda x, y: x + y, [ssjobs
-                for ssjobs in sjobs
-                if not ssjobs is None
-            ]) for sjobs in jobs]
-        else:
-            jobs = []
-    if not options.nodraw:
-        parallel_draw(jobs, options)
+    results = run(sequence, datasets, options)
