@@ -108,7 +108,7 @@ class WeightQcdEwk(object):
                 )
         else:
             indices = get_bin_indices(
-                [event.GenPartBoson_pt],
+                [event.GenPartBoson(event, 'pt')],
                 [self.input_df.index.get_level_values("bin_min").values],
                 [self.input_df.index.get_level_values("bin_max").values],
                 1,

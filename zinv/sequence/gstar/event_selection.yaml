@@ -1,5 +1,5 @@
 selections:
-    mll_selection: "ev: (ev.GenPartBoson_mass >= 71.) & (ev.GenPartBoson_mass < 111.)"
+    mll_selection: "ev: (ev.GenPartBoson(ev, 'mass') >= 71.) & (ev.GenPartBoson(ev, 'mass') < 111.)"
 grouped_selections: []
 cutflows:
     None:
