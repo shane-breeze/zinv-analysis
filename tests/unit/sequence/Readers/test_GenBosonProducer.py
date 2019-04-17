@@ -20,8 +20,11 @@ class DummyEvent(object):
         self.GenPart = DummyColl()
         self.GenDressedLepton = DummyColl()
 
-    def delete_branches(self, branches):
-        pass
+    def hasbranch(self, branch):
+        return hasattr(self, branch)
+
+    def register_function(self, event, name, function):
+        self.__dict__[name] = function
 
 @pytest.fixture()
 def event():
@@ -72,24 +75,24 @@ def test_genbosonproducer_event(module, event, inputs, outputs):
     event.GenDressedLepton.phi = awk.JaggedArray.fromiter(inputs["dl_phi"]).astype(np.float32)
     event.GenDressedLepton.mass = awk.JaggedArray.fromiter(inputs["dl_mass"]).astype(np.float32)
 
-    module.event(event)
+    module.begin(event)
 
     assert np.array_equal(
-        event.nGenBosons, np.array(outputs["ngenbosons"], dtype=np.int32),
+        event.nGenBosons(event), np.array(outputs["ngenbosons"], dtype=np.int32),
     )
     assert np.allclose(
-        event.GenPartBoson.pt, np.array(outputs["vpt"], dtype=np.float32),
+        event.GenPartBoson(event, 'pt'), np.array(outputs["vpt"], dtype=np.float32),
         rtol=1e-6, equal_nan=True,
     )
     assert np.allclose(
-        event.GenPartBoson.eta, np.array(outputs["veta"], dtype=np.float32),
+        event.GenPartBoson(event, 'eta'), np.array(outputs["veta"], dtype=np.float32),
         rtol=1e-6, equal_nan=True,
     )
     assert np.allclose(
-        event.GenPartBoson.phi, np.array(outputs["vphi"], dtype=np.float32),
+        event.GenPartBoson(event, 'phi'), np.array(outputs["vphi"], dtype=np.float32),
         rtol=1e-6, equal_nan=True,
     )
     assert np.allclose(
-        event.GenPartBoson.mass, np.array(outputs["vmass"], dtype=np.float32),
+        event.GenPartBoson(event, 'mass'), np.array(outputs["vmass"], dtype=np.float32),
         rtol=1e-6, equal_nan=True,
     )

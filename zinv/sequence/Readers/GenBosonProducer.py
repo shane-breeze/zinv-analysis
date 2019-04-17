@@ -11,47 +11,98 @@ class GenBosonProducer(object):
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
-    def event(self, event):
-        gp = event.GenPart
+    def begin(self, event):
+        event.register_function(event, "nGenBosons", ngen_bosons)
+        event.register_function(event, "GenPartBoson", genpart_boson)
+
+def ngen_bosons(ev):
+    gp = ev.GenPart
+    pdgs = gp.pdgId
+    motheridx = gp.genPartIdxMother
+
+    nb_mask = (
+        (np.abs(pdgs)==11) | (np.abs(pdgs)==12) | (np.abs(pdgs)==13)
+        | (np.abs(pdgs)==14) | (np.abs(pdgs)==15) | (np.abs(pdgs)==16)
+        | (np.abs(pdgs)==23) | (np.abs(pdgs)==24)
+    ) & (motheridx==0)
+
+    nbosons = np.zeros_like(pdgs.content, dtype=np.int32)
+    nbosons[(nb_mask & (np.abs(pdgs)<20)).content] = 1
+    nbosons[(nb_mask & (np.abs(pdgs)>=20)).content] = 2
+    nbosons = awk.JaggedArray(pdgs.starts, pdgs.stops, nbosons)
+    return nbosons.sum()/2
+
+def genpart_boson(ev, attr):
+    if not ev.hasbranch("GenPartBoson_{}".format(attr)):
+        gp = ev.GenPart
         flags = gp.statusFlags
         pdgs = gp.pdgId
         status = gp.status
-        motheridx = gp.genPartIdxMother
 
-        nb_mask = ((np.abs(pdgs)==11) | (np.abs(pdgs)==12) | (np.abs(pdgs)==13)\
-                   | (np.abs(pdgs)==14) | (np.abs(pdgs)==15) | (np.abs(pdgs)==16)\
-                   | (np.abs(pdgs)==23) | (np.abs(pdgs)==24)) & (motheridx==0)
-        nbosons = np.zeros_like(pdgs.content, dtype=np.int32)
-        nbosons[(nb_mask & (np.abs(pdgs)<20)).content] = 1
-        nbosons[(nb_mask & (np.abs(pdgs)>=20)).content] = 2
-        nbosons = awk.JaggedArray(pdgs.starts, pdgs.stops, nbosons)
-        event.nGenBosons = nbosons.sum()/2
+        # Mask for boson decay products
+        gp_mask = (
+            ((flags&1==1) & (flags&(1<<8)==(1<<8)))
+            & (
+                (((np.abs(pdgs)==11) | (np.abs(pdgs)==13)) & (status==1) & ((flags&(1<<2)==0)))
+                | ((np.abs(pdgs)==15) & (status==2))
+                | (((np.abs(pdgs)==12) | (np.abs(pdgs)==14) | (np.abs(pdgs)==16)) & (status==1))
+            )
+        )
 
-        gp_mask = ((flags&1==1) & (flags&(1<<8)==(1<<8)))\
-                & (
-                    (((np.abs(pdgs)==11) | (np.abs(pdgs)==13)) & (status==1) & ((flags&(1<<2)==0)))\
-                    | ((np.abs(pdgs)==15) & (status==2))\
-                    | (((np.abs(pdgs)==12) | (np.abs(pdgs)==14) | (np.abs(pdgs)==16)) & (status==1))\
-                )
+        genpart_dressedlepidx = genpart_matched_dressedlepton(ev, gp_mask)
+        pt, eta, phi, mass = create_genpart_boson(
+            ev, gp_mask, genpart_dressedlepidx,
+        )
+        ev.GenPartBoson_pt = pt
+        ev.GenPartBoson_eta = eta
+        ev.GenPartBoson_phi = phi
+        ev.GenPartBoson_mass = mass
 
-        # Finished with GenPart branches
-        genpart_dressedlepidx = genpart_matched_dressedlepton(event, gp_mask)
-        event.GenPartBoson = Collection("GenPartBoson", event)
-        pt, eta, phi, mass = create_genpart_boson(event, gp_mask, genpart_dressedlepidx)
-        event.GenPartBoson_pt = pt
-        event.GenPartBoson_eta = eta
-        event.GenPartBoson_phi = phi
-        event.GenPartBoson_mass = mass
-
-        event.delete_branches([
-            "GenPart_genPartIdxMother", "GenPart_status", "GenPart_eta",
-            "GenPart_phi", "GenPart_pt", "GenPart_mass",
-            "GenDressedLepton_pdgId", "GenDressedLepton_eta",
-            "GenDressedLepton_phi", "GenDressedLepton_pt",
-            "GenDressedLepton_mass",
-        ])
+    return getattr(ev, "GenPartBoson_{}".format(attr))
 
 def create_genpart_boson(ev, gp_mask, gdl_idx):
+    @nb.njit(["UniTuple(float32[:],4)(float32[:],float32[:],float32[:],float32[:],int64[:],int64[:],int64[:],float32[:],float32[:],float32[:],float32[:],int64[:],int64[:])"])
+    def create_genpart_boson_jit(
+        gps_pt, gps_eta, gps_phi, gps_mass, gps_gdidx, gps_starts, gps_stops,
+        gds_pt, gds_eta, gds_phi, gds_mass, gds_starts, gds_stops,
+    ):
+
+        nev = gps_stops.shape[0]
+        pts = np.zeros(nev, dtype=np.float32)
+        etas = np.zeros(nev, dtype=np.float32)
+        phis = np.zeros(nev, dtype=np.float32)
+        masss = np.zeros(nev, dtype=np.float32)
+
+        for iev, (gps_start, gps_stop, gds_start, gds_stop) in enumerate(zip(
+            gps_starts, gps_stops, gds_starts, gds_stops,
+        )):
+            x, y, z, e = 0., 0., 0., 0.
+            for igps in range(gps_start, gps_stop):
+                igds = gps_gdidx[igps]
+                if igds >= 0:
+                    igds += gds_start
+                    tx, ty, tz, te = LorTHPMToXYZE(
+                        gds_pt[igds], gds_eta[igds], gds_phi[igds], gds_mass[igds],
+                    )
+                    x += tx
+                    y += ty
+                    z += tz
+                    e += te
+                else:
+                    tx, ty, tz, te = LorTHPMToXYZE(
+                        gps_pt[igps], gps_eta[igps], gps_phi[igps], gps_mass[igps],
+                    )
+                    x += tx
+                    y += ty
+                    z += tz
+                    e += te
+            t, h, p, m = LorXYZEToTHPM(x, y, z, e)
+            pts[iev] = t
+            etas[iev] = h
+            phis[iev] = p
+            masss[iev] = m
+        return pts, etas, phis, masss
+
     return create_genpart_boson_jit(
         ev.GenPart.pt[gp_mask].content,
         ev.GenPart.eta[gp_mask].content,
@@ -68,49 +119,26 @@ def create_genpart_boson(ev, gp_mask, gdl_idx):
         ev.GenDressedLepton.pt.stops,
     )
 
-@nb.njit(["UniTuple(float32[:],4)(float32[:],float32[:],float32[:],float32[:],int64[:],int64[:],int64[:],float32[:],float32[:],float32[:],float32[:],int64[:],int64[:])"])
-def create_genpart_boson_jit(
-    gps_pt, gps_eta, gps_phi, gps_mass, gps_gdidx, gps_starts, gps_stops,
-    gds_pt, gds_eta, gds_phi, gds_mass, gds_starts, gds_stops,
-):
-
-    nev = gps_stops.shape[0]
-    pts = np.zeros(nev, dtype=np.float32)
-    etas = np.zeros(nev, dtype=np.float32)
-    phis = np.zeros(nev, dtype=np.float32)
-    masss = np.zeros(nev, dtype=np.float32)
-
-    for iev, (gps_start, gps_stop, gds_start, gds_stop) in enumerate(zip(
-        gps_starts, gps_stops, gds_starts, gds_stops,
-    )):
-        x, y, z, e = 0., 0., 0., 0.
-        for igps in range(gps_start, gps_stop):
-            igds = gps_gdidx[igps]
-            if igds >= 0:
-                igds += gds_start
-                tx, ty, tz, te = LorTHPMToXYZE(
-                    gds_pt[igds], gds_eta[igds], gds_phi[igds], gds_mass[igds],
-                )
-                x += tx
-                y += ty
-                z += tz
-                e += te
-            else:
-                tx, ty, tz, te = LorTHPMToXYZE(
-                    gps_pt[igps], gps_eta[igps], gps_phi[igps], gps_mass[igps],
-                )
-                x += tx
-                y += ty
-                z += tz
-                e += te
-        t, h, p, m = LorXYZEToTHPM(x, y, z, e)
-        pts[iev] = t
-        etas[iev] = h
-        phis[iev] = p
-        masss[iev] = m
-    return pts, etas, phis, masss
-
 def genpart_matched_dressedlepton(ev, gpmask):
+    @nb.njit(["int64[:](int32[:],float32[:],float32[:],int64[:],int64[:],int32[:],float32[:],float32[:],int64[:],int64[:])"])
+    def genpart_matched_dressedlepton_jit(
+        gps_pdg, gps_eta, gps_phi, gps_starts, gps_stops,
+        gds_pdg, gds_eta, gds_phi, gds_starts, gds_stops,
+    ):
+        indices = -1*np.ones(gps_pdg.shape[0], dtype=np.int32)
+        for iev, (gps_start, gps_stop, gds_start, gds_stop) in enumerate(zip(
+            gps_starts, gps_stops, gds_starts, gds_stops,
+        )):
+            for igps in range(gps_start, gps_stop):
+                for igds in range(gds_start, gds_stop):
+                    matched_pdg = (gps_pdg[igps] == gds_pdg[igds])
+                    within_dr = (DeltaR2(gps_eta[igps]-gds_eta[igds],
+                                         gps_phi[igps]-gds_phi[igds]) < 0.01)
+                    if matched_pdg and within_dr:
+                        indices[igps] = igds - gds_start
+                        break
+        return indices
+
     return genpart_matched_dressedlepton_jit(
         ev.GenPart.pdgId[gpmask].content,
         ev.GenPart.eta[gpmask].content,
@@ -123,22 +151,3 @@ def genpart_matched_dressedlepton(ev, gpmask):
         ev.GenDressedLepton.pdgId.starts,
         ev.GenDressedLepton.pdgId.stops,
     )
-
-@nb.njit(["int64[:](int32[:],float32[:],float32[:],int64[:],int64[:],int32[:],float32[:],float32[:],int64[:],int64[:])"])
-def genpart_matched_dressedlepton_jit(
-    gps_pdg, gps_eta, gps_phi, gps_starts, gps_stops,
-    gds_pdg, gds_eta, gds_phi, gds_starts, gds_stops,
-):
-    indices = -1*np.ones(gps_pdg.shape[0], dtype=np.int32)
-    for iev, (gps_start, gps_stop, gds_start, gds_stop) in enumerate(zip(
-        gps_starts, gps_stops, gds_starts, gds_stops,
-    )):
-        for igps in range(gps_start, gps_stop):
-            for igds in range(gds_start, gds_stop):
-                matched_pdg = (gps_pdg[igps] == gds_pdg[igds])
-                within_dr = (DeltaR2(gps_eta[igps]-gds_eta[igds],
-                                     gps_phi[igps]-gds_phi[igds]) < 0.01)
-                if matched_pdg and within_dr:
-                    indices[igps] = igds - gds_start
-                    break
-    return indices
