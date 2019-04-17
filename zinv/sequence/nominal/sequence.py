@@ -302,11 +302,11 @@ weight_producer = Readers.WeightProducer(
 
 sqlite_reader = Collectors.SqliteReader(
     name = "sqlite_reader",
-    cfg = os.path.join(collpath, "Sqlite_objscale_cfg.yaml"),
+    cfg = os.path.join(collpath, "Sqlite_cfg.yaml"),
 )
 sqlite_collector = Collectors.SqliteCollector(
     name = "sqlite_collector",
-    cfg = os.path.join(collpath, "Sqlite_objscale_cfg.yaml"),
+    cfg = os.path.join(collpath, "Sqlite_cfg.yaml"),
 )
 
 hist_reader = Collectors.HistReader(

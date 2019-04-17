@@ -1,5 +1,6 @@
 name: "Events"
 output: "/vols/cms/sdb15/database_outputs/"
+variations: []
 attributes:
     Both:
         isdata: "ev: np.full(ev.size, ev.config.dataset.isdata, dtype=np.bool8)"
