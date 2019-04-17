@@ -35,8 +35,6 @@ def parse_args():
                         help="Config for the physics object selection")
     parser.add_argument("trigger_cfg", type=str,
                         help="Config for the HLT trigger paths")
-    parser.add_argument("weight_cfg", type=str,
-                        help="Config for the weight sequence")
     parser.add_argument("-o", "--outdir", default="output", type=str,
                         help="Where to save the results")
     parser.add_argument("--mode", default="multiprocessing", type=str,
@@ -266,7 +264,7 @@ if __name__ == "__main__":
 
     sequence = build_sequence(
         options.sequence_cfg, options.outdir, options.event_selection_cfg,
-        options.physics_object_cfg, options.trigger_cfg, options.weight_cfg,
+        options.physics_object_cfg, options.trigger_cfg,
         options.nuisances.split(","),
     )
     datasets = get_datasets(options.dataset_cfg)
