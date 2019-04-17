@@ -12,6 +12,12 @@ class DummyEvent(object):
         self.GenPart = mock.MagicMock()
         self.delete_branches = mock.MagicMock()
 
+    def register_function(self, event, name, function):
+        self.__dict__[name] = function
+
+    def hasbranch(self, branch):
+        return hasattr(self, branch)
+
 @pytest.fixture()
 def event():
     ev = DummyEvent()
@@ -35,21 +41,21 @@ def lhe_module():
 def gen_module():
     return GenPartAssigner(old_parents=["DummyParent"])
 
-@pytest.mark.parametrize("parent,result", (
-    ["DummyParent", None],
-    ["NotDummyParent", True],
+@pytest.mark.parametrize("parent", (
+    ["DummyParent",],
+    ["NotDummyParent",],
 ))
-def test_lhe_module_parent(lhe_module, event, parent, result):
+def test_lhe_module_parent(lhe_module, event, parent):
     event.config.dataset.parent = parent
-    assert lhe_module.event(event) == result
+    lhe_module.begin(event)
 
-@pytest.mark.parametrize("parent,result", (
-    ["DummyParent", None],
-    ["NotDummyParent", True],
+@pytest.mark.parametrize("parent", (
+    ["DummyParent",],
+    ["NotDummyParent",],
 ))
-def test_gen_module_parent(gen_module, event, parent, result):
+def test_gen_module_parent(gen_module, event, parent):
     event.config.dataset.parent = parent
-    assert gen_module.event(event) == result
+    gen_module.begin(event)
 
 params1 = [{
     "starts": [0, 1, 4, 5, 6, 7, 8],
@@ -72,10 +78,10 @@ def test_lhe_module(lhe_module, event, starts, stops, pdgs, isele, ismu, istau):
         np.array(stops, dtype=np.int32),
         np.array(pdgs, dtype=np.int32),
     )
-    lhe_module.event(event)
-    assert np.array_equal(event.LeptonIsElectron, np.array(isele, dtype=np.bool8))
-    assert np.array_equal(event.LeptonIsMuon, np.array(ismu, dtype=np.bool8))
-    assert np.array_equal(event.LeptonIsTau, np.array(istau, dtype=np.bool8))
+    lhe_module.begin(event)
+    assert np.array_equal(event.LeptonIs(event, 'Electron'), np.array(isele, dtype=np.bool8))
+    assert np.array_equal(event.LeptonIs(event, 'Muon'), np.array(ismu, dtype=np.bool8))
+    assert np.array_equal(event.LeptonIs(event, 'Tau'), np.array(istau, dtype=np.bool8))
 
 params2 = [{
     "starts": [0, 1, 4],
@@ -102,13 +108,13 @@ def test_gen_module(gen_module, event, starts, stops, flags, pdgs, ngtaul):
         np.array(stops, dtype=np.int32),
         np.array(pdgs, dtype=np.int32),
     )
-    gen_module.event(event)
-    assert np.array_equal(event.nGenTauL, np.array(ngtaul, dtype=np.int32))
+    gen_module.begin(event)
+    assert np.array_equal(event.nGenTauL(event), np.array(ngtaul, dtype=np.int32))
 
 def test_lhe_module_delete(lhe_module, event):
-    lhe_module.event(event)
+    lhe_module.begin(event)
     assert event.delete_branches.assert_called
 
 def test_gen_module_delete(gen_module, event):
-    gen_module.event(event)
+    gen_module.begin(event)
     assert event.delete_branches.assert_called
