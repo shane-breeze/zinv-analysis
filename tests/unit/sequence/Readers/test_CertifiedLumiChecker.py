@@ -11,6 +11,12 @@ class DummyEvent(object):
         self.run = np.array([0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 3], dtype=np.int32)
         self.luminosityBlock = np.array([0, 1, 2, 4, 5, 6, 0, 8, 9, 10, 100], dtype=np.int32)
 
+    def register_function(self, event, name, function):
+        self.__dict__[name] = function
+
+    def hasbranch(self, branch):
+        return hasattr(self, branch)
+
 @pytest.fixture()
 def event():
     return DummyEvent()
