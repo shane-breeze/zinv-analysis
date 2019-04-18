@@ -20,6 +20,9 @@ class DummyEvent(object):
         self.Jet = DummyColl()
         self.Photon = DummyColl()
 
+    def register_function(self, event, name, function):
+        self.__dict__[name] = function
+
 @pytest.fixture()
 def event():
     return DummyEvent()
@@ -124,7 +127,7 @@ def test_weightprefiring_begin(module, event, inputs, outputs):
 
     module.begin(event)
 
-    wpref = event.WeightPreFiring(event)
+    wpref = event.WeightPreFiring(event, event.source, event.nsig)
     owpref = np.array(outputs["wpref"], dtype=np.float32)
 
     print(wpref)
