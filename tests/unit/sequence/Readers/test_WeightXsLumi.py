@@ -18,6 +18,9 @@ class DummyEvent(object):
         self.cache = {}
         self.config = mock.MagicMock()
 
+    def register_function(self, event, name, function):
+        self.__dict__[name] = function
+
 @pytest.fixture()
 def event():
     return DummyEvent()
