@@ -31,11 +31,11 @@ def evaluate_metnox(arg):
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_metnox'))
     def fevaluate_metnox(ev, evidx, nsig, source, arg_):
         return metnox_numba(
-            ev.MET_ptShift(ev), ev.MET_phiShift(ev),
-            ev.MuonSelection(ev, 'ptShift').content, ev.MuonSelection(ev, 'phi').content,
-            ev.MuonSelection(ev, 'phi').starts, ev.MuonSelection(ev, 'phi').stops,
-            ev.ElectronSelection(ev, 'ptShift').content, ev.ElectronSelection(ev, 'phi').content,
-            ev.ElectronSelection(ev, 'phi').starts, ev.ElectronSelection(ev, 'phi').stops,
+            ev.MET_ptShift(ev, source, nsig), ev.MET_phiShift(ev, source, nsig),
+            ev.MuonSelection(ev, source, nsig, 'ptShift').content, ev.MuonSelection(ev, source, nsig, 'phi').content,
+            ev.MuonSelection(ev, source, nsig, 'phi').starts, ev.MuonSelection(ev, source, nsig, 'phi').stops,
+            ev.ElectronSelection(ev, source, nsig, 'ptShift').content, ev.ElectronSelection(ev, source, nsig, 'phi').content,
+            ev.ElectronSelection(ev, source, nsig, 'phi').starts, ev.ElectronSelection(ev, source, nsig, 'phi').stops,
         )[arg_].astype(np.float32)
 
     def return_evaluate_metnox(ev):
@@ -85,7 +85,7 @@ def evaluate_met_dcalo():
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_met_dcalo'))
     def fevaluate_met_dcalo(ev, evidx, nsig, source):
         return met_dcalo_numba(
-            ev.MET_ptShift(ev), ev.CaloMET_pt, ev.METnoX_pt(ev),
+            ev.MET_ptShift(ev, source, nsig), ev.CaloMET_pt, ev.METnoX_pt(ev, source, nsig),
         )
 
     def return_evaluate_met_dcalo(ev):
@@ -126,13 +126,13 @@ def evaluate_mtw():
 
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_mtw'))
     def fevaluate_mtw(ev, evidx, nsig, source):
-        mupts = ev.MuonSelection(ev, 'ptShift')
-        epts = ev.ElectronSelection(ev, 'ptShift')
+        mupts = ev.MuonSelection(ev, source, nsig, 'ptShift')
+        epts = ev.ElectronSelection(ev, source, nsig, 'ptShift')
         return event_mtw_numba(
-            ev.MET_ptShift(ev), ev.MET_phiShift(ev),
-            mupts.content, ev.MuonSelection(ev, 'phi').content,
+            ev.MET_ptShift(ev, source, nsig), ev.MET_phiShift(ev, source, nsig),
+            mupts.content, ev.MuonSelection(ev, source, nsig, 'phi').content,
             mupts.starts, mupts.stops,
-            epts.content, ev.ElectronSelection(ev, 'phi').content,
+            epts.content, ev.ElectronSelection(ev, source, nsig, 'phi').content,
             epts.starts, epts.stops,
         )
 
@@ -178,14 +178,14 @@ def evaluate_mll():
 
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_mll'))
     def fevaluate_mll(ev, evidx, nsig, source):
-        mpts = ev.MuonSelection(ev, 'ptShift')
-        epts = ev.ElectronSelection(ev, 'ptShift')
+        mpts = ev.MuonSelection(ev, source, nsig, 'ptShift')
+        epts = ev.ElectronSelection(ev, source, nsig, 'ptShift')
         return event_mll_numba(
-            mpts.content, ev.MuonSelection(ev, 'eta').content,
-            ev.MuonSelection(ev, 'phi').content, ev.MuonSelection(ev, 'mass').content,
+            mpts.content, ev.MuonSelection(ev, source, nsig, 'eta').content,
+            ev.MuonSelection(ev, source, nsig, 'phi').content, ev.MuonSelection(ev, source, nsig, 'mass').content,
             mpts.starts, mpts.stops,
-            epts.content, ev.ElectronSelection(ev, 'eta').content,
-            ev.ElectronSelection(ev, 'phi').content, ev.ElectronSelection(ev, 'mass').content,
+            epts.content, ev.ElectronSelection(ev, source, nsig, 'eta').content,
+            ev.ElectronSelection(ev, source, nsig, 'phi').content, ev.ElectronSelection(ev, source, nsig, 'mass').content,
             epts.starts, epts.stops,
             ev.size,
         )
@@ -214,8 +214,8 @@ def evaluate_lepton_charge():
 
     @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_lepton_charge'))
     def fevaluate_lepton_charge(ev, evidx, nsig, source):
-        mcharge = ev.MuonSelection(ev, 'charge')
-        echarge = ev.ElectronSelection(ev, 'charge')
+        mcharge = ev.MuonSelection(ev, source, nsig, 'charge')
+        echarge = ev.ElectronSelection(ev, source, nsig, 'charge')
         return lepton_charge_numba(
             mcharge.content, mcharge.starts, mcharge.stops,
             echarge.content, echarge.starts, echarge.stops,

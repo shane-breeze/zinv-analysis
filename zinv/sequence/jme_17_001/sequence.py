@@ -230,8 +230,8 @@ weight_prefiring = Readers.WeightPreFiring(
     name = "weight_prefiring",
     jet_eff_map_path = datapath+"/prefiring/L1prefiring_jetpt_2016BtoH.txt",
     photon_eff_map_path = datapath+"/prefiring/L1prefiring_photonpt_2016BtoH.txt",
-    jet_selection = "ev: (ev.Jet_ptShift(ev)>20) & ((2<np.abs(ev.Jet_eta)) & (np.abs(ev.Jet_eta)<3))",
-    photon_selection = "ev: (ev.Photon_ptShift(ev)>20) & ((2<np.abs(ev.Photon_eta)) & (np.abs(ev.Photon_eta)<3))",
+    jet_selection = "ev, source, nsig: (ev.Jet_ptShift(ev, source, nsig)>20) & ((2<np.abs(ev.Jet_eta)) & (np.abs(ev.Jet_eta)<3))",
+    photon_selection = "ev, source, nsig: (ev.Photon_ptShift(ev, source, nsig)>20) & ((2<np.abs(ev.Photon_eta)) & (np.abs(ev.Photon_eta)<3))",
     syst = 0.2,
     data = False,
 )

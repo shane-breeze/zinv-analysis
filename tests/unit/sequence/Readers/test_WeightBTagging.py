@@ -104,8 +104,8 @@ def test_weightbtagging_begin(module, event, inputs, outputs):
     event.Jet_hadronFlavour = jflav
     event.Jet.eta = jeta
     event.Jet_eta = jeta
-    event.Jet.ptShift = mock.Mock(side_effect=lambda ev: jptshift)
-    event.Jet_ptShift = mock.Mock(side_effect=lambda ev: jptshift)
+    event.Jet.ptShift = mock.Mock(side_effect=lambda ev, source, nsig: jptshift)
+    event.Jet_ptShift = mock.Mock(side_effect=lambda ev, source, nsig: jptshift)
 
     assert module.begin(event) is None
 

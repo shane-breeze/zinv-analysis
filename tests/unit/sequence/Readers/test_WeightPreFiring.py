@@ -35,16 +35,16 @@ def module(path):
     return WeightPreFiring(
         jet_eff_map_path = path+"/prefiring/L1prefiring_jetpt_2016BtoH.txt",
         photon_eff_map_path = path+"/prefiring/L1prefiring_photonpt_2016BtoH.txt",
-        jet_selection = "ev: (ev.Jet_ptShift(ev)>20) & ((2<np.abs(ev.Jet_eta)) & (np.abs(ev.Jet_eta)<3))",
-        photon_selection = "ev: (ev.Photon_ptShift(ev)>20) & ((2<np.abs(ev.Photon_eta)) & (np.abs(ev.Photon_eta)<3))",
+        jet_selection = "ev, source, nsig: (ev.Jet_ptShift(ev, source, nsig)>20) & ((2<np.abs(ev.Jet_eta)) & (np.abs(ev.Jet_eta)<3))",
+        photon_selection = "ev, source, nsig: (ev.Photon_ptShift(ev, source, nsig)>20) & ((2<np.abs(ev.Photon_eta)) & (np.abs(ev.Photon_eta)<3))",
         syst = 0.2,
     )
 
 def test_weightprefiring_init(module, path):
     assert module.jet_eff_map_path == path + "/prefiring/L1prefiring_jetpt_2016BtoH.txt"
     assert module.photon_eff_map_path == path + "/prefiring/L1prefiring_photonpt_2016BtoH.txt"
-    assert module.jet_selection == "ev: (ev.Jet_ptShift(ev)>20) & ((2<np.abs(ev.Jet_eta)) & (np.abs(ev.Jet_eta)<3))"
-    assert module.photon_selection == "ev: (ev.Photon_ptShift(ev)>20) & ((2<np.abs(ev.Photon_eta)) & (np.abs(ev.Photon_eta)<3))"
+    assert module.jet_selection == "ev, source, nsig: (ev.Jet_ptShift(ev, source, nsig)>20) & ((2<np.abs(ev.Jet_eta)) & (np.abs(ev.Jet_eta)<3))"
+    assert module.photon_selection == "ev, source, nsig: (ev.Photon_ptShift(ev, source, nsig)>20) & ((2<np.abs(ev.Photon_eta)) & (np.abs(ev.Photon_eta)<3))"
     assert module.syst == 0.2
 
 @pytest.mark.parametrize(
@@ -108,17 +108,17 @@ def test_weightprefiring_begin(module, event, inputs, outputs):
     peta = awk.JaggedArray.fromiter(inputs["peta"]).astype(np.float32)
     pphi = awk.JaggedArray.fromiter(inputs["pphi"]).astype(np.float32)
 
-    event.Jet.ptShift = mock.Mock(side_effect=lambda ev: jpt)
+    event.Jet.ptShift = mock.Mock(side_effect=lambda ev, source, nsig: jpt)
     event.Jet.eta = jeta
     event.Jet.phi = jphi
-    event.Jet_ptShift = mock.Mock(side_effect=lambda ev: jpt)
+    event.Jet_ptShift = mock.Mock(side_effect=lambda ev, source, nsig: jpt)
     event.Jet_eta = jeta
     event.Jet_phi = jphi
 
-    event.Photon.ptShift = mock.Mock(side_effect=lambda ev: ppt)
+    event.Photon.ptShift = mock.Mock(side_effect=lambda ev, source, nsig: ppt)
     event.Photon.eta = peta
     event.Photon.phi = pphi
-    event.Photon_ptShift = mock.Mock(side_effect=lambda ev: ppt)
+    event.Photon_ptShift = mock.Mock(side_effect=lambda ev, source, nsig: ppt)
     event.Photon_eta = peta
     event.Photon_phi = pphi
 
