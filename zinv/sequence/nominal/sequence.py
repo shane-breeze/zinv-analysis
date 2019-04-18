@@ -173,7 +173,7 @@ weight_muons = Readers.WeightObjects(
         {
             "name": "muonIdTight",
             "collection": "Muon",
-            "binning_variables": ("ev, source. nsig: np.abs(ev.Muon.eta)", "ev, source. nsig: ev.Muon_ptShift(ev, source, nsig)"),
+            "binning_variables": ("ev, source, nsig: np.abs(ev.Muon.eta)", "ev, source, nsig: ev.Muon_ptShift(ev, source, nsig)"),
             "weighted_paths": [
                 (19.7, datapath+"/muons/muon_id_loose_runBCDEF.txt"),
                 (16.2, datapath+"/muons/muon_id_loose_runGH.txt"),
@@ -244,7 +244,7 @@ weight_photon = Readers.WeightObjects(
         {
             "name": "photonIdLoose",
             "collection": "Photon",
-            "binning_variables": ("ev, source, nsig: ev.Photon.eta", "ev, source, nsig: ev.Photon_ptShift(ev)"),
+            "binning_variables": ("ev, source, nsig: ev.Photon.eta", "ev, source, nsig: ev.Photon_ptShift(ev, source, nsig)"),
             "weighted_paths": [(1, datapath+"/photons/photon_cutbasedid_loose.txt")],
             "add_syst": "ev, source, nsig: awk.JaggedArray.zeros_like(ev.Photon.eta)",
             "nuisances": ["photonIdLoose", "photonEnergyScale"],
