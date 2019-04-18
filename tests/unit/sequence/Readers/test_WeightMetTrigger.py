@@ -17,6 +17,9 @@ class DummyEvent(object):
         self.attribute_variation_sources = []
         self.cache = {}
 
+    def register_function(self, event, name, function):
+        self.__dict__[name] = function
+
 @pytest.fixture()
 def path():
     toppath = os.path.abspath(os.environ["TOPDIR"])
@@ -95,17 +98,17 @@ def test_weightmettrigger_begin(module, event, inputs, outputs):
     module.begin(event)
 
     event.METnoX_pt = mock.Mock(
-        side_effect=lambda ev: np.array(inputs["met"], dtype=np.float32),
+        side_effect=lambda ev, source, nsig: np.array(inputs["met"], dtype=np.float32),
     )
 
-    def mupt(ev, attr):
+    def mupt(ev, source, nsig, attr):
         assert attr == "pt"
         musele = DummyColl()
         musele.counts = np.array(inputs["mucounts"], dtype=np.float32)
         return musele
     event.MuonSelection = mock.Mock(side_effect=mupt)
 
-    eff = event.WeightMETTrig(event)
+    eff = event.WeightMETTrig(event, event.source, event.nsig)
     oeff = np.array(outputs["eff"], dtype=np.float32)
     print(eff)
     print(oeff)

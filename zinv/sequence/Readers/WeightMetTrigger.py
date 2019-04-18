@@ -9,7 +9,7 @@ from functools import partial
 
 from zinv.utils.NumbaFuncs import interp, weight_numba
 
-def evaluate_met_trigger(cats, xcents, params):
+def evaluate_met_trigger(ev, source, nsig, cats, xcents, params):
     @nb.njit
     def met_trigger_numba(cats_, xcents_, incorr, nmuons, met):
         nev = met.shape[0]
@@ -22,35 +22,22 @@ def evaluate_met_trigger(cats, xcents, params):
 
         return output
 
-    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'met_trigger_numba_cached'))
-    def met_trigger_numba_cached(ev, evidx, idx):
-        nmuons = ev.MuonSelection(ev, 'pt').counts
-        metnox = ev.METnoX_pt(ev)
-        return met_trigger_numba(cats, xcents, params[idx], nmuons, metnox)
+    nmuons = ev.MuonSelection(ev, source, nsig, 'pt').counts
+    metnox = ev.METnoX_pt(ev, source, nsig)
+    wmet = met_trigger_numba(cats, xcents, params[0], nmuons, metnox)
 
-    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_met_trigger'))
-    def fevaluate_met_trigger(ev, evidx, nsig, source):
-        wmet = met_trigger_numba_cached(ev, evidx, 0)
+    up = np.zeros_like(wmet)
+    down = np.zeros_like(wmet)
+    zero_mask = (wmet!=0.)
 
-        up = np.zeros_like(wmet)
-        down = np.zeros_like(wmet)
-        zero_mask = (wmet!=0.)
-        if source == "metTrigStat":
-            up[zero_mask] = met_trigger_numba_cached(ev, evidx, 1)[zero_mask]/wmet[zero_mask] - 1.
-            down[zero_mask] = met_trigger_numba_cached(ev, evidx, 2)[zero_mask]/wmet[zero_mask] - 1.
-        elif source == "metTrigSyst":
-            up[zero_mask] = met_trigger_numba_cached(ev, evidx, 3)[zero_mask]/wmet[zero_mask] - 1.
-            down[zero_mask] = met_trigger_numba_cached(ev, evidx, 4)[zero_mask]/wmet[zero_mask] - 1.
+    if source == "metTrigStat":
+        up[zero_mask] = met_trigger_numba(cats, xcents, params[1], nmuons, metnox)[zero_mask]/wmet[zero_mask] - 1.
+        down[zero_mask] = met_trigger_numba(cats, xcents, params[2], nmuons, metnox)[zero_mask]/wmet[zero_mask] - 1.
+    elif source == "metTrigSyst":
+        up[zero_mask] = met_trigger_numba(cats, xcents, params[3], nmuons, metnox)[zero_mask]/wmet[zero_mask] - 1.
+        down[zero_mask] = met_trigger_numba(cats, xcents, params[4], nmuons, metnox)[zero_mask]/wmet[zero_mask] - 1.
 
-        return weight_numba(wmet, nsig, up, down)
-
-    def ret_func(ev):
-        source, nsig = ev.source, ev.nsig
-        if ev.source not in ev.attribute_variation_sources+["metTrigSyst", "metTrigStat"]:
-            source, nsig = '', 0.
-        return fevaluate_met_trigger(ev, ev.iblock, nsig, source)
-
-    return ret_func
+    return weight_numba(wmet, nsig, up, down)
 
 class WeightMetTrigger(object):
     def __init__(self, **kwargs):
@@ -87,7 +74,13 @@ class WeightMetTrigger(object):
             self.corr*(1.+self.systup),
             self.corr*(1.-self.systdown),
         )
-        event.WeightMETTrig = evaluate_met_trigger(self.cats, self.xcents, params)
+        event.register_function(
+            event, "WeightMETTrig",
+            partial(
+                evaluate_met_trigger, cats=self.cats, xcents=self.xcents,
+                params=params,
+            ),
+        )
 
 def read_file(path):
     df = pd.read_csv(path, sep='\s+')[[
