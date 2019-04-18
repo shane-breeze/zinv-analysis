@@ -24,6 +24,12 @@ class DummyEvent(object):
         self.GenJet = DummyColl()
         self.MET = DummyColl()
 
+    def register_function(self, event, name, function):
+        self.__dict__[name] = function
+
+    def hasbranch(self, branch):
+        return hasattr(self, branch)
+
 @pytest.fixture()
 def event():
     return DummyEvent()
@@ -45,8 +51,9 @@ def module():
 
 def test_jec_variations_begin(module, event):
     module.begin(event)
-    assert all(t in ["Total", "AbsoluteStat"] for t in module.jes_sources)
-    assert all(t in ["Total", "AbsoluteStat"] for t in event.JetSources)
+    print(module.jes_sources)
+    assert all(t in module.jes_sources for t in ["Total", "AbsoluteStat"])
+    assert all(t in event.JesSources for t in ["jesTotal", "jesAbsoluteStat"])
 
 @pytest.fixture()
 def event_module_run(module, event):
@@ -76,6 +83,7 @@ def event_module_run(module, event):
         "mephi":       [0.9,  0.1,     -0.8071129825],
     }
     event.config.dataset.idx = 2
+    event.size = 3
 
     jet_pt = awk.JaggedArray.fromiter(inputs["jpt"]).astype(np.float32)
     jet_eta = awk.JaggedArray.fromiter(inputs["jeta"]).astype(np.float32)
@@ -110,70 +118,84 @@ def event_module_run(module, event):
     event.MET.phi = met_phi
 
     module.begin(event)
-    module.event(event)
+    #module.event(event)
     event.outputs = outputs
-    return event
+    return event, module
 
 def test_jec_variations_ptres(event_module_run):
-    outputs = event_module_run.outputs
+    event = event_module_run[0]
+    outputs = event.outputs
+
     assert np.allclose(
-        event_module_run.Jet_ptResolution.content,
+        event.Jet_ptResolution(event).content,
         awk.JaggedArray.fromiter(outputs["jptres"]).astype(np.float32).content,
         rtol=1e-6, equal_nan=True,
     )
 
 def test_jec_variations_jersfdown(event_module_run):
-    outputs = event_module_run.outputs
+    event = event_module_run[0]
+    outputs = event.outputs
     assert np.allclose(
-        event_module_run.Jet_JECjerSFDown.content,
+        event.Jet_jerSF(event, "jer", -1.).content,
         awk.JaggedArray.fromiter(outputs["jjersfdown"]).astype(np.float32).content,
         rtol=1e-5, equal_nan=True,
     )
 
 def test_jec_variations_jersfup(event_module_run):
-    outputs = event_module_run.outputs
+    event = event_module_run[0]
+    outputs = event.outputs
     assert np.allclose(
-        event_module_run.Jet_JECjerSFUp.content,
+        event.Jet_jerSF(event, "jer", 1.).content,
         awk.JaggedArray.fromiter(outputs["jjersfup"]).astype(np.float32).content,
         rtol=1e-5, equal_nan=True,
     )
 
 def test_jec_variations_newjpt(event_module_run):
-    outputs = event_module_run.outputs
+    event, module = event_module_run
+    module.event(event)
+    outputs = event.outputs
     assert np.allclose(
-        event_module_run.Jet_pt.content,
+        event.Jet_pt.content,
         awk.JaggedArray.fromiter(outputs["jpt"]).astype(np.float32).content,
         rtol=1e-6, equal_nan=True,
     )
 
 def test_jec_variations_newmet(event_module_run):
-    outputs = event_module_run.outputs
+    event, module = event_module_run
+    module.event(event)
+    outputs = event.outputs
     assert np.allclose(
-        event_module_run.MET_pt,
+        event.MET_pt,
         np.array(outputs["met"], dtype=np.float32),
         rtol=1e-6, equal_nan=True,
     )
 
 def test_jec_variations_newmephi(event_module_run):
-    outputs = event_module_run.outputs
+    event, module = event_module_run
+    module.event(event)
+    outputs = event.outputs
     assert np.allclose(
-        event_module_run.MET_phi,
+        event.MET_phi,
         np.array(outputs["mephi"], dtype=np.float32),
         rtol=1e-6, equal_nan=True,
     )
 
 def test_jec_variations_jestotup(event_module_run):
-    outputs = event_module_run.outputs
+    event, module = event_module_run
+    module.event(event)
+    outputs = event.outputs
     assert np.allclose(
-        event_module_run.Jet_JECjesTotalUp.content,
+        event.Jet_jesSF(event, "jesTotal", 1.).content,
         awk.JaggedArray.fromiter(outputs["jjestotup"]).astype(np.float32).content,
         rtol=1e-6, equal_nan=True,
     )
 
 def test_jec_variations_jestotdown(event_module_run):
-    outputs = event_module_run.outputs
+    event, module = event_module_run
+    module.event(event)
+    outputs = event.outputs
     assert np.allclose(
-        event_module_run.Jet_JECjesTotalDown.content,
+        event.Jet_jesSF(event, "jesTotal", -1.).content,
         awk.JaggedArray.fromiter(outputs["jjestotdown"]).astype(np.float32).content,
         rtol=1e-6, equal_nan=True,
     )

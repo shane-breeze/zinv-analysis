@@ -94,7 +94,7 @@ class JecVariations(object):
         self.jesuncs["corr_up"] = self.jesuncs["corr_up"].apply(lambda x: list(eval(x.replace("nan", "np.nan"))))
         self.jesuncs["corr_down"] = self.jesuncs["corr_down"].apply(lambda x: list(eval(x.replace("nan", "np.nan"))))
         self.jes_sources = self.jesuncs["source"].unique()
-        event.JesSources = self.jes_sources
+        event.JesSources = ["jes"+s for s in self.jes_sources]
 
         # register functions
         event.register_function(
@@ -202,21 +202,23 @@ def jer_corr(ev, source, nsig, jersfs, maxdr_jets_with_genjets, ndpt_jets_with_g
     return getattr(ev, "Jet_JEC{}".format(flavour))
 
 def jes_corr(ev, source, nsig, jesuncs):
-    flavour = "jes{}".format(source)
+    flavour = source
     if source in ev.JesSources and nsig != 0.:
         updown = "Up" if nsig>0. else "Down"
         flavour += updown
     else:
-        return np.ones(ev.size, dtype=np.float32)
+        starts = ev.Jet_pt.starts
+        stops = ev.Jet_pt.stops
+        return awk.JaggedArray(
+            starts, stops, np.ones_like(ev.Jet_pt.content, dtype=np.float32),
+        )
 
     if not ev.hasbranch("Jet_JEC{}".format(flavour)):
-        df = jesuncs[jesuncs["source"]==source]
+        df = jesuncs[jesuncs["source"]==(source[3:] if source.startswith("jes") else source)]
 
         indices = get_bin_indices(
-            [ev.Jet_eta.content],
-            [df["eta_low"].values],
-            [df["eta_high"].values],
-            1,
+            [ev.Jet_eta.content], [df["eta_low"].values],
+            [df["eta_high"].values], 1,
         )[:,0]
 
         pt = np.array(list(df.iloc[indices]["pt"].values))
@@ -229,14 +231,14 @@ def jes_corr(ev, source, nsig, jesuncs):
         starts = ev.Jet_eta.starts
         stops = ev.Jet_eta.stops
 
-        setattr(ev, "Jet_JECjes{}Up".format(source), awk.JaggedArray(
+        setattr(ev, "Jet_JEC{}Up".format(source), awk.JaggedArray(
             starts, stops, corr_up,
         ))
-        setattr(ev, "Jet_JECjes{}Down".format(source), awk.JaggedArray(
+        setattr(ev, "Jet_JEC{}Down".format(source), awk.JaggedArray(
             starts, stops, -1.*corr_down,
         ))
 
-    return getattr(ev, "Jet_JESjes{}".format(flavour))
+    return getattr(ev, "Jet_JEC{}".format(flavour))
 
 def read_table(path, underflow_cols=[], overflow_cols=[], csv=False):
     if not csv:
