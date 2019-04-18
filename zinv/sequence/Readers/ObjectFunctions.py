@@ -116,7 +116,6 @@ class ObjectFunctions(object):
         event.register_function(event, "Jet_dphiMET", jet_dphimet)
 
         for objname, selection, xclean in self.selections:
-            print(objname, selection)
             if xclean:
                 event.register_function(
                     event, selection+"NoXClean",
@@ -134,14 +133,3 @@ class ObjectFunctions(object):
                     event, selection,
                     partial(obj_selection, name=objname, sele=selection),
                 )
-
-    def event(self, event):
-        print(event.Jet_ptShift(event, '', 0.))
-        print(event.Muon_ptShift(event, '', 0.))
-        print(event.Electron_ptShift(event, '', 0.))
-        print(event.Photon_ptShift(event, '', 0.))
-        print(event.Tau_ptShift(event, '', 0.))
-        print(event.MET_ptShift(event, '', 0.))
-        print(event.MET_phiShift(event, '', 0.))
-        print(event.Jet_dphiMET(event, '', 0.))
-        print(event.JetSelection(event, '', 0., 'pt'))
