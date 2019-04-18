@@ -62,18 +62,49 @@ def photon_pt_shift(ev, source, nsig):
     return result
 
 def met_shift(ev, source, nsig, attr):
-    @nb.njit(["UniTuple(float32[:],2)(float32[:],float32[:],float32[:],float32[:],float32[:],int64[:],int64[:],float32[:],float32[:],float32)"])
+    @nb.njit([
+        "UniTuple(float32[:],2)("
+        "float32[:],float32[:],"
+        "float32[:],float32[:],float32[:],int64[:],int64[:],"
+        "float32[:],float32[:],float32[:],int64[:],int64[:],"
+        "float32[:],float32[:],float32[:],int64[:],int64[:],"
+        "float32[:],float32[:],float32[:],int64[:],int64[:],"
+        "float32[:],float32[:],float32"
+        ")"
+    ])
     def met_shift_numba(
-        met, mephi, jpt, jptcorr, jphi, jstarts, jstops, metuncx, metuncy, nsig,
+        met, mephi,
+        jpt, jptcorr, jphi, jstarts, jstops,
+        ept, eptcorr, ephi, estarts, estops,
+        mpt, mptcorr, mphi, mstarts, mstops,
+        ppt, pptcorr, pphi, pstarts, pstops,
+        metuncx, metuncy, nsig,
     ):
         jpx_old, jpy_old = RadToCart2D(jpt, jphi)
         jpx_new, jpy_new = RadToCart2D(jptcorr, jphi)
+        epx_old, epy_old = RadToCart2D(ept, ephi)
+        epx_new, epy_new = RadToCart2D(eptcorr, ephi)
+        mpx_old, mpy_old = RadToCart2D(mpt, mphi)
+        mpx_new, mpy_new = RadToCart2D(mptcorr, mphi)
+        ppx_old, ppy_old = RadToCart2D(ppt, pphi)
+        ppx_new, ppy_new = RadToCart2D(pptcorr, pphi)
 
         mex, mey = RadToCart2D(met, mephi)
-        for iev, (start, stop) in enumerate(zip(jstarts, jstops)):
-            for iob in range(start, stop):
+        for iev, (jsta, jsto, esta, esto, msta, msto, psta, psto) in enumerate(zip(
+            jstarts, jstops, estarts, estops, mstarts, mstops, pstarts, pstops,
+        )):
+            for iob in range(jsto, jsto):
                 mex[iev] += (jpx_old[iob] - jpx_new[iob])
                 mey[iev] += (jpy_old[iob] - jpy_new[iob])
+            for iob in range(esto, esto):
+                mex[iev] += (epx_old[iob] - epx_new[iob])
+                mey[iev] += (epy_old[iob] - epy_new[iob])
+            for iob in range(msto, msto):
+                mex[iev] += (mpx_old[iob] - mpx_new[iob])
+                mey[iev] += (mpy_old[iob] - mpy_new[iob])
+            for iob in range(psto, psto):
+                mex[iev] += (ppx_old[iob] - ppx_new[iob])
+                mey[iev] += (ppy_old[iob] - ppy_new[iob])
 
         mex += nsig*metuncx
         mey += nsig*metuncy
@@ -82,9 +113,15 @@ def met_shift(ev, source, nsig, attr):
 
     arg_ = 1 if attr=='phi' else 0
     return met_shift_numba(
-        ev.MET_pt, ev.MET_phi, ev.Jet_pt.content,
-        ev.Jet_ptShift(ev, source, nsig).content, ev.Jet_phi.content,
-        ev.Jet_pt.starts, ev.Jet_pt.stops,
+        ev.MET_pt, ev.MET_phi,
+        ev.Jet_pt.content, ev.Jet_ptShift(ev, source, nsig).content,
+        ev.Jet_phi.content, ev.Jet_pt.starts, ev.Jet_pt.stops,
+        ev.Electron_pt.content, ev.Electron_ptShift(ev, source, nsig).content,
+        ev.Electron_phi.content, ev.Electron_pt.starts, ev.Electron_pt.stops,
+        ev.Muon_pt.content, ev.Muon_ptShift(ev, source, nsig).content,
+        ev.Muon_phi.content, ev.Muon_pt.starts, ev.Muon_pt.stops,
+        ev.Photon_pt.content, ev.Photon_ptShift(ev, source, nsig).content,
+        ev.Photon_phi.content, ev.Photon_pt.starts, ev.Photon_pt.stops,
         (source=="unclust")*ev.MET_MetUnclustEnUpDeltaX,
         (source=="unclust")*ev.MET_MetUnclustEnUpDeltaY,
         nsig,
@@ -97,7 +134,7 @@ def obj_selection(ev, source, nsig, attr, name, sele, xclean=False):
 
     obj = getattr(ev, "{}_{}".format(name, attr))
     if callable(obj):
-        obj = obj(ev)
+        obj = obj(ev, source, nsig)
 
     return obj[mask]
 

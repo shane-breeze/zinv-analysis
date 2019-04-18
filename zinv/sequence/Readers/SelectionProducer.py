@@ -8,18 +8,11 @@ from functools import partial, reduce
 
 from zinv.utils.Lambda import Lambda
 
-def evaluate_selection(name, cutlist):
-    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_selection'))
-    def fevaluate_selection(ev, evidx, nsig, source, name_):
-        return reduce(operator.add, cutlist, Lambda("ev: np.ones(ev.size, dtype=np.bool8)"))(ev)
-
-    def return_evaluate_selection(ev):
-        source, nsig = ev.source, ev.nsig
-        if source not in ev.attribute_variation_sources:
-            source, nsig = '', 0.
-        return fevaluate_selection(ev, ev.iblock, nsig, source, name)
-
-    return return_evaluate_selection
+def evaluate_selection(ev, source, nsig, name, cutlist):
+    return reduce(
+        operator.add, cutlist,
+        Lambda("ev, source, nsig: np.ones(ev.size, dtype=np.bool8)"),
+    )(ev, source, nsig)
 
 class SelectionProducer(object):
     def __init__(self, **kwargs):
@@ -76,6 +69,16 @@ class SelectionProducer(object):
         data_or_mc = "Data" if event.config.dataset.isdata else "MC"
         for cutflow, datamc_selections in self.selections.items():
             if data_or_mc in datamc_selections:
-                setattr(event, "Cutflow_"+cutflow, evaluate_selection(
-                    cutflow, [Lambda(cut[1]) for cut in datamc_selections[data_or_mc]],
-                ))
+                event.register_function(
+                    event, "Cutflow_"+cutflow,
+                    partial(
+                        evaluate_selection, name=cutflow,
+                        cutlist=[
+                            Lambda(cut[1])
+                            for cut in datamc_selections[data_or_mc]
+                        ],
+                    ),
+                )
+
+    def event(self, event):
+        print(event.Cutflow_Monojet(event, '', 0.))

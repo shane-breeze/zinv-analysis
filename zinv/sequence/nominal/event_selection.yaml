@@ -1,7 +1,7 @@
 selections:
-    lumi_selection: "ev: ev.IsCertified(ev)"
+    lumi_selection: "ev, source, nsig: ev.IsCertified(ev)"
     filter_selection:
-        "ev: (ev.Flag_goodVertices>0.5)
+        "ev, source, nsig: (ev.Flag_goodVertices>0.5)
              & (ev.Flag_globalSuperTightHalo2016Filter>0.5)
              & (ev.Flag_HBHENoiseFilter>0.5)
              & (ev.Flag_HBHENoiseIsoFilter>0.5)
@@ -10,65 +10,65 @@ selections:
              & (ev.Flag_BadGlobalMuon>0.5)
              & (ev.Flag_CloneGlobalMuon>0.5)
              & ((ev.Flag_eeBadScFilter>0.5) | (np.ones(ev.size, dtype=np.int32)*(~ev.config.dataset.isdata)))"
-    met_selection: "ev: ev.METnoX_pt(ev) > 200."
-    met_low_selection: "ev: ev.METnoX_pt(ev) <= 200."
-    dphi_jet_met_selection: "ev: ev.MinDPhiJ1234METnoX(ev) > 0.5"
-    dphi_jet_met_inv_selection: "ev: ev.MinDPhiJ1234METnoX(ev) <= 0.5"
-    dcalo_pfmet_selection: "ev: ev.MET_dCaloMET(ev) < 0.6"
+    met_selection: "ev, source, nsig: ev.METnoX_pt(ev, source, nsig) > 200."
+    met_low_selection: "ev, source, nsig: ev.METnoX_pt(ev, source, nsig) <= 200."
+    dphi_jet_met_selection: "ev, source, nsig: ev.MinDPhiJ1234METnoX(ev, source, nsig) > 0.5"
+    dphi_jet_met_inv_selection: "ev, source, nsig: ev.MinDPhiJ1234METnoX(ev, source, nsig) <= 0.5"
+    dcalo_pfmet_selection: "ev, source, nsig: ev.MET_dCaloMET(ev, source, nsig) < 0.6"
     jet_selection:
-        "ev: (ev.JetSelection(ev, 'pt').counts > 0)
-             & (ev.JetSelection(ev, 'pt').counts == ev.JetVeto(ev, 'pt').counts)"
+        "ev, source, nsig: (ev.JetSelection(ev, source, nsig, 'pt').counts > 0)
+             & (ev.JetSelection(ev, source, nsig, 'pt').counts == ev.JetVeto(ev, source, nsig, 'pt').counts)"
     lead_jet_selection:
-        "ev: (get_nth_object(ev.JetSelection(ev, 'pt'), 0, ev.size)>200.)
-             & (get_nth_object(ev.JetSelection(ev, 'chHEF'), 0, ev.size)>0.1)
-             & (get_nth_object(ev.JetSelection(ev, 'chHEF'), 0, ev.size)<0.95)"
+        "ev, source, nsig: (get_nth_object(ev.JetSelection(ev, source, nsig, 'pt'), 0, ev.size)>200.)
+             & (get_nth_object(ev.JetSelection(ev, source, nsig, 'chHEF'), 0, ev.size)>0.1)
+             & (get_nth_object(ev.JetSelection(ev, source, nsig, 'chHEF'), 0, ev.size)<0.95)"
     muon_0_selection:
-        "ev: (ev.MuonSelection(ev, 'pt').counts == ev.MuonVeto(ev, 'pt').counts)
-             & (ev.MuonVeto(ev, 'pt').counts == 0)"
+        "ev, source, nsig: (ev.MuonSelection(ev, source, nsig, 'pt').counts == ev.MuonVeto(ev, source, nsig, 'pt').counts)
+             & (ev.MuonVeto(ev, source, nsig, 'pt').counts == 0)"
     muon_1_selection:
-        "ev: (ev.MuonSelection(ev, 'pt').counts == ev.MuonVeto(ev, 'pt').counts)
-             & (ev.MuonVeto(ev, 'pt').counts == 1)"
+        "ev, source, nsig: (ev.MuonSelection(ev, source, nsig, 'pt').counts == ev.MuonVeto(ev, source, nsig, 'pt').counts)
+             & (ev.MuonVeto(ev, source, nsig, 'pt').counts == 1)"
     muon_2_selection:
-        "ev: (ev.MuonSelection(ev, 'pt').counts == ev.MuonVeto(ev, 'pt').counts)
-             & (ev.MuonVeto(ev, 'pt').counts == 2)"
+        "ev, source, nsig: (ev.MuonSelection(ev, source, nsig, 'pt').counts == ev.MuonVeto(ev, source, nsig, 'pt').counts)
+             & (ev.MuonVeto(ev, source, nsig, 'pt').counts == 2)"
     muon_3_selection:
-        "ev: (ev.MuonSelection(ev, 'pt').counts == ev.MuonVeto(ev, 'pt').counts)
-             & (ev.MuonVeto(ev, 'pt').counts == 3)"
-    lepton_p1_charge: "ev: ev.LeptonCharge(ev) == 1"
-    lepton_zero_charge: "ev: ev.LeptonCharge(ev) == 0"
-    lepton_m1_charge: "ev: ev.LeptonCharge(ev) == -1"
+        "ev, source, nsig: (ev.MuonSelection(ev, source, nsig, 'pt').counts == ev.MuonVeto(ev, source, nsig, 'pt').counts)
+             & (ev.MuonVeto(ev, source, nsig, 'pt').counts == 3)"
+    lepton_p1_charge: "ev, source, nsig: ev.LeptonCharge(ev, source, nsig) == 1"
+    lepton_zero_charge: "ev, source, nsig: ev.LeptonCharge(ev, source, nsig) == 0"
+    lepton_m1_charge: "ev, source, nsig: ev.LeptonCharge(ev, source, nsig) == -1"
     ele_0_selection:
-        "ev: (ev.ElectronSelection(ev, 'pt').counts == ev.ElectronVeto(ev, 'pt').counts)
-             & (ev.ElectronVeto(ev, 'pt').counts == 0)"
+        "ev, source, nsig: (ev.ElectronSelection(ev, source, nsig, 'pt').counts == ev.ElectronVeto(ev, source, nsig, 'pt').counts)
+             & (ev.ElectronVeto(ev, source, nsig, 'pt').counts == 0)"
     ele_1_selection:
-        "ev: (ev.ElectronSelection(ev, 'pt').counts == ev.ElectronVeto(ev, 'pt').counts)
-             & (ev.ElectronVeto(ev, 'pt').counts == 1)"
+        "ev, source, nsig: (ev.ElectronSelection(ev, source, nsig, 'pt').counts == ev.ElectronVeto(ev, source, nsig, 'pt').counts)
+             & (ev.ElectronVeto(ev, source, nsig, 'pt').counts == 1)"
     ele_2_selection:
-        "ev: (ev.ElectronSelection(ev, 'pt').counts == ev.ElectronVeto(ev, 'pt').counts)
-             & (ev.ElectronVeto(ev, 'pt').counts == 2)"
+        "ev, source, nsig: (ev.ElectronSelection(ev, source, nsig, 'pt').counts == ev.ElectronVeto(ev, source, nsig, 'pt').counts)
+             & (ev.ElectronVeto(ev, source, nsig, 'pt').counts == 2)"
     ele_3_selection:
-        "ev: (ev.ElectronSelection(ev, 'pt').counts == ev.ElectronVeto(ev, 'pt').counts)
-             & (ev.ElectronVeto(ev, 'pt').counts == 3)"
+        "ev, source, nsig: (ev.ElectronSelection(ev, source, nsig, 'pt').counts == ev.ElectronVeto(ev, source, nsig, 'pt').counts)
+             & (ev.ElectronVeto(ev, source, nsig, 'pt').counts == 3)"
     tau_0_selection:
         "ev: (ev.TauSelection(ev, 'pt').counts == ev.TauVeto(ev, 'pt').counts)
              & (ev.TauVeto(ev, 'pt').counts == 0)"
     tau_1_selection:
-        "ev: (ev.TauSelection(ev, 'pt').counts == ev.TauVeto(ev, 'pt').counts)
-             & (ev.TauVeto(ev, 'pt').counts == 1)"
+        "ev, source, nsig: (ev.TauSelection(ev, source, nsig, 'pt').counts == ev.TauVeto(ev, source, nsig, 'pt').counts)
+             & (ev.TauVeto(ev, source, nsig, 'pt').counts == 1)"
     tau_2_selection:
-        "ev: (ev.TauSelection(ev, 'pt').counts == ev.TauVeto(ev, 'pt').counts)
-             & (ev.TauVeto(ev, 'pt').counts == 2)"
+        "ev, source, nsig: (ev.TauSelection(ev, source, nsig, 'pt').counts == ev.TauVeto(ev, source, nsig, 'pt').counts)
+             & (ev.TauVeto(ev, source, nsig, 'pt').counts == 2)"
     pho_0_selection:
-        "ev: (ev.PhotonSelection(ev, 'pt').counts == ev.PhotonVeto(ev, 'pt').counts)
-             & (ev.PhotonVeto(ev, 'pt').counts == 0)"
+        "ev, source, nsig: (ev.PhotonSelection(ev, source, nsig, 'pt').counts == ev.PhotonVeto(ev, source, nsig, 'pt').counts)
+             & (ev.PhotonVeto(ev, source, nsig, 'pt').counts == 0)"
     bjet_0_selection:
-        "ev: (ev.JetBSelection(ev, 'pt').counts == ev.JetBVeto(ev, 'pt').counts)
-             & (ev.JetBVeto(ev, 'pt').counts == 0)"
-    mtw_selection: "ev: (ev.MTW(ev) >= 30.) & (ev.MTW(ev) < 125.)"
-    mll_selection: "ev: (ev.MLL(ev) >= 71.) & (ev.MLL(ev) < 111.)"
-    met_pf_selection: "ev: ev.MET_ptShift(ev) > 100."
+        "ev, source, nsig: (ev.JetBSelection(ev, source, nsig, 'pt').counts == ev.JetBVeto(ev, source, nsig, 'pt').counts)
+             & (ev.JetBVeto(ev, source, nsig, 'pt').counts == 0)"
+    mtw_selection: "ev, source, nsig: (ev.MTW(ev, source, nsig) >= 30.) & (ev.MTW(ev, source, nsig) < 125.)"
+    mll_selection: "ev, source, nsig: (ev.MLL(ev, source, nsig) >= 71.) & (ev.MLL(ev, source, nsig) < 111.)"
+    met_pf_selection: "ev, source, nsig: ev.MET_ptShift(ev, source, nsig) > 100."
     ngen_boson_selection:
-        "ev: np.ones(ev.size, dtype=bool)
+        "ev, source, nsig: np.ones(ev.size, dtype=bool)
              if ev.config.dataset.parent not in 'EWKV2Jets'
              else (ev.nGenBosons(ev)==1)"
 grouped_selections:
