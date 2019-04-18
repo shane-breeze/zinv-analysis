@@ -3,7 +3,6 @@ from .ScribblerWrapper import ScribblerWrapper
 
 from .CollectionCreator import CollectionCreator, Collection
 from .SelectionProducer import SelectionProducer
-from .WeightProducer import WeightProducer
 
 from .GenBosonProducer import GenBosonProducer
 from .LHEPartAssigner import LHEPartAssigner, GenPartAssigner

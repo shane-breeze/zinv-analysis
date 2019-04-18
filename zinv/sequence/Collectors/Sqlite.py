@@ -58,12 +58,9 @@ class SqliteReader(object):
         data, keys = {}, []
         for attr, subdict in self.attributes.items():
             for var_dict in subdict["evattrs"]:
-                osource, onsig = event.source, event.nsig
-                if var_dict["source"] not in event.weight_variation_sources:
-                    event.weight_variation_sources.append(var_dict["source"])
-                event.source, event.nsig = var_dict["source"], var_dict["nsig"]
-                val = self.lambda_functions[subdict["selection"]](event)
-                event.source, event.nsig = osource, onsig
+                val = self.lambda_functions[subdict["selection"]](
+                    event, var_dict["source"], var_dict["nsig"],
+                )
 
                 label = (
                     "_".join([attr, var_dict["label"]])
@@ -82,16 +79,12 @@ class SqliteReader(object):
         del df
 
         for source, nsig in self.variations:
-            if source not in event.attribute_variation_sources:
-                event.attribute_variation_sources.append(source)
             data, keys = {}, []
-            osource, onsig = event.source, event.nsig
-            event.source, event.nsig = source, nsig
             for attr, subdict in self.attributes.items():
                 for var_dict in subdict["evattrs"]:
-                    if var_dict["source"] != "":
-                        continue
-                    val = self.lambda_functions[subdict["selection"]](event)
+                    val = self.lambda_functions[subdict["selection"]](
+                        event, source, nsig,
+                    )
 
                     label = (
                         "_".join([attr, var_dict["label"]])
@@ -100,8 +93,6 @@ class SqliteReader(object):
                     )
                     data[label] = val
                     keys.append(label)
-
-            event.source, event.nsig = osource, onsig
 
             updown = "Up" if nsig>=0. else "Down"
             table_name = (
@@ -126,10 +117,3 @@ class SqliteReader(object):
     def end(self):
         self.lambda_functions = None
         self.engine = None
-
-class SqliteCollector(object):
-    def __init__(self, **kwargs):
-        self.__dict__.update(kwargs)
-
-    def collect(self, dataset_readers_list):
-        print(dataset_readers_list)

@@ -1,1 +1,1 @@
-from .Sqlite import SqliteReader, SqliteCollector
+from .Sqlite import SqliteReader
