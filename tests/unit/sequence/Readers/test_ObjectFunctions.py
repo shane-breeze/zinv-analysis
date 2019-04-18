@@ -650,14 +650,14 @@ def test_objfunc_xclean(module, event, inputs, outputs):
             setattr(event, objname+"_pt", cpt)
         setattr(
             event, "{}_{}Mask".format(objname, selection),
-            mock.Mock(side_effect=lambda ev: mask),
+            mock.Mock(side_effect=lambda ev, source, nsig: mask),
         )
         if xclean:
             if hasattr(event, "{}_XCleanMask"):
                 continue
             setattr(
                 event, "{}_XCleanMask".format(objname),
-                mock.Mock(side_effect=lambda ev: xclean_mask),
+                mock.Mock(side_effect=lambda ev, source, nsig: xclean_mask),
             )
 
     pt_noxclean = awk.JaggedArray.fromiter(

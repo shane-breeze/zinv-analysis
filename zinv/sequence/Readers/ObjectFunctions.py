@@ -91,9 +91,9 @@ def met_shift(ev, source, nsig, attr):
     )[arg_].astype(np.float32)
 
 def obj_selection(ev, source, nsig, attr, name, sele, xclean=False):
-    mask = getattr(ev, "{}_{}Mask".format(name, sele))(ev)
+    mask = getattr(ev, "{}_{}Mask".format(name, sele))(ev, source, nsig)
     if xclean:
-        mask = mask & getattr(ev, "{}_XCleanMask".format(name))(ev)
+        mask = mask & getattr(ev, "{}_XCleanMask".format(name))(ev, source, nsig)
 
     obj = getattr(ev, "{}_{}".format(name, attr))
     if callable(obj):
@@ -116,6 +116,7 @@ class ObjectFunctions(object):
         event.register_function(event, "Jet_dphiMET", jet_dphimet)
 
         for objname, selection, xclean in self.selections:
+            print(objname, selection)
             if xclean:
                 event.register_function(
                     event, selection+"NoXClean",
@@ -133,3 +134,14 @@ class ObjectFunctions(object):
                     event, selection,
                     partial(obj_selection, name=objname, sele=selection),
                 )
+
+    def event(self, event):
+        print(event.Jet_ptShift(event, '', 0.))
+        print(event.Muon_ptShift(event, '', 0.))
+        print(event.Electron_ptShift(event, '', 0.))
+        print(event.Photon_ptShift(event, '', 0.))
+        print(event.Tau_ptShift(event, '', 0.))
+        print(event.MET_ptShift(event, '', 0.))
+        print(event.MET_phiShift(event, '', 0.))
+        print(event.Jet_dphiMET(event, '', 0.))
+        print(event.JetSelection(event, '', 0., 'pt'))

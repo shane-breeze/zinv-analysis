@@ -8,7 +8,7 @@ from cachetools.keys import hashkey
 from functools import partial
 from zinv.utils.Geometry import DeltaR2
 
-def evaluate_xclean_mask(obj1name, obj2names, mindr):
+def evaluate_xclean_mask(ev, source, nsig, obj1name, obj2names, mindr):
     @nb.njit(["boolean[:](float32[:],float32[:],int64[:],int64[:],float32[:],float32[:],int64[:],int64[:])"])
     def xclean_mask_numba(
         etas1, phis1, starts1, stops1, etas2, phis2, starts2, stops2,
@@ -31,30 +31,22 @@ def evaluate_xclean_mask(obj1name, obj2names, mindr):
 
         return content
 
-    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_xclean_mask'))
-    def fevaluate_xclean_mask(ev, obj1name, obj2names, eidx, nsig, source):
-        obj1 = getattr(ev, obj1name)
-        masks = []
-        for obj2name in obj2names:
-            obj2 = getattr(ev, obj2name)
-            masks.append(xclean_mask_numba(
-                obj1.eta.content, obj1.phi.content,
-                obj1.eta.starts, obj1.eta.stops,
-                obj2(ev, 'eta').content, obj2(ev, 'phi').content,
-                obj2(ev, 'eta').starts, obj2(ev, 'eta').stops,
-            ))
-        return awk.JaggedArray(
+    obj1 = getattr(ev, obj1name)
+    masks = []
+    for obj2name in obj2names:
+        obj2 = getattr(ev, obj2name)
+        masks.append(xclean_mask_numba(
+            obj1.eta.content, obj1.phi.content,
             obj1.eta.starts, obj1.eta.stops,
-            reduce(operator.and_, masks),
-        )
-
-    def return_evaluate_xclean_mask(ev):
-        source, nsig = ev.source, ev.nsig
-        if source not in ev.attribute_variation_sources:
-            source, nsig = '', 0.
-        return fevaluate_xclean_mask(ev, obj1name, tuple(obj2names), ev.iblock, nsig, source)
-
-    return return_evaluate_xclean_mask
+            obj2(ev, source, nsig, 'eta').content,
+            obj2(ev, source, nsig, 'phi').content,
+            obj2(ev, source, nsig, 'eta').starts,
+            obj2(ev, source, nsig, 'eta').stops,
+        ))
+    return awk.JaggedArray(
+        obj1.eta.starts, obj1.eta.stops,
+        reduce(operator.and_, masks),
+    )
 
 class ObjectCrossCleaning(object):
     def __init__(self, **kwargs):
@@ -62,8 +54,11 @@ class ObjectCrossCleaning(object):
 
     def begin(self, event):
         for cname in self.collections:
-            setattr(
+            event.register_function(
                 event,
                 "{}_XCleanMask".format(cname),
-                evaluate_xclean_mask(cname, self.ref_collections, self.mindr),
+                partial(
+                    evaluate_xclean_mask, obj1name=cname,
+                    obj2names=self.ref_collections, mindr=self.mindr,
+                ),
             )
