@@ -79,6 +79,3 @@ class SelectionProducer(object):
                         ],
                     ),
                 )
-
-    def event(self, event):
-        print(event.Cutflow_Monojet(event, '', 0.))
