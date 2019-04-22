@@ -1,0 +1,88 @@
+default: {energy: 13000, lumi: 35860}
+datasets:
+    DYJetsToLL_LO:
+        DAS: /DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v2/MINIAODSIM
+        file_nevents: [5170241, 2989995, 5162758, 5137770, 5157320, 5131537, 5101242, 5089788, 5100536, 5103087]
+        files:
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_LO/trees/nanoAOD_1.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_LO/trees/nanoAOD_10.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_LO/trees/nanoAOD_2.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_LO/trees/nanoAOD_3.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_LO/trees/nanoAOD_4.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_LO/trees/nanoAOD_5.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_LO/trees/nanoAOD_6.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_LO/trees/nanoAOD_7.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_LO/trees/nanoAOD_8.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_LO/trees/nanoAOD_9.root
+        isdata: false
+        name: DYJetsToLL
+        nevents: 49144274
+        parent: DYJetsToLL
+        sumweights: 49144274.0
+        tree: Events
+        xsection: 4963.0
+    DYJetsToLL_LO_ext1:
+        DAS: /DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext2-v1/MINIAODSIM
+        file_nevents: [5156391, 5189597, 5075612, 5091393, 5107362, 5125794, 5166568, 5099253, 5168118, 5086876, 4280262, 5121636, 5157537, 5169946, 5169360, 5097696, 5074546, 5126563, 5165306]
+        files:
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_LO_ext1/trees/nanoAOD_1.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_LO_ext1/trees/nanoAOD_10.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_LO_ext1/trees/nanoAOD_11.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_LO_ext1/trees/nanoAOD_12.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_LO_ext1/trees/nanoAOD_13.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_LO_ext1/trees/nanoAOD_14.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_LO_ext1/trees/nanoAOD_15.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_LO_ext1/trees/nanoAOD_16.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_LO_ext1/trees/nanoAOD_17.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_LO_ext1/trees/nanoAOD_18.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_LO_ext1/trees/nanoAOD_19.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_LO_ext1/trees/nanoAOD_2.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_LO_ext1/trees/nanoAOD_3.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_LO_ext1/trees/nanoAOD_4.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_LO_ext1/trees/nanoAOD_5.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_LO_ext1/trees/nanoAOD_6.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_LO_ext1/trees/nanoAOD_7.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_LO_ext1/trees/nanoAOD_8.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_LO_ext1/trees/nanoAOD_9.root
+        isdata: false
+        name: DYJetsToLL
+        nevents: 96629816
+        parent: DYJetsToLL
+        sumweights: 96629816.0
+        tree: Events
+        xsection: 4963.0
+    DYJetsToLL_NLO:
+        DAS: /DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext2-v1/MINIAODSIM
+        file_nevents: [5172812, 5191897, 5123175, 5126201, 5190528, 5166024, 5115333, 5197467, 5124402, 5133193, 5156566, 5176434, 5172846, 5198318, 5177888, 5086150, 3457485, 5139271, 5132612, 5199869, 5120763, 5198254, 5160534, 5137366]
+        files:
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_NLO/trees/nanoAOD_1.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_NLO/trees/nanoAOD_10.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_NLO/trees/nanoAOD_11.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_NLO/trees/nanoAOD_12.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_NLO/trees/nanoAOD_13.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_NLO/trees/nanoAOD_14.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_NLO/trees/nanoAOD_15.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_NLO/trees/nanoAOD_16.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_NLO/trees/nanoAOD_17.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_NLO/trees/nanoAOD_18.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_NLO/trees/nanoAOD_19.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_NLO/trees/nanoAOD_2.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_NLO/trees/nanoAOD_20.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_NLO/trees/nanoAOD_21.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_NLO/trees/nanoAOD_22.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_NLO/trees/nanoAOD_23.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_NLO/trees/nanoAOD_24.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_NLO/trees/nanoAOD_3.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_NLO/trees/nanoAOD_4.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_NLO/trees/nanoAOD_5.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_NLO/trees/nanoAOD_6.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_NLO/trees/nanoAOD_7.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_NLO/trees/nanoAOD_8.root
+            - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_NLO/trees/nanoAOD_9.root
+        isdata: false
+        name: DYJetsToLL
+        nevents: 122055388
+        parent: DYJetsToLL
+        sumweights: 1917228144467.0156
+        tree: Events
+        xsection: 5941.0
