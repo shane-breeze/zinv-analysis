@@ -10,6 +10,8 @@ class LHEPartAssigner(object):
 
 def leptonis(ev, attr):
     if not ev.hasbranch("LeptonIs{}".format(attr)):
+        if not ev.hasbranch("LHEPart_pdgId"):
+            return np.zeros(ev.size, dtype=np.bool8)
         pdg = ev.LHEPart.pdgId
         lepton_decay = get_nth_object(np.abs(
             pdg[(np.abs(pdg)==11) | (np.abs(pdg)==13) | (np.abs(pdg)==15)]
