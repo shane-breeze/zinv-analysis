@@ -18,14 +18,6 @@ class SqliteReader(object):
         self.attributes = cfg["attributes"]
         self.variations = cfg["variations"]
 
-        for cat, subdict in self.attributes.items():
-            for attr, subsplit in subdict.items():
-                if not isinstance(subsplit, dict):
-                    self.attributes[cat][attr] = {
-                        "evattrs": [{"label": "", "source": "", "nsig": 0.}],
-                        "selection": subsplit,
-                    }
-
     def begin(self, event):
         self.database_path = "/".join(os.path.abspath("result.db").split("/")[-3:])
         self.engine = create_engine('sqlite:///result.db')
@@ -50,49 +42,27 @@ class SqliteReader(object):
         self.attributes = attributes
 
         self.lambda_functions = {
-            subdict["selection"]: Lambda(subdict["selection"])
-            for _, subdict in self.attributes.items()
+            selection: Lambda(selection)
+            for _, selection in self.attributes.items()
         }
 
     def event(self, event):
-        data, keys = {}, []
-        for attr, subdict in self.attributes.items():
-            for var_dict in subdict["evattrs"]:
-                val = self.lambda_functions[subdict["selection"]](
-                    event, var_dict["source"], var_dict["nsig"],
-                )
+        data = {
+            attr: self.lambda_functions[selection](event, '', 0.)
+            for attr, selection in self.attributes.items()
+        }
 
-                label = (
-                    "_".join([attr, var_dict["label"]])
-                    if var_dict["label"] != "" else
-                    attr
-                )
-                data[label] = val
-                keys.append(label)
-
-        df = (
-            pd.DataFrame(data, columns=keys)
-            .to_sql(self.name, self.engine, if_exists='append', chunksize=1000)
-        )
+        df = pd.DataFrame(data, columns=self.attributes.keys())
+        df.to_sql(self.name, self.engine, if_exists='append', chunksize=1000)
 
         # Just incase it hangs around in memory for too long
         del df
 
         for source, nsig in self.variations:
-            data, keys = {}, []
-            for attr, subdict in self.attributes.items():
-                for var_dict in subdict["evattrs"]:
-                    val = self.lambda_functions[subdict["selection"]](
-                        event, source, nsig,
-                    )
-
-                    label = (
-                        "_".join([attr, var_dict["label"]])
-                        if var_dict["label"] != "" else
-                        attr
-                    )
-                    data[label] = val
-                    keys.append(label)
+            data = {
+                attr: self.lambda_functions[selection](event, source, nsig)
+                for attr, selection in self.attributes.items()
+            }
 
             updown = "Up" if nsig>=0. else "Down"
             table_name = (
@@ -101,18 +71,10 @@ class SqliteReader(object):
                 self.name
             )
             df = (
-                pd.DataFrame(data, columns=keys)
+                pd.DataFrame(data, columns=self.attributes.keys())
                 .to_sql(table_name, self.engine, if_exists='append', chunksize=1000)
             )
             del df
-
-    def merge(self, other):
-        #engine = create_engine("sqlite:///{}".format(os.path.abspath(self.database_path)))
-        #connection = engine.connect()
-        #connection.execute("""ATTACH DATABASE '{}' AS DB2;""".format(os.path.abspath(other.database_path)))
-        #connection.execute("""INSERT INTO {} SELECT * FROM DB2.{};""".format(self.name, other.name))
-        #connection.close()
-        return self
 
     def end(self):
         self.lambda_functions = None
