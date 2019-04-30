@@ -50,8 +50,8 @@ selections:
         "ev, source, nsig: (ev.ElectronSelection(ev, source, nsig, 'pt').counts == ev.ElectronVeto(ev, source, nsig, 'pt').counts)
              & (ev.ElectronVeto(ev, source, nsig, 'pt').counts == 3)"
     tau_0_selection:
-        "ev: (ev.TauSelection(ev, 'pt').counts == ev.TauVeto(ev, 'pt').counts)
-             & (ev.TauVeto(ev, 'pt').counts == 0)"
+        "ev, source, nsig: (ev.TauSelection(ev, source, nsig, 'pt').counts == ev.TauVeto(ev, source, nsig, 'pt').counts)
+             & (ev.TauVeto(ev, source, nsig, 'pt').counts == 0)"
     tau_1_selection:
         "ev, source, nsig: (ev.TauSelection(ev, source, nsig, 'pt').counts == ev.TauVeto(ev, source, nsig, 'pt').counts)
              & (ev.TauVeto(ev, source, nsig, 'pt').counts == 1)"
