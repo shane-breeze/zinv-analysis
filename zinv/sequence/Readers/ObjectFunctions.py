@@ -41,6 +41,22 @@ def jet_dphimet(ev, source, nsig):
         ),
     )
 
+def tau_dphimet(ev, source, nsig):
+    def dphi_met(mephi, tphi, starts, stops):
+        dphi = np.pi*np.ones_like(tphi, dtype=np.float32)
+        for iev, (start, stop) in enumerate(zip(starts, stops)):
+            for iob in range(start, stop):
+                dphi[iob] = np.abs(BoundPhi(tphi[iob]-mephi[iev]))
+
+        return dphi.astype(np.float32)
+
+    tphi = ev.Tau.phi
+    return awk.JaggedArray(
+        tphi.starts, tphi.stops, dphi_met(
+            ev.MET_phiShift(ev, source, nsig), tphi.content, tphi.starts, tphi.stops,
+        ),
+    )
+
 def muon_pt_shift(ev, source, nsig):
     shift = (source=="muonPtScale")*ev.Muon.ptErr.content/ev.Muon.pt.content
     return awk.JaggedArray(ev.Muon.pt.starts, ev.Muon.pt.stops, pt_shift_numba(
@@ -93,16 +109,16 @@ def met_shift(ev, source, nsig, attr):
         for iev, (jsta, jsto, esta, esto, msta, msto, psta, psto) in enumerate(zip(
             jstarts, jstops, estarts, estops, mstarts, mstops, pstarts, pstops,
         )):
-            for iob in range(jsto, jsto):
+            for iob in range(jsta, jsto):
                 mex[iev] += (jpx_old[iob] - jpx_new[iob])
                 mey[iev] += (jpy_old[iob] - jpy_new[iob])
-            for iob in range(esto, esto):
+            for iob in range(esta, esto):
                 mex[iev] += (epx_old[iob] - epx_new[iob])
                 mey[iev] += (epy_old[iob] - epy_new[iob])
-            for iob in range(msto, msto):
+            for iob in range(msta, msto):
                 mex[iev] += (mpx_old[iob] - mpx_new[iob])
                 mey[iev] += (mpy_old[iob] - mpy_new[iob])
-            for iob in range(psto, psto):
+            for iob in range(psta, psto):
                 mex[iev] += (ppx_old[iob] - ppx_new[iob])
                 mey[iev] += (ppy_old[iob] - ppy_new[iob])
 
@@ -112,6 +128,7 @@ def met_shift(ev, source, nsig, attr):
         return CartToRad2D(mex, mey)
 
     arg_ = 1 if attr=='phi' else 0
+    photon_mask = (~np.isnan(ev.Photon_pt))
     return met_shift_numba(
         ev.MET_pt, ev.MET_phi,
         ev.Jet_pt.content, ev.Jet_ptShift(ev, source, nsig).content,
@@ -120,8 +137,8 @@ def met_shift(ev, source, nsig, attr):
         ev.Electron_phi.content, ev.Electron_pt.starts, ev.Electron_pt.stops,
         ev.Muon_pt.content, ev.Muon_ptShift(ev, source, nsig).content,
         ev.Muon_phi.content, ev.Muon_pt.starts, ev.Muon_pt.stops,
-        ev.Photon_pt.content, ev.Photon_ptShift(ev, source, nsig).content,
-        ev.Photon_phi.content, ev.Photon_pt.starts, ev.Photon_pt.stops,
+        ev.Photon_pt[photon_mask].content, ev.Photon_ptShift(ev, source, nsig)[photon_mask].content,
+        ev.Photon_phi[photon_mask].content, ev.Photon_pt[photon_mask].starts, ev.Photon_pt[photon_mask].stops,
         (source=="unclust")*ev.MET_MetUnclustEnUpDeltaX,
         (source=="unclust")*ev.MET_MetUnclustEnUpDeltaY,
         nsig,
@@ -151,6 +168,7 @@ class ObjectFunctions(object):
         event.register_function(event, "MET_ptShift", partial(met_shift, attr='pt'))
         event.register_function(event, "MET_phiShift", partial(met_shift, attr='phi'))
         event.register_function(event, "Jet_dphiMET", jet_dphimet)
+        event.register_function(event, "Tau_dphiMET", tau_dphimet)
 
         for objname, selection, xclean in self.selections:
             if xclean:
