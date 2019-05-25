@@ -11,7 +11,7 @@ import zinv.sequence.Collectors as Collectors
 
 event_tools = Readers.EventTools(
     name = "event_tools",
-    maxsize = int(8*1024**3), # 2 GB
+    maxsize = int(12*1024**3), # 2 GB
 )
 
 # Initialise readers and collectors
@@ -313,9 +313,12 @@ selection_producer = Readers.SelectionProducer(
 
 sqlite_reader = Collectors.SqliteReader(
     name = "sqlite_reader",
-    cfg = os.path.join(collpath, "Sqlite_cfg.yaml"),
-    #cfg = os.path.join(collpath, "Sqlite_objscale_cfg.yaml"),
-    #cfg = os.path.join(collpath, "Sqlite_pdfscale_cfg.yaml"),
+    cfg = os.path.join(collpath, "Sqlite_v2_cfg.yaml"),
+)
+
+hdf5_reader = Collectors.HDF5Reader(
+    name = "hdf5_reader",
+    cfg = os.path.join(collpath, "HDF5_cfg.yaml"),
 )
 
 sequence = [
@@ -360,4 +363,5 @@ sequence = [
     # Add collectors (with accompanying readers) at the end so that all
     # event attributes are available to them
     (sqlite_reader, NullCollector()),
+    (hdf5_reader, NullCollector()),
 ]
