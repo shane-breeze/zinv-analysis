@@ -16,6 +16,9 @@ class DummyEvent(object):
         self.attribute_variation_sources = ['']
         self.cache = {}
 
+    def register_function(self, event, name, function):
+        self.__dict__[name] = function
+
 @pytest.fixture()
 def event():
     return DummyEvent()
@@ -71,7 +74,7 @@ def test_selectionproducer_begin_evattr(module, event, inputs, outputs):
     )
     event.size = len(inputs["dummy_selection"])
     event.config.dataset.isdata = True
-    data = """selections:\n    dummy_selection: \"ev: ev.dummy_selection(ev)\"\n"""\
+    data = """selections:\n    dummy_selection: \"ev, source, nsig: ev.dummy_selection(ev)\"\n"""\
         + """grouped_selections:\n    dummy_cat_sele:\n        - \"dummy_selection\"\n"""\
         + """cutflows:\n    dummy_cutflow:\n        Data:\n            - \"dummy_cat_sele\""""
     mocked_open = mock.mock_open(read_data=data)
@@ -82,5 +85,5 @@ def test_selectionproducer_begin_evattr(module, event, inputs, outputs):
         ("dummy_cutflow", outputs["selection"]),
         ("dummy_cutflow_remove_dummy_selection", outputs["selection_remove"]),
     ]:
-        selection = getattr(event, "Cutflow_"+cutflow)(event)
+        selection = getattr(event, "Cutflow_"+cutflow)(event, '', 0.)
         assert np.array_equal(selection, np.array(outsele))
