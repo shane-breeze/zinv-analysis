@@ -19,7 +19,6 @@ class SqliteReader(object):
         self.variations = cfg["variations"]
 
     def begin(self, event):
-        self.database_path = "/".join(os.path.abspath("result.db").split("/")[-3:])
         self.engine = create_engine('sqlite:///result.db')
         conn = self.engine.connect()
 
@@ -47,34 +46,36 @@ class SqliteReader(object):
         }
 
     def event(self, event):
-        data = {
-            attr: self.lambda_functions[selection](event, '', 0.)
-            for attr, selection in self.attributes.items()
-        }
-
-        df = pd.DataFrame(data, columns=self.attributes.keys())
-        df.to_sql(self.name, self.engine, if_exists='append', chunksize=1000)
-
-        # Just incase it hangs around in memory for too long
+        opts = ('', 0.)
+        for df in self.chunk_events(event, opts=opts, chunksize=int(1e7)):
+            df.to_sql(self.name, self.engine, if_exists='append', chunksize=100000)
         del df
+        print("Created result.db with table {}".format(self.name))
 
         for source, nsig in self.variations:
-            data = {
-                attr: self.lambda_functions[selection](event, source, nsig)
-                for attr, selection in self.attributes.items()
-            }
-
+            opts = (source, nsig)
             updown = "Up" if nsig>=0. else "Down"
             table_name = (
                 "_".join([self.name, source+updown])
                 if source != "" else
                 self.name
             )
-            df = (
-                pd.DataFrame(data, columns=self.attributes.keys())
-                .to_sql(table_name, self.engine, if_exists='append', chunksize=1000)
-            )
+
+            for df in self.chunk_events(event, opts=opts, chunksize=int(1e7)):
+                df.to_sql(table_name, self.engine, if_exists='append', chunksize=100000)
             del df
+            print("Create result.db with table {}".format(table_name))
+
+    def chunk_events(self, event, opts=[], chunksize=int(1e5)):
+        for start in xrange(0, event.size, chunksize):
+            stop = start+chunksize if start+chunksize<event.size else event.size
+
+            data = {
+                attr: self.lambda_functions[selection](event, *opts)[start:stop]
+                for attr, selection in self.attributes.items()
+            }
+
+            yield pd.DataFrame(data, columns=self.attributes.keys())
 
     def end(self):
         self.lambda_functions = None
