@@ -125,7 +125,7 @@ class JecVariations(object):
 
 def jet_pt_res(ev, jers):
     indices = get_bin_indices(
-        [ev.Jet_eta.content,
+        [np.abs(ev.Jet_eta.content),
          event_to_object_var(ev.fixedGridRhoFastjetAll, ev.Jet_pt.starts, ev.Jet_pt.stops)],
         [jers["eta_low"].values, jers["rho_low"].values],
         [jers["eta_high"].values, jers["rho_high"].values],
