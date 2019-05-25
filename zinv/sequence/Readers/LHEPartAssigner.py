@@ -5,32 +5,35 @@ class LHEPartAssigner(object):
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
-    def event(self, event):
-        if event.config.dataset.parent not in self.old_parents:
-            return True
+    def begin(self, event):
+        event.register_function(event, "LeptonIs", leptonis)
 
-        pdg = event.LHEPart.pdgId
-        event.LeptonDecay = get_nth_object(np.abs(
+def leptonis(ev, attr):
+    if not ev.hasbranch("LeptonIs{}".format(attr)):
+        if not ev.hasbranch("LHEPart_pdgId"):
+            return np.zeros(ev.size, dtype=np.bool8)
+        pdg = ev.LHEPart.pdgId
+        lepton_decay = get_nth_object(np.abs(
             pdg[(np.abs(pdg)==11) | (np.abs(pdg)==13) | (np.abs(pdg)==15)]
-        ), 0, event.size)
-        event.LeptonIsElectron = (event.LeptonDecay == 11)
-        event.LeptonIsMuon = (event.LeptonDecay == 13)
-        event.LeptonIsTau = (event.LeptonDecay == 15)
-        event.delete_branches(["LHEPart_pdgId"])
+        ), 0, ev.size)
+        ev.LeptonIsElectron = (lepton_decay == 11)
+        ev.LeptonIsMuon = (lepton_decay == 13)
+        ev.LeptonIsTau = (lepton_decay == 15)
+    return getattr(ev, "LeptonIs{}".format(attr))
 
 class GenPartAssigner(object):
     def __init__(self, **kwargs):
         self.__dict__.update(**kwargs)
 
-    def event(self, event):
-        if event.config.dataset.parent not in self.old_parents:
-            return True
+    def begin(self, event):
+        event.register_function(event, "nGenTauL", ngen_taul)
 
-        flag = event.GenPart.statusFlags
-        pdgs = event.GenPart.pdgId
+def ngen_taul(ev):
+    if not ev.hasbranch("nGenTauL_val"):
+        flag = ev.GenPart.statusFlags
+        pdgs = ev.GenPart.pdgId
 
-        event.nGenTauL = (
+        ev.nGenTauL_val = (
             (flag&(1<<10)==(1<<10)) & ((np.abs(pdgs)==11) | (np.abs(pdgs)==13))
         ).sum()
-
-        event.delete_branches(["GenPart_pdgId", "GenPart_statusFlags"])
+    return ev.nGenTauL_val

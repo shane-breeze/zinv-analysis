@@ -35,8 +35,6 @@ def parse_args():
                         help="Config for the physics object selection")
     parser.add_argument("trigger_cfg", type=str,
                         help="Config for the HLT trigger paths")
-    parser.add_argument("weight_cfg", type=str,
-                        help="Config for the weight sequence")
     parser.add_argument("-o", "--outdir", default="output", type=str,
                         help="Where to save the results")
     parser.add_argument("--mode", default="multiprocessing", type=str,
@@ -54,7 +52,7 @@ def parse_args():
                         help="Number of files per process")
     parser.add_argument("--blocksize", default=1000000, type=int,
                         help="Number of events per block")
-    parser.add_argument("--cachesize", default=6*1024**3, type=int,
+    parser.add_argument("--cachesize", default=8*1024**3, type=int,
                         help="Branch cache size")
     parser.add_argument("--quiet", default=False, action='store_true',
                         help="Keep progress report quiet")
@@ -230,10 +228,7 @@ def run(sequence, datasets, options):
     process.parallel_mode = options.mode
     if options.mode == 'sge':
         dispatcher_options = {
-            "vmem": 24,
-            "walltime": 3*60*60,
-            "vmem_dict": {}, #vmem_dict,
-            "walltime_dict": {},
+            "job_opts": "-l h_vmem=24G -l h_rt=3:0:0"
         }
         dropbox_options = {}
     elif options.mode == 'htcondor':
@@ -266,7 +261,7 @@ if __name__ == "__main__":
 
     sequence = build_sequence(
         options.sequence_cfg, options.outdir, options.event_selection_cfg,
-        options.physics_object_cfg, options.trigger_cfg, options.weight_cfg,
+        options.physics_object_cfg, options.trigger_cfg,
         options.nuisances.split(","),
     )
     datasets = get_datasets(options.dataset_cfg)

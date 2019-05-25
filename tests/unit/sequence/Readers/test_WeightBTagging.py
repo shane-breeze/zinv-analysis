@@ -19,6 +19,9 @@ class DummyEvent(object):
 
         self.Jet = DummyColl()
 
+    def register_function(self, event, name, function):
+        self.__dict__[name] = function
+
 @pytest.fixture()
 def path():
     toppath = os.path.abspath(os.environ["TOPDIR"])
@@ -104,12 +107,12 @@ def test_weightbtagging_begin(module, event, inputs, outputs):
     event.Jet_hadronFlavour = jflav
     event.Jet.eta = jeta
     event.Jet_eta = jeta
-    event.Jet.ptShift = mock.Mock(side_effect=lambda ev: jptshift)
-    event.Jet_ptShift = mock.Mock(side_effect=lambda ev: jptshift)
+    event.Jet.ptShift = mock.Mock(side_effect=lambda ev, source, nsig: jptshift)
+    event.Jet_ptShift = mock.Mock(side_effect=lambda ev, source, nsig: jptshift)
 
     assert module.begin(event) is None
 
-    jbtagsf = event.Jet_btagSF(event)
+    jbtagsf = event.Jet_btagSF(event, event.source, event.nsig)
     ojbtagsf = awk.JaggedArray.fromiter(outputs["jbtagsf"]).astype(np.float32)
     assert np.array_equal(jbtagsf.starts, ojbtagsf.starts)
     assert np.array_equal(jbtagsf.stops, ojbtagsf.stops)

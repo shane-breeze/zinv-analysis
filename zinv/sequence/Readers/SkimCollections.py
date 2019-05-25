@@ -9,38 +9,19 @@ from functools import partial
 
 from zinv.utils.Lambda import Lambda
 
-def evaluate_skim(objname, name, cutlist):
-    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_skim'))
-    def fevaluate_skim(ev, evidx, nsig, source, name_, objname_):
-        starts = getattr(ev, objname_).pt.starts
-        stops = getattr(ev, objname_).pt.stops
-        return awk.JaggedArray(
-            starts, stops,
-            reduce(operator.add, cutlist)(ev).content,
-        )
+def evaluate_skim(ev, source, nsig, objname, name, cutlist):
+    starts = getattr(ev, objname).pt.starts
+    stops = getattr(ev, objname).pt.stops
 
-    def return_evaluate_skim(ev):
-        source, nsig = ev.source, ev.nsig
-        if source not in ev.attribute_variation_sources:
-            source, nsig = '', 0.
-        return fevaluate_skim(ev, ev.iblock, nsig, source, name, objname)
+    return awk.JaggedArray(
+        starts, stops,
+        reduce(operator.add, cutlist)(ev, source, nsig).content,
+    )
 
-    return return_evaluate_skim
-
-def evaluate_this_not_that(this, that):
-    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_this_not_that'))
-    def fevaluate_this_not_that(ev, evidx, nsig, source, this_, that_):
-        this_attr = getattr(ev, this_)(ev)
-        that_attr = getattr(ev, that_)(ev)
-        return this_attr & (~that_attr)
-
-    def return_evaluate_this_not_that(ev):
-        source, nsig = ev.source, ev.nsig
-        if source not in ev.attribute_variation_sources:
-            source, nsig = '', 0.
-        return fevaluate_this_not_that(ev, ev.iblock, nsig, source, this, that)
-
-    return return_evaluate_this_not_that
+def evaluate_this_not_that(ev, source, nsig, this, that):
+    this_attr = getattr(ev, this)(ev, source, nsig)
+    that_attr = getattr(ev, that)(ev, source, nsig)
+    return this_attr & (~that_attr)
 
 class SkimCollections(object):
     def __init__(self, **kwargs):
@@ -60,7 +41,13 @@ class SkimCollections(object):
             incoll = subdict["original"]
             selections = [self.lambda_functions[s] for s in subdict["selections"]]
             name = "{}_{}Mask".format(incoll, outcoll)
-            setattr(event, name, evaluate_skim(incoll, name, selections))
+
+            event.register_function(
+                event, name, partial(
+                    evaluate_skim, objname=incoll, name=name,
+                    cutlist=selections,
+                ),
+            )
 
         for outcoll, subdict in selection_functions.items():
             if "Veto" not in outcoll:
@@ -69,9 +56,12 @@ class SkimCollections(object):
             name = "{}_{}Mask".format(incoll, outcoll)
             nosele_name = "{}_{}NoSelectionMask".format(incoll, outcoll)
 
-            setattr(event, nosele_name, evaluate_this_not_that(
-                name, name.replace("Veto", "Selection"),
-            ))
+            event.register_function(
+                event, nosele_name, partial(
+                    evaluate_this_not_that, this=name,
+                    that=name.replace("Veto", "Selection"),
+                ),
+            )
 
     def end(self):
         self.lambda_functions = None

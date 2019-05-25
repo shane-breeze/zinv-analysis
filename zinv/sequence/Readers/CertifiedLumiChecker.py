@@ -6,7 +6,7 @@ from cachetools import cachedmethod
 from cachetools.keys import hashkey
 from functools import partial
 
-def evaluate_certified_lumi(cert_runs, cert_lumis):
+def evaluate_certified_lumi(ev, cert_runs, cert_lumis):
     @nb.njit
     def is_certified_lumi(runs, lumis, cert_runs_, cert_lumis_):
         nev = runs.shape[0]
@@ -31,11 +31,7 @@ def evaluate_certified_lumi(cert_runs, cert_lumis):
 
         return is_certified
 
-    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_certified_lumi'))
-    def fevaluate_certified_lumi(ev, evidx):
-        return is_certified_lumi(ev.run, ev.luminosityBlock, cert_runs, cert_lumis)
-
-    return lambda ev: fevaluate_certified_lumi(ev, ev.iblock)
+    return is_certified_lumi(ev.run, ev.luminosityBlock, cert_runs, cert_lumis)
 
 class CertifiedLumiChecker(object):
     def __init__(self, **kwargs):
@@ -43,7 +39,12 @@ class CertifiedLumiChecker(object):
 
     def begin(self, event):
         runs, lumilist = read_json(self.lumi_json_path)
-        event.IsCertified = evaluate_certified_lumi(runs, lumilist)
+        event.register_function(
+            event, 'IsCertified',
+            partial(
+                evaluate_certified_lumi, cert_runs=runs, cert_lumis=lumilist,
+            ),
+        )
 
 def read_json(path):
     with open(path, 'r') as f:

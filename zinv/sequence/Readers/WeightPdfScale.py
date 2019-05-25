@@ -44,5 +44,5 @@ class WeightPdfScale(object):
         self.__dict__.update(kwargs)
 
     def begin(self, event):
-        event.WeightPdfVariations = evaluate_pdf_variations()
-        event.WeightScaleVariations = evaluate_scale_variations()
+        event._nonbranch_cache["WeightPdfVariations"] = evaluate_pdf_variations()
+        event._nonbranch_cache["WeightScaleVariations"] = evaluate_scale_variations()

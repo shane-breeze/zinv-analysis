@@ -1,15 +1,7 @@
-import operator
-
-from cachetools import cachedmethod
-from cachetools.keys import hashkey
 from functools import partial
 
-def evaluate_xslumi_weight(sf, dataset):
-    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_xslumi_weight'))
-    def fevaluate_xslumi_weight(ev, iblock, sf_, name):
-        return ev.genWeight*sf_
-
-    return lambda ev: fevaluate_xslumi_weight(ev, ev.iblock, sf, dataset.name)
+def evaluate_xslumi_weight(ev, sf, dataset):
+    return ev.genWeight*sf
 
 class WeightXsLumi(object):
     def __init__(self, **kwargs):
@@ -22,4 +14,8 @@ class WeightXsLumi(object):
             for associates in dataset.associates
         ])
         sf = (dataset.xsection * dataset.lumi / sumweights)
-        event.WeightXsLumi = evaluate_xslumi_weight(sf, dataset)
+
+        event.register_function(
+            event, "WeightXsLumi",
+            partial(evaluate_xslumi_weight, sf=sf, dataset=dataset),
+        )

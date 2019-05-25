@@ -20,6 +20,12 @@ class DummyEvent(object):
         self.attribute_variation_sources = ['']
         self.cache = {}
 
+    def register_function(self, event, name, function):
+        self.__dict__[name] = function
+
+    def hasbranch(self, branch):
+        return hastattr(self, branch)
+
 @pytest.fixture()
 def event():
     return DummyEvent()
@@ -32,7 +38,7 @@ def test_skimcollections_init(module):
     assert module.physics_object_selection_path == "dummy_path.yaml"
 
 def test_skimcollections_open(module, event):
-    data = """C1Sub:\n    original: \"C1\"\n    selections:\n        - \"ev: ev.C1Selection(ev)\""""
+    data = """C1Sub:\n    original: \"C1\"\n    selections:\n        - \"ev, source, nsig: ev.C1Selection(ev, source, nsig)\""""
     mocked_open = mock.mock_open(read_data=data)
     with mock.patch("__builtin__.open", mocked_open):
         module.begin(event)
@@ -49,15 +55,15 @@ def test_skimcollections_open(module, event):
 )
 def test_skimcollections_begin_onemask(module, event, inputs, outputs):
     collection_selection = awk.JaggedArray.fromiter(inputs["dummy_selection"])
-    event.C1Selection = lambda ev: collection_selection
+    event.C1Selection = lambda ev, source, nsig: collection_selection
     event.C1.pt = collection_selection*100.
 
-    data = """C1Sub:\n    original: \"C1\"\n    selections:\n        - \"ev: ev.C1Selection(ev)\""""
+    data = """C1Sub:\n    original: \"C1\"\n    selections:\n        - \"ev, source, nsig: ev.C1Selection(ev, source, nsig)\""""
     mocked_open = mock.mock_open(read_data=data)
     with mock.patch("__builtin__.open", mocked_open):
         module.begin(event)
 
-    mask = event.C1_C1SubMask(event)
+    mask = event.C1_C1SubMask(event, event.source, event.nsig)
     out_mask = awk.JaggedArray.fromiter(outputs["selection"])
     assert np.array_equal(mask.starts, out_mask.starts)
     assert np.array_equal(mask.stops, out_mask.stops)
@@ -78,19 +84,19 @@ def test_skimcollections_begin_onemask(module, event, inputs, outputs):
 def test_skimcollections_begin_allmasks(module, event, inputs, outputs):
     collection_veto = awk.JaggedArray.fromiter(inputs["c1veto"])
     collection_selection = awk.JaggedArray.fromiter(inputs["c1sele"])
-    event.C1Veto = lambda ev: collection_veto
-    event.C1Selection = lambda ev: collection_selection
+    event.C1Veto = lambda ev, source, nsig: collection_veto
+    event.C1Selection = lambda ev, source, nsig: collection_selection
     event.C1.pt = collection_selection*100.
 
-    data = """C1Veto:\n    original: \"C1\"\n    selections:\n        - \"ev: ev.C1Veto(ev)\"\n"""\
-            + """C1Selection:\n    original: \"C1\"\n    selections:\n        - \"ev: ev.C1Selection(ev)\""""
+    data = """C1Veto:\n    original: \"C1\"\n    selections:\n        - \"ev, source, nsig: ev.C1Veto(ev, source, nsig)\"\n"""\
+            + """C1Selection:\n    original: \"C1\"\n    selections:\n        - \"ev, source, nsig: ev.C1Selection(ev, source, nsig)\""""
     mocked_open = mock.mock_open(read_data=data)
     with mock.patch("__builtin__.open", mocked_open):
         module.begin(event)
 
-    mask_veto = event.C1_C1VetoMask(event)
-    mask_sele = event.C1_C1SelectionMask(event)
-    mask_vetonosele = event.C1_C1VetoNoSelectionMask(event)
+    mask_veto = event.C1_C1VetoMask(event, event.source, event.nsig)
+    mask_sele = event.C1_C1SelectionMask(event, event.source, event.nsig)
+    mask_vetonosele = event.C1_C1VetoNoSelectionMask(event, event.source, event.nsig)
     out_mask_veto = awk.JaggedArray.fromiter(outputs["mask_veto"])
     out_mask_sele = awk.JaggedArray.fromiter(outputs["mask_sele"])
     out_mask_vetonosele = awk.JaggedArray.fromiter(outputs["mask_vetonosele"])

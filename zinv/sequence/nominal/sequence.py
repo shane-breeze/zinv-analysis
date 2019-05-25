@@ -11,7 +11,7 @@ import zinv.sequence.Collectors as Collectors
 
 event_tools = Readers.EventTools(
     name = "event_tools",
-    maxsize = int(2*1024**3), # 6 GB
+    maxsize = int(8*1024**3), # 2 GB
 )
 
 # Initialise readers and collectors
@@ -138,30 +138,30 @@ weight_electrons = Readers.WeightObjects(
         {
             "name": "eleIdIsoTight",
             "collection": "Electron",
-            "binning_variables": ("ev: ev.Electron.eta", "ev: ev.Electron_ptShift(ev)"),
+            "binning_variables": ("ev, source, nsig: ev.Electron.eta", "ev, source, nsig: ev.Electron_ptShift(ev, source, nsig)"),
             "weighted_paths": [(1, datapath+"/electrons/electron_idiso_tight.txt")],
-            "add_syst": "ev: awk.JaggedArray.zeros_like(ev.Electron.eta)",
+            "add_syst": "ev, source, nsig: awk.JaggedArray.zeros_like(ev.Electron.eta)",
             "nuisances": ["eleIdIsoTight", "eleEnergyScale"],
         }, {
             "name": "eleIdIsoVeto",
             "collection": "Electron",
-            "binning_variables": ("ev: ev.Electron.eta", "ev: ev.Electron_ptShift(ev)"),
+            "binning_variables": ("ev, source, nsig: ev.Electron.eta", "ev, source, nsig: ev.Electron_ptShift(ev, source, nsig)"),
             "weighted_paths": [(1, datapath+"/electrons/electron_idiso_veto.txt")],
-            "add_syst": "ev: awk.JaggedArray.zeros_like(ev.Electron.eta)",
+            "add_syst": "ev, source, nsig: awk.JaggedArray.zeros_like(ev.Electron.eta)",
             "nuisances": ["eleIdIsoVeto", "eleEnergyScale"],
         }, {
             "name": "eleReco",
             "collection": "Electron",
-            "binning_variables": ("ev: ev.Electron.eta", "ev: ev.Electron_ptShift(ev)"),
+            "binning_variables": ("ev, source, nsig: ev.Electron.eta", "ev, source, nsig: ev.Electron_ptShift(ev, source, nsig)"),
             "weighted_paths": [(1, datapath+"/electrons/electron_reconstruction.txt")],
-            "add_syst": "ev: 0.01*((ev.Electron_ptShift(ev)<20) | (ev.Electron_ptShift(ev)>80))",
+            "add_syst": "ev, source, nsig: 0.01*((ev.Electron_ptShift(ev, source, nsig)<20) | (ev.Electron_ptShift(ev, source, nsig)>80))",
             "nuisances": ["eleReco", "eleEnergyScale"],
         }, {
             "name": "eleTrig",
             "collection": "Electron",
-            "binning_variables": ("ev: ev.Electron_ptShift(ev)", "ev: np.abs(ev.Electron.eta)"),
+            "binning_variables": ("ev, source, nsig: ev.Electron_ptShift(ev, source, nsig)", "ev, source, nsig: np.abs(ev.Electron.eta)"),
             "weighted_paths": [(1, datapath+"/electrons/electron_trigger_v2.txt")],
-            "add_syst": "ev: awk.JaggedArray.zeros_like(ev.Electron.eta)",
+            "add_syst": "ev, source, nsig: awk.JaggedArray.zeros_like(ev.Electron.eta)",
             "nuisances": ["eleTrig", "eleEnergyScale"],
         },
     ],
@@ -173,42 +173,52 @@ weight_muons = Readers.WeightObjects(
         {
             "name": "muonIdTight",
             "collection": "Muon",
-            "binning_variables": ("ev: np.abs(ev.Muon.eta)", "ev: ev.Muon_ptShift(ev)"),
-            "weighted_paths": [(19.7, datapath+"/muons/muon_id_loose_runBCDEF.txt"),
-                               (16.2, datapath+"/muons/muon_id_loose_runGH.txt")],
-            "add_syst": "ev: 0.01*awk.JaggedArray.ones_like(ev.Muon.eta)",
+            "binning_variables": ("ev, source, nsig: np.abs(ev.Muon.eta)", "ev, source, nsig: ev.Muon_ptShift(ev, source, nsig)"),
+            "weighted_paths": [
+                (19.7, datapath+"/muons/muon_id_loose_runBCDEF.txt"),
+                (16.2, datapath+"/muons/muon_id_loose_runGH.txt"),
+            ],
+            "add_syst": "ev, source, nsig: 0.01*awk.JaggedArray.ones_like(ev.Muon.eta)",
             "nuisances": ["muonIdTight", "muonPtScale"],
         }, {
             "name": "muonIdLoose",
             "collection": "Muon",
-            "binning_variables": ("ev: np.abs(ev.Muon.eta)", "ev: ev.Muon_ptShift(ev)"),
-            "weighted_paths": [(19.7, datapath+"/muons/muon_id_loose_runBCDEF.txt"),
-                               (16.2, datapath+"/muons/muon_id_loose_runGH.txt")],
-            "add_syst": "ev: 0.01*awk.JaggedArray.ones_like(ev.Muon.eta)",
+            "binning_variables": ("ev, source, nsig: np.abs(ev.Muon.eta)", "ev, source, nsig: ev.Muon_ptShift(ev, source, nsig)"),
+            "weighted_paths": [
+                (19.7, datapath+"/muons/muon_id_loose_runBCDEF.txt"),
+                (16.2, datapath+"/muons/muon_id_loose_runGH.txt"),
+            ],
+            "add_syst": "ev, source, nsig: 0.01*awk.JaggedArray.ones_like(ev.Muon.eta)",
             "nuisances": ["muonIdLoose", "muonPtScale"],
         }, {
             "name": "muonIsoTight",
             "collection": "Muon",
-            "binning_variables": ("ev: np.abs(ev.Muon.eta)", "ev: ev.Muon_ptShift(ev)"),
-            "weighted_paths": [(19.7, datapath+"/muons/muon_iso_tight_tightID_runBCDEF.txt"),
-                               (16.2, datapath+"/muons/muon_iso_tight_tightID_runGH.txt")],
-            "add_syst": "ev: 0.005*awk.JaggedArray.ones_like(ev.Muon.eta)",
+            "binning_variables": ("ev, source, nsig: np.abs(ev.Muon.eta)", "ev, source, nsig: ev.Muon_ptShift(ev, source, nsig)"),
+            "weighted_paths": [
+                (19.7, datapath+"/muons/muon_iso_tight_tightID_runBCDEF.txt"),
+                (16.2, datapath+"/muons/muon_iso_tight_tightID_runGH.txt"),
+            ],
+            "add_syst": "ev, source, nsig: 0.005*awk.JaggedArray.ones_like(ev.Muon.eta)",
             "nuisances": ["muonIsoTight", "muonPtScale"],
         }, {
             "name": "muonIsoLoose",
             "collection": "Muon",
-            "binning_variables": ("ev: np.abs(ev.Muon.eta)", "ev: ev.Muon_ptShift(ev)"),
-            "weighted_paths": [(19.7, datapath+"/muons/muon_iso_loose_looseID_runBCDEF.txt"),
-                               (16.2, datapath+"/muons/muon_iso_loose_looseID_runGH.txt")],
-            "add_syst": "ev: 0.005*awk.JaggedArray.ones_like(ev.Muon.eta)",
+            "binning_variables": ("ev, source, nsig: np.abs(ev.Muon.eta)", "ev, source, nsig: ev.Muon_ptShift(ev, source, nsig)"),
+            "weighted_paths": [
+                (19.7, datapath+"/muons/muon_iso_loose_looseID_runBCDEF.txt"),
+                (16.2, datapath+"/muons/muon_iso_loose_looseID_runGH.txt"),
+            ],
+            "add_syst": "ev, source, nsig: 0.005*awk.JaggedArray.ones_like(ev.Muon.eta)",
             "nuisances": ["muonIsoLoose", "muonPtScale"],
         }, {
             "name": "muonTrig",
             "collection": "Muon",
-            "binning_variables": ("ev: np.abs(ev.Muon.eta)", "ev: ev.Muon_ptShift(ev)"),
-            "weighted_paths": [(19.7, datapath + "/muons/muon_trigger_IsoMu24_OR_IsoTkMu24_runBCDEF.txt"),
-                               (16.2, datapath + "/muons/muon_trigger_IsoMu24_OR_IsoTkMu24_runGH.txt")],
-            "add_syst": "ev: 0.005*awk.JaggedArray.ones_like(ev.Muon.eta)",
+            "binning_variables": ("ev, source, nsig: np.abs(ev.Muon.eta)", "ev, source, nsig: ev.Muon_ptShift(ev, source, nsig)"),
+            "weighted_paths": [
+                (19.7, datapath + "/muons/muon_trigger_IsoMu24_OR_IsoTkMu24_runBCDEF.txt"),
+                (16.2, datapath + "/muons/muon_trigger_IsoMu24_OR_IsoTkMu24_runGH.txt"),
+            ],
+            "add_syst": "ev, source, nsig: 0.005*awk.JaggedArray.ones_like(ev.Muon.eta)",
             "nuisances": ["muonTrig", "muonPtScale"],
         },
     ],
@@ -220,9 +230,9 @@ weight_taus = Readers.WeightObjects(
         {
             "name": "tauIdTight",
             "collection": "Tau",
-            "binning_variables": ("ev: ev.Tau_ptShift(ev)",),
+            "binning_variables": ("ev, source, nsig: ev.Tau_ptShift(ev, source, nsig)",),
             "weighted_paths": [(1, datapath+"/taus/tau_id_tight.txt")],
-            "add_syst": "ev: 0.05*awk.JaggedArray.ones_like(ev.Tau.eta)",
+            "add_syst": "ev, source, nsig: 0.05*awk.JaggedArray.ones_like(ev.Tau.eta)",
             "nuisances": ["tauIdTight", "tauEnergyScale"],
         },
     ],
@@ -234,16 +244,16 @@ weight_photon = Readers.WeightObjects(
         {
             "name": "photonIdLoose",
             "collection": "Photon",
-            "binning_variables": ("ev: ev.Photon.eta", "ev: ev.Photon_ptShift(ev)"),
+            "binning_variables": ("ev, source, nsig: ev.Photon.eta", "ev, source, nsig: ev.Photon_ptShift(ev, source, nsig)"),
             "weighted_paths": [(1, datapath+"/photons/photon_cutbasedid_loose.txt")],
-            "add_syst": "ev: awk.JaggedArray.zeros_like(ev.Photon.eta)",
+            "add_syst": "ev, source, nsig: awk.JaggedArray.zeros_like(ev.Photon.eta)",
             "nuisances": ["photonIdLoose", "photonEnergyScale"],
         }, {
             "name": "photonPixelSeedVeto",
             "collection": "Photon",
-            "binning_variables": ("ev: ev.Photon.r9", "ev: np.abs(ev.Photon.eta)", "ev: ev.Photon_ptShift(ev)"),
+            "binning_variables": ("ev, source, nsig: ev.Photon.r9", "ev, source, nsig: np.abs(ev.Photon.eta)", "ev, source, nsig: ev.Photon_ptShift(ev, source, nsig)"),
             "weighted_paths": [(1, datapath+"/photons/photon_pixelseedveto.txt")],
-            "add_syst": "ev: awk.JaggedArray.zeros_like(ev.Photon.eta)",
+            "add_syst": "ev, source, nsig: awk.JaggedArray.zeros_like(ev.Photon.eta)",
             "nuisances": ["photonPixelSeedVeto", "photonEnergyScale"],
         },
     ],
@@ -268,16 +278,22 @@ weight_qcd_ewk = Readers.WeightQcdEwk(
     },
     underflow = True,
     overflow = True,
-    formula = "((K_NNLO + d1k_qcd*d1K_NNLO + d2k_qcd*d2K_NNLO + d3k_qcd*d3K_NNLO)"\
-              "*(1 + kappa_EW + d1k_ew*d1kappa_EW + isz*(d2k_ew_z*d2kappa_EW + d3k_ew_z*d3kappa_EW)"\
-                                                 "+ isw*(d2k_ew_w*d2kappa_EW + d3k_ew_w*d3kappa_EW))"\
-              "+ dk_mix*dK_NNLO_mix)"\
-              "/(K_NLO + d1k_qcd*d1K_NLO + d2k_qcd*d2K_NLO + d3k_qcd*d3K_NLO)",
-    params = ["K_NLO", "d1K_NLO", "d2K_NLO", "d3K_NLO", "K_NNLO", "d1K_NNLO",
-              "d2K_NNLO", "d3K_NNLO", "kappa_EW", "d1kappa_EW", "d2kappa_EW",
-              "d3kappa_EW", "dK_NNLO_mix"],
-    variation_names = ["d1k_qcd", "d2k_qcd", "d3k_qcd", "d1k_ew", "d2k_ew_z",
-                       "d2k_ew_w", "d3k_ew_z", "d3k_ew_w", "dk_mix"],
+    formula = (
+        "((K_NNLO + d1k_qcd*d1K_NNLO + d2k_qcd*d2K_NNLO + d3k_qcd*d3K_NNLO)"
+        "*(1 + kappa_EW + d1k_ew*d1kappa_EW + isz*(d2k_ew_z*d2kappa_EW + d3k_ew_z*d3kappa_EW)"
+                                           "+ isw*(d2k_ew_w*d2kappa_EW + d3k_ew_w*d3kappa_EW))"
+        "+ dk_mix*dK_NNLO_mix)"
+        "/(K_NLO + d1k_qcd*d1K_NLO + d2k_qcd*d2K_NLO + d3k_qcd*d3K_NLO)"
+    ),
+    params = [
+        "K_NLO", "d1K_NLO", "d2K_NLO", "d3K_NLO", "K_NNLO", "d1K_NNLO",
+        "d2K_NNLO", "d3K_NNLO", "kappa_EW", "d1kappa_EW", "d2kappa_EW",
+        "d3kappa_EW", "dK_NNLO_mix",
+    ],
+    variation_names = [
+        "d1k_qcd", "d2k_qcd", "d3k_qcd", "d1k_ew", "d2k_ew_z", "d2k_ew_w",
+        "d3k_ew_z", "d3k_ew_w", "dk_mix",
+    ],
     data = False,
 )
 
@@ -285,8 +301,8 @@ weight_prefiring = Readers.WeightPreFiring(
     name = "weight_prefiring",
     jet_eff_map_path = datapath+"/prefiring/L1prefiring_jetpt_2016BtoH.txt",
     photon_eff_map_path = datapath+"/prefiring/L1prefiring_photonpt_2016BtoH.txt",
-    jet_selection = "ev: (ev.Jet_ptShift(ev)>20) & ((2<np.abs(ev.Jet_eta)) & (np.abs(ev.Jet_eta)<3))",
-    photon_selection = "ev: (ev.Photon_ptShift(ev)>20) & ((2<np.abs(ev.Photon_eta)) & (np.abs(ev.Photon_eta)<3))",
+    jet_selection = "ev, source, nsig: (ev.Jet_ptShift(ev, source, nsig)>20) & ((2<np.abs(ev.Jet_eta)) & (np.abs(ev.Jet_eta)<3))",
+    photon_selection = "ev, source, nsig: (ev.Photon_ptShift(ev, source, nsig)>20) & ((2<np.abs(ev.Photon_eta)) & (np.abs(ev.Photon_eta)<3))",
     syst = 0.2,
     data = False,
 )
@@ -295,17 +311,11 @@ selection_producer = Readers.SelectionProducer(
     name = "selection_producer",
 )
 
-weight_producer = Readers.WeightProducer(
-    name = "weight_producer",
-)
-
 sqlite_reader = Collectors.SqliteReader(
     name = "sqlite_reader",
     cfg = os.path.join(collpath, "Sqlite_cfg.yaml"),
-)
-sqlite_collector = Collectors.SqliteCollector(
-    name = "sqlite_collector",
-    cfg = os.path.join(collpath, "Sqlite_cfg.yaml"),
+    #cfg = os.path.join(collpath, "Sqlite_objscale_cfg.yaml"),
+    #cfg = os.path.join(collpath, "Sqlite_pdfscale_cfg.yaml"),
 )
 
 sequence = [
@@ -314,30 +324,28 @@ sequence = [
     # Creates object collections accessible through the event variable. e.g.
     # event.Jet.pt rather than event.Jet_pt.
     (collection_creator, NullCollector()),
-    # selection and weight producers. They only create functions and hence can
-    # be placed near the start
-    (weight_producer, NullCollector()),
-    (selection_producer, NullCollector()),
-    # # Try to keep GenPart branch stuff before everything else. It's quite big
-    # # and is deleted after use. Don't want to add the memory consumption of
-    # # this with all other branches
+    # Try to keep GenPart branch stuff before everything else. It's quite big
+    # and is deleted after use. Don't want to add the memory consumption of
+    # this with all other branches
     (gen_boson_producer, NullCollector()),
     (lhe_part_assigner, NullCollector()),
     (gen_part_assigner, NullCollector()),
     (jec_variations, NullCollector()),
+    # Cross cleaning must be placed after the veto and selection collections
+    # are created. They update the selection flags produced in skim_collections
+    # Next 4 modules depend on each other. Turning one off breaks the others.
     (object_functions, NullCollector()),
-    (event_functions, NullCollector()),
-    # # Cross cleaning must be placed after the veto and selection collections
-    # # are created. They update the selection flags produced in skim_collections
     (skim_collections, NullCollector()),
     (tau_cross_cleaning, NullCollector()),
     (jet_cross_cleaning, NullCollector()),
-    # # Readers which create a mask for the event. Doesn't apply it, just stores
-    # # the mask as an array of booleans
+    (event_functions, NullCollector()),
+    # Readers which create a mask for the event. Doesn't apply it, just stores
+    # the mask as an array of booleans
     (trigger_checker, NullCollector()),
     (certified_lumi_checker, NullCollector()),
-    # # Weighters. The generally just apply to MC and that logic is dealt with by
-    # # the ScribblerWrapper.
+    (selection_producer, NullCollector()),
+    # Weighters. The generally just apply to MC and that logic is dealt with by
+    # the ScribblerWrapper.
     (weight_xsection_lumi, NullCollector()),
     (weight_pdf_scale, NullCollector()),
     (weight_pu, NullCollector()),
@@ -351,5 +359,5 @@ sequence = [
     (weight_prefiring, NullCollector()),
     # Add collectors (with accompanying readers) at the end so that all
     # event attributes are available to them
-    (sqlite_reader, sqlite_collector),
+    (sqlite_reader, NullCollector()),
 ]

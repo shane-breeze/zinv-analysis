@@ -21,6 +21,12 @@ class DummyEvent(object):
         self.RC2 = DummyColl()
         self.cache = {}
 
+    def register_function(self, event, name, function):
+        self.__dict__[name] = function
+
+    def hasbranch(self, branch):
+        return hasattr(self, branch)
+
 @pytest.fixture()
 def event():
     return DummyEvent()
@@ -73,7 +79,7 @@ def test_objxclean_attr(module, event, inputs, outputs):
     event.C1.eta = awk.JaggedArray.fromiter(inputs["c1_eta"]).astype(np.float32)
     event.C1.phi = awk.JaggedArray.fromiter(inputs["c1_phi"]).astype(np.float32)
 
-    def rc1_call(ev, attr):
+    def rc1_call(ev, source, nsig, attr):
         if attr == "eta":
             return awk.JaggedArray.fromiter(
                 inputs["rc1_eta"],
@@ -87,7 +93,7 @@ def test_objxclean_attr(module, event, inputs, outputs):
             assert False
     event.RC1 = mock.Mock(side_effect=rc1_call)
 
-    def rc2_call(ev, attr):
+    def rc2_call(ev, source, nsig, attr):
         if attr == "eta":
             return awk.JaggedArray.fromiter(
                 inputs["rc2_eta"],
@@ -102,7 +108,7 @@ def test_objxclean_attr(module, event, inputs, outputs):
     event.RC2 = mock.Mock(side_effect=rc2_call)
 
     module.begin(event)
-    xclean = event.C1_XCleanMask(event)
+    xclean = event.C1_XCleanMask(event, inputs["source"], inputs["nsig"])
     oxclean = awk.JaggedArray.fromiter(outputs["xclean"]).astype(np.bool8)
 
     assert np.array_equal(xclean.starts, oxclean.starts)

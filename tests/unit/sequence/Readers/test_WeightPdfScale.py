@@ -16,14 +16,19 @@ class DummyEvent(object):
         self.nsig = 0.
         self.attribute_variation_sources = []
         self.cache = {}
+        self._nonbranch_cache = {}
 
         self.config = mock.MagicMock()
 
-    def delete_branches(self, branches):
-        pass
-
     def hasbranch(self, branch):
-        return True
+        return hasattr(self, branch)
+
+    def __getattr__(self, attr):
+        if attr in self._nonbranch_cache:
+            return self._nonbranch_cache[attr]
+        elif attr in self.cache:
+            return self.cache[attr]
+        return self.__dict__[attr]
 
 @pytest.fixture()
 def event():

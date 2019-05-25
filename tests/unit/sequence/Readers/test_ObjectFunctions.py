@@ -2,6 +2,7 @@ import pytest
 import mock
 import numpy as np
 import awkward as awk
+import collections
 
 from zinv.sequence.Readers import ObjectFunctions
 
@@ -16,7 +17,7 @@ class DummyEvent(object):
         self.source = ''
         self.cache = {}
         self.attribute_variation_sources = [
-            "Var1", "muonPtScale", "eleEnergyScale", "photonEnergyScale",
+            "Var1", "muonPtScale", "eleEnergyScaleBug", "photonEnergyScale",
             "jesTotal", "jerSF", "unclust",
         ]
 
@@ -26,6 +27,12 @@ class DummyEvent(object):
         self.Photon = DummyColl()
         self.Tau = DummyColl()
         self.MET = DummyColl()
+
+    def register_function(self, event, name, function):
+        self.__dict__[name] = function
+
+    def hasbranch(self, branch):
+        return hasattr(self, branch)
 
 @pytest.fixture()
 def event():
@@ -134,7 +141,7 @@ def test_objfunc_jptshift(module, event, inputs, outputs):
         ))
 
     module.begin(event)
-    jptshift = event.Jet_ptShift(event)
+    jptshift = event.Jet_ptShift(event, event.source, event.nsig)
 
     assert np.array_equal(jptshift.starts, np.array(inputs["starts"]))
     assert np.array_equal(jptshift.stops, np.array(inputs["stops"]))
@@ -170,14 +177,14 @@ def test_jet_dphimet(module, event, inputs, outputs):
     module.begin(event)
 
     mephi = np.array(inputs["mephi"], dtype=np.float32)
-    event.MET.phiShift = mock.Mock(side_effect=lambda ev: mephi)
-    event.MET_phiShift = mock.Mock(side_effect=lambda ev: mephi)
+    event.MET.phiShift = mock.Mock(side_effect=lambda ev, source, nsig: mephi)
+    event.MET_phiShift = mock.Mock(side_effect=lambda ev, source, nsig: mephi)
 
     jphi = awk.JaggedArray.fromiter(inputs["jphi"]).astype(np.float32)
     event.Jet.phi = jphi
     event.Jet_phi = jphi
 
-    jdphimet = event.Jet_dphiMET(event)
+    jdphimet = event.Jet_dphiMET(event, event.source, event.nsig)
     ojdphimet = awk.JaggedArray.fromiter(outputs["jdphimet"]).astype(np.float32)
     assert np.array_equal(jdphimet.starts, ojdphimet.starts)
     assert np.array_equal(jdphimet.stops, ojdphimet.stops)
@@ -250,7 +257,7 @@ def test_objfunc_muptshift(module, event, inputs, outputs):
         setattr(event, "Muon_{}".format(key), jagarr)
 
     module.begin(event)
-    mptshift = event.Muon_ptShift(event)
+    mptshift = event.Muon_ptShift(event, event.source, event.nsig)
 
     assert np.array_equal(mptshift.starts, np.array(inputs["starts"]))
     assert np.array_equal(mptshift.stops, np.array(inputs["stops"]))
@@ -275,7 +282,7 @@ def test_objfunc_muptshift(module, event, inputs, outputs):
             "eptshift": [20., 40., 60., 80.],
         }], [{
             "nsig":   1,
-            "source": 'eleEnergyScale',
+            "source": 'eleEnergyScaleBug',
             "starts": [0, 1, 2],
             "stops":  [1, 2, 4],
             "ept":    [20., 40., 60., 80.],
@@ -286,7 +293,7 @@ def test_objfunc_muptshift(module, event, inputs, outputs):
             "eptshift": [21., 42., 64., 88.],
         }], [{
             "nsig":   -1,
-            "source": 'eleEnergyScale',
+            "source": 'eleEnergyScaleBug',
             "starts": [0, 1, 2],
             "stops":  [1, 2, 4],
             "ept":    [20., 40., 60., 80.],
@@ -323,7 +330,7 @@ def test_objfunc_eptshift(module, event, inputs, outputs):
         setattr(event, "Electron_{}".format(key), jagarr)
 
     module.begin(event)
-    eptshift = event.Electron_ptShift(event)
+    eptshift = event.Electron_ptShift(event, event.source, event.nsig)
 
     assert np.array_equal(eptshift.starts, np.array(inputs["starts"]))
     assert np.array_equal(eptshift.stops, np.array(inputs["stops"]))
@@ -396,7 +403,7 @@ def test_objfunc_yptshift(module, event, inputs, outputs):
         setattr(event, "Photon_{}".format(key), jagarr)
 
     module.begin(event)
-    yptshift = event.Photon_ptShift(event)
+    yptshift = event.Photon_ptShift(event, event.source, event.nsig)
 
     assert np.array_equal(yptshift.starts, np.array(inputs["starts"]))
     assert np.array_equal(yptshift.stops, np.array(inputs["stops"]))
@@ -469,7 +476,7 @@ def test_objfunc_tptshift(module, event, inputs, outputs):
         setattr(event, "Tau_{}".format(key), jagarr)
 
     module.begin(event)
-    tptshift = event.Tau_ptShift(event)
+    tptshift = event.Tau_ptShift(event, event.source, event.nsig)
 
     assert np.array_equal(tptshift.starts, np.array(inputs["starts"]))
     assert np.array_equal(tptshift.stops, np.array(inputs["stops"]))
@@ -560,6 +567,18 @@ def test_objfunc_tptshift(module, event, inputs, outputs):
     )
 )
 def test_objfunc_metshift(module, event, inputs, outputs):
+    event.Electron_pt = awk.JaggedArray.fromiter([[],[],[]]).astype(np.float32)
+    event.Muon_pt = awk.JaggedArray.fromiter([[],[],[]]).astype(np.float32)
+    event.Tau_pt = awk.JaggedArray.fromiter([[],[],[]]).astype(np.float32)
+    event.Photon_pt = awk.JaggedArray.fromiter([[],[],[]]).astype(np.float32)
+
+    def sele(ev, source, nsig, attr):
+        return awk.JaggedArray.fromiter([[],[],[]]).astype(np.float32)
+    event.ElectronSelection = mock.Mock(side_effect=sele)
+    event.MuonSelection = mock.Mock(side_effect=sele)
+    event.TauSelection = mock.Mock(side_effect=sele)
+    event.PhotonSelection = mock.Mock(side_effect=sele)
+
     event.nsig = inputs["nsig"]
     event.source = inputs["source"]
 
@@ -583,10 +602,10 @@ def test_objfunc_metshift(module, event, inputs, outputs):
         setattr(event, "MET_"+key, np.array(val, dtype=np.float32))
 
     module.begin(event)
-    event.Jet.ptShift = mock.Mock(side_effect=lambda ev: jptshift)
-    event.Jet_ptShift = mock.Mock(side_effect=lambda ev: jptshift)
-    metshift = event.MET_ptShift(event)
-    mephishift = event.MET_phiShift(event)
+    event.Jet.ptShift = mock.Mock(side_effect=lambda ev, source, nsig: jptshift)
+    event.Jet_ptShift = mock.Mock(side_effect=lambda ev, source, nsig: jptshift)
+    metshift = event.MET_ptShift(event, event.source, event.nsig)
+    mephishift = event.MET_phiShift(event, event.source, event.nsig)
 
     assert np.allclose(
         metshift,
@@ -634,7 +653,7 @@ def test_objfunc_xclean(module, event, inputs, outputs):
     xclean_mask = awk.JaggedArray.fromiter(inputs["xclean"]).astype(np.bool8)
     mask = awk.JaggedArray.fromiter(inputs["mask"]).astype(np.bool8)
 
-    def cpt(ev):
+    def cpt(ev, source, nsig):
         return pt
 
     for objname, selection, xclean in selections:
@@ -644,14 +663,14 @@ def test_objfunc_xclean(module, event, inputs, outputs):
             setattr(event, objname+"_pt", cpt)
         setattr(
             event, "{}_{}Mask".format(objname, selection),
-            mock.Mock(side_effect=lambda ev: mask),
+            mock.Mock(side_effect=lambda ev, source, nsig: mask),
         )
         if xclean:
             if hasattr(event, "{}_XCleanMask"):
                 continue
             setattr(
                 event, "{}_XCleanMask".format(objname),
-                mock.Mock(side_effect=lambda ev: xclean_mask),
+                mock.Mock(side_effect=lambda ev, source, nsig: xclean_mask),
             )
 
     pt_noxclean = awk.JaggedArray.fromiter(
@@ -663,9 +682,9 @@ def test_objfunc_xclean(module, event, inputs, outputs):
 
     module.begin(event)
     for objname, selection, xclean in selections:
-        out_mask = getattr(event, selection)(event, 'pt')
+        out_mask = getattr(event, selection)(event, event.source, event.nsig, 'pt')
         if xclean:
-            out_noxclean = getattr(event, selection+"NoXClean")(event, 'pt')
+            out_noxclean = getattr(event, selection+"NoXClean")(event, event.source, event.nsig, 'pt')
             assert np.array_equal(out_mask.starts, pt_mask.starts)
             assert np.array_equal(out_mask.stops, pt_mask.stops)
             assert np.array_equal(out_mask.content, pt_mask.content)

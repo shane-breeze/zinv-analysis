@@ -12,6 +12,9 @@ class DummyEvent(object):
         self.config.dataset.name = "MET_Run2016F_v1"
         self.cache = {}
 
+    def register_function(self, event, name, function):
+        self.__dict__[name] = function
+
     def hasbranch(self, branch):
         return hasattr(self, branch)
 

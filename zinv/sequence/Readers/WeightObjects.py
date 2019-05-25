@@ -11,7 +11,9 @@ from functools import partial
 from zinv.utils.Lambda import Lambda
 from zinv.utils.NumbaFuncs import weight_numba, get_bin_indices
 
-def evaluate_object_weights(df, bins_vars, add_syst, name, nuisances):
+def evaluate_object_weights(
+    ev, source, nsig, df, bins_vars, add_syst, name,
+):
     @nb.njit
     def weighted_mean_numba(objattr, w, k, dkup, dkdown, addsyst, nweight):
         wsum = np.zeros_like(objattr, dtype=np.float32)
@@ -31,38 +33,28 @@ def evaluate_object_weights(df, bins_vars, add_syst, name, nuisances):
         unc_down = -1.*np.sqrt((wdkdownsum / wsum**2) + addsyst**2)
         return mean.astype(np.float32), unc_up.astype(np.float32), unc_down.astype(np.float32)
 
-    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_object_weights'))
-    def fevaluate_object_weights(ev, evidx, nsig, source, name_):
-        event_vars = [v(ev) for v in bins_vars]
-        for v in event_vars:
-            v.content[np.isnan(v.content)] = 0.
+    event_vars = [v(ev, source, nsig) for v in bins_vars]
+    for v in event_vars:
+        v.content[np.isnan(v.content)] = 0.
 
-        indices = get_bin_indices(
-            [event_vars[idx].content.astype(np.float32) for idx in range(len(event_vars))],
-            [df["bin{}_low".format(idx)].values.astype(np.float32) for idx in range(len(event_vars))],
-            [df["bin{}_upp".format(idx)].values.astype(np.float32) for idx in range(len(event_vars))],
-            df["weight"].unique().shape[0],
-        ).ravel()
-        dfw = df.iloc[indices]
+    indices = get_bin_indices(
+        [event_vars[idx].content.astype(np.float32) for idx in range(len(event_vars))],
+        [df["bin{}_low".format(idx)].values.astype(np.float32) for idx in range(len(event_vars))],
+        [df["bin{}_upp".format(idx)].values.astype(np.float32) for idx in range(len(event_vars))],
+        df["weight"].unique().shape[0],
+    ).ravel()
+    dfw = df.iloc[indices]
 
-        sf, sfup, sfdown = weighted_mean_numba(
-            event_vars[0].content, dfw["weight"].values, dfw["corr"].values,
-            dfw["unc_up"].values, dfw["unc_down"].values,
-            add_syst(ev).content, df["weight"].unique().shape[0],
-        )
+    sf, sfup, sfdown = weighted_mean_numba(
+        event_vars[0].content, dfw["weight"].values, dfw["corr"].values,
+        dfw["unc_up"].values, dfw["unc_down"].values,
+        add_syst(ev, source, nsig).content, df["weight"].unique().shape[0],
+    )
 
-        return awk.JaggedArray(
-            event_vars[0].starts, event_vars[0].stops,
-            weight_numba(sf, nsig, sfup, sfdown),
-        )
-
-    def return_evaluate_object_weights(ev):
-        source, nsig = ev.source, ev.nsig
-        if source not in nuisances:
-            source, nsig = '', 0.
-        return fevaluate_object_weights(ev, ev.iblock, nsig, source, name)
-
-    return return_evaluate_object_weights
+    return awk.JaggedArray(
+        event_vars[0].starts, event_vars[0].stops,
+        weight_numba(sf, nsig, sfup, sfdown),
+    )
 
 class WeightObjects(object):
     def __init__(self, **kwargs):
@@ -105,14 +97,14 @@ class WeightObjects(object):
         for corrector in self.correctors:
             vname = corrector["name"]
             cname = corrector["collection"]
-            setattr(
+            event.register_function(
                 event,
                 "{}_Weight{}SF".format(cname, vname),
-                evaluate_object_weights(
-                    corrector["df"],
-                    [self.lambda_functions[v] for v in corrector["binning_variables"]],
-                    self.lambda_functions[corrector["add_syst"]],
-                    vname, corrector["nuisances"],
+                partial(
+                    evaluate_object_weights, df=corrector["df"],
+                    bins_vars=[self.lambda_functions[v] for v in corrector["binning_variables"]],
+                    add_syst=self.lambda_functions[corrector["add_syst"]],
+                    name=vname,
                 ),
             )
 

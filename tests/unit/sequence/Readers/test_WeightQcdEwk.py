@@ -6,9 +6,6 @@ import awkward as awk
 
 from zinv.sequence.Readers import WeightQcdEwk
 
-class DummyColl(object):
-    pass
-
 class DummyEvent(object):
     def __init__(self):
         self.iblock = 0
@@ -16,9 +13,10 @@ class DummyEvent(object):
         self.nsig = 0.
         self.cache = {}
 
-        self.GenPartBoson = DummyColl()
-
         self.config = mock.MagicMock()
+
+    def register_function(self, event, name, function):
+        self.__dict__[name] = function
 
 @pytest.fixture()
 def event():
@@ -106,7 +104,7 @@ def test_weightqcdewk_init(module, path):
             "underflow": True,
             "overflow": True,
         }, {
-            "result":False,
+            "result": True,
         }],
     )
 )
@@ -292,12 +290,9 @@ def test_weightqcdewk_event(module, event, inputs, outputs):
     module.begin(event)
 
     vpt = np.array(inputs["vpt"], dtype=np.float32)
-    event.GenPartBoson.pt = vpt
-    event.GenPartBoson_pt = vpt
+    event.GenPartBoson = mock.Mock(side_effect=lambda ev, attr: vpt)
 
-    module.event(event)
-
-    weight = event.WeightQcdEwk(event)
+    weight = event.WeightQcdEwk(event, event.source, event.nsig)
     oweight = np.array(outputs["weight"], dtype=np.float32)
 
     print(inputs["parent"])

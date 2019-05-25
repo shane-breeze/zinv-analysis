@@ -19,6 +19,9 @@ class DummyEvent(object):
 
         self.Electron = DummyColl()
 
+    def register_function(self, event, name, function):
+        self.__dict__[name] = function
+
 @pytest.fixture()
 def path():
     toppath = os.path.abspath(os.environ["TOPDIR"])
@@ -36,30 +39,30 @@ def module(path):
             {
                 "name": "eleIdIsoTight",
                 "collection": "Electron",
-                "binning_variables": ("ev: ev.Electron.eta", "ev: ev.Electron_ptShift(ev)"),
+                "binning_variables": ("ev, source, nsig: ev.Electron.eta", "ev, source, nsig: ev.Electron_ptShift(ev, source, nsig)"),
                 "weighted_paths": [(1, path+"/electrons/electron_idiso_tight.txt")],
-                "add_syst": "ev: awk.JaggedArray.zeros_like(ev.Electron.eta)",
+                "add_syst": "ev, source, nsig: awk.JaggedArray.zeros_like(ev.Electron.eta)",
                 "nuisances": ["eleIdIsoTight", "eleEnergyScale"],
             }, {
                 "name": "eleIdIsoVeto",
                 "collection": "Electron",
-                "binning_variables": ("ev: ev.Electron.eta", "ev: ev.Electron_ptShift(ev)"),
+                "binning_variables": ("ev, source, nsig: ev.Electron.eta", "ev, source, nsig: ev.Electron_ptShift(ev, source, nsig)"),
                 "weighted_paths": [(1, path+"/electrons/electron_idiso_veto.txt")],
-                "add_syst": "ev: awk.JaggedArray.zeros_like(ev.Electron.eta)",
+                "add_syst": "ev, source, nsig: awk.JaggedArray.zeros_like(ev.Electron.eta)",
                 "nuisances": ["eleIdIsoVeto", "eleEnergyScale"],
             }, {
                 "name": "eleReco",
                 "collection": "Electron",
-                "binning_variables": ("ev: ev.Electron.eta", "ev: ev.Electron_ptShift(ev)"),
+                "binning_variables": ("ev, source, nsig: ev.Electron.eta", "ev, source, nsig: ev.Electron_ptShift(ev, source, nsig)"),
                 "weighted_paths": [(1, path+"/electrons/electron_reconstruction.txt")],
-                "add_syst": "ev: 0.01*((ev.Electron_ptShift(ev)<20) | (ev.Electron_ptShift(ev)>80))",
+                "add_syst": "ev, source, nsig: 0.01*((ev.Electron_ptShift(ev, source, nsig)<20) | (ev.Electron_ptShift(ev, source, nsig)>80))",
                 "nuisances": ["eleReco", "eleEnergyScale"],
             }, {
                 "name": "eleTrig",
                 "collection": "Electron",
-                "binning_variables": ("ev: ev.Electron_ptShift(ev)", "ev: np.abs(ev.Electron.eta)"),
+                "binning_variables": ("ev, source, nsig: ev.Electron_ptShift(ev, source, nsig)", "ev, source, nsig: np.abs(ev.Electron.eta)"),
                 "weighted_paths": [(1, path+"/electrons/electron_trigger_v2.txt")],
-                "add_syst": "ev: awk.JaggedArray.zeros_like(ev.Electron.eta)",
+                "add_syst": "ev, source, nsig: awk.JaggedArray.zeros_like(ev.Electron.eta)",
                 "nuisances": ["eleTrig", "eleEnergyScale"],
             },
         ],
@@ -108,10 +111,10 @@ def test_weightobjects_begin(module, event, inputs, outputs):
     event.Electron_eta = eleeta
 
     elept = awk.JaggedArray.fromiter(inputs["elept"]).astype(np.float32)
-    event.Electron.ptShift = mock.Mock(side_effect=lambda ev: elept)
-    event.Electron_ptShift = mock.Mock(side_effect=lambda ev: elept)
+    event.Electron.ptShift = mock.Mock(side_effect=lambda ev, source, nsig: elept)
+    event.Electron_ptShift = mock.Mock(side_effect=lambda ev, source, nsig: elept)
 
-    sf = getattr(event, "Electron_Weight{}SF".format(inputs["name"]))(event)
+    sf = getattr(event, "Electron_Weight{}SF".format(inputs["name"]))(event, event.source, event.nsig)
     osf = awk.JaggedArray.fromiter(outputs["sf"]).astype(np.float32)
 
     print(sf)

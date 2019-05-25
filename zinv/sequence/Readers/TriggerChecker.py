@@ -7,15 +7,12 @@ from cachetools import cachedmethod
 from cachetools.keys import hashkey
 from functools import partial
 
-def evaluate_triggers(triggers):
-    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_triggers'))
-    def fevaluate_triggers(ev, evidx, triggers_list):
-        return reduce(operator.or_, [
-            getattr(ev, trigger)
-            for trigger in triggers_list
-            if ev.hasbranch(trigger)
-        ])
-    return lambda ev: fevaluate_triggers(ev, ev.iblock, tuple(triggers))
+def evaluate_triggers(ev, triggers):
+    return reduce(operator.or_, [
+        getattr(ev, trigger)
+        for trigger in triggers
+        if ev.hasbranch(trigger)
+    ])
 
 class TriggerChecker(object):
     regex = re.compile("^(?P<dataset>[a-zA-Z0-9]*)_Run2016(?P<run_letter>[a-zA-Z])_v(?P<version>[0-9])$")
@@ -41,15 +38,15 @@ class TriggerChecker(object):
 
         if not isdata:
             for dataset in trigger_dict.keys():
-                setattr(
+                event.register_function(
                     event,
                     "Is{}Triggered".format(dataset),
                     lambda ev: np.ones(ev.size, dtype=float),
                 )
         else:
             for dataset, trigger_list in trigger_dict.items():
-                setattr(
+                event.register_function(
                     event,
                     "Is{}Triggered".format(dataset),
-                    evaluate_triggers(trigger_list),
+                    partial(evaluate_triggers, triggers=trigger_list),
                 )

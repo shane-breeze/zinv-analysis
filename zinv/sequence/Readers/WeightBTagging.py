@@ -30,51 +30,41 @@ def btag_formula(x, df):
         df["p6"].values.astype(np.float32),
     )
 
-def evaluate_btagsf(df, attrs, h2f):
-    @cachedmethod(operator.attrgetter('cache'), key=partial(hashkey, 'fevaluate_btagsf'))
-    def fevaluate_btagsf(ev, evidx, nsig, source, attrs_):
-        jet_flavour = dict_apply(h2f, ev.Jet.hadronFlavour.content)
+def evaluate_btagsf(ev, source, nsig, df, attrs, h2f):
+    jet_flavour = dict_apply(h2f, ev.Jet.hadronFlavour.content)
 
-        # Create mask
-        mask = np.ones((jet_flavour.shape[0], df.shape[0]), dtype=np.bool8)
+    # Create mask
+    mask = np.ones((jet_flavour.shape[0], df.shape[0]), dtype=np.bool8)
 
-        # Flavour mask
-        event_attrs = [jet_flavour.astype(np.float32)]
-        mins = [df["jetFlavor"].values.astype(np.float32)]
-        maxs = [(df["jetFlavor"].values+1).astype(np.float32)]
+    # Flavour mask
+    event_attrs = [jet_flavour.astype(np.float32)]
+    mins = [df["jetFlavor"].values.astype(np.float32)]
+    maxs = [(df["jetFlavor"].values+1).astype(np.float32)]
 
-        for jet_attr, df_attr in attrs_:
-            obj_attr = getattr(ev.Jet, jet_attr)
-            if callable(obj_attr):
-                obj_attr = obj_attr(ev)
-            event_attrs.append(obj_attr.content.astype(np.float32))
-            mins.append(df[df_attr+"Min"].values.astype(np.float32))
-            maxs.append(df[df_attr+"Max"].values.astype(np.float32))
+    for jet_attr, df_attr in attrs:
+        obj_attr = getattr(ev.Jet, jet_attr)
+        if callable(obj_attr):
+            obj_attr = obj_attr(ev, source, nsig)
+        event_attrs.append(obj_attr.content.astype(np.float32))
+        mins.append(df[df_attr+"Min"].values.astype(np.float32))
+        maxs.append(df[df_attr+"Max"].values.astype(np.float32))
 
-        # Create indices from mask
-        indices = get_bin_indices(event_attrs, mins, maxs, 3)
-        idx_central = indices[:,0]
-        idx_down = indices[:,1]
-        idx_up = indices[:,2]
+    # Create indices from mask
+    indices = get_bin_indices(event_attrs, mins, maxs, 3)
+    idx_central = indices[:,0]
+    idx_down = indices[:,1]
+    idx_up = indices[:,2]
 
-        jpt = ev.Jet.ptShift(ev)
-        sf = btag_formula(jpt.content, df.iloc[idx_central])
-        sf_up = btag_formula(jpt.content, df.iloc[idx_up])
-        sf_down = btag_formula(jpt.content, df.iloc[idx_down])
+    jpt = ev.Jet.ptShift(ev, source, nsig)
+    sf = btag_formula(jpt.content, df.iloc[idx_central])
+    sf_up = btag_formula(jpt.content, df.iloc[idx_up])
+    sf_down = btag_formula(jpt.content, df.iloc[idx_down])
 
-        sf_up = (source=="btagSF")*(sf_up/sf-1.)
-        sf_down = (source=="btagSF")*(sf_down/sf-1.)
-        return awk.JaggedArray(
-            jpt.starts, jpt.stops, weight_numba(sf, nsig, sf_up, sf_down),
-        )
-
-    def return_evaluate_btagsf(ev):
-        source, nsig = ev.source, ev.nsig
-        if source not in ev.attribute_variation_sources+["btagSF"]:
-            source, nsig = '', 0.
-        return fevaluate_btagsf(ev, ev.iblock, nsig, source, tuple(attrs))
-
-    return return_evaluate_btagsf
+    sf_up = (source=="btagSF")*(sf_up/sf-1.)
+    sf_down = (source=="btagSF")*(sf_down/sf-1.)
+    return awk.JaggedArray(
+        jpt.starts, jpt.stops, weight_numba(sf, nsig, sf_up, sf_down),
+    )
 
 class WeightBTagging(object):
     ops = {"loose": 0, "medium": 1, "tight": 2, "reshaping": 3}
@@ -120,9 +110,12 @@ class WeightBTagging(object):
         if self.operating_point == "reshaping":
             attrs.append(("btagCSVV2", "discr"))
 
-        setattr(event, "Jet_btagSF", evaluate_btagsf(
-            self.calibrations, attrs, self.hadron_to_flavour,
-        ))
+        event.register_function(
+            event, "Jet_btagSF", partial(
+                evaluate_btagsf, df=self.calibrations, attrs=attrs,
+                h2f=self.hadron_to_flavour,
+            ),
+        )
 
     def end(self):
         self.calibrations = None

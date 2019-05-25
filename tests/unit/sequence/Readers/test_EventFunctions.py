@@ -13,6 +13,12 @@ class DummyEvent(object):
         self.cache = {}
         self.attribute_variation_sources = ["unclust"]
 
+    def register_function(self, event, name, function):
+        self.__dict__[name] = function
+
+    def hasbranch(self, branch):
+        return hasattr(self, branch)
+
 @pytest.fixture()
 def event():
     return DummyEvent()
@@ -55,16 +61,16 @@ def test_metnox(event, module, inputs, outputs):
     event.nsig = inputs["nsig"]
     module.begin(event)
 
-    def met_ptshift(self):
+    def met_ptshift(self, source, nsig):
         return np.array(inputs["met"], dtype=np.float32)
     event.MET_ptShift = mock.Mock(side_effect=met_ptshift)
 
-    def met_phishift(self):
+    def met_phishift(self, source, nsig):
         return np.array(inputs["mephi"], dtype=np.float32)
     event.MET_phiShift = mock.Mock(side_effect=met_phishift)
 
-    def muon_selection(self, attr):
-        if attr == 'ptShift':
+    def muon_selection(self, source, nsig, attr):
+        if attr in ['ptShift', 'ptMETShift']:
             return awk.JaggedArray.fromiter(inputs["mupt"]).astype(np.float32)
         elif attr == 'phi':
             return awk.JaggedArray.fromiter(inputs["muphi"]).astype(np.float32)
@@ -73,8 +79,8 @@ def test_metnox(event, module, inputs, outputs):
             assert False
     event.MuonSelection = mock.Mock(side_effect=muon_selection)
 
-    def ele_selection(self, attr):
-        if attr == 'ptShift':
+    def ele_selection(self, source, nsig, attr):
+        if attr in ['ptShift', 'ptMETShift']:
             return awk.JaggedArray.fromiter(inputs["ept"]).astype(np.float32)
         elif attr == 'phi':
             return awk.JaggedArray.fromiter(inputs["ephi"]).astype(np.float32)
@@ -83,8 +89,8 @@ def test_metnox(event, module, inputs, outputs):
             assert False
     event.ElectronSelection = mock.Mock(side_effect=ele_selection)
 
-    metnox_pt = event.METnoX_pt(event)
-    metnox_phi = event.METnoX_phi(event)
+    metnox_pt = event.METnoX_pt(event, event.source, event.nsig)
+    metnox_phi = event.METnoX_phi(event, event.source, event.nsig)
 
     # Check arrays match with 0.0001% (1e-6)
     assert np.allclose(
@@ -137,16 +143,16 @@ def test_mindphi(event, module, inputs, outputs):
     module.begin(event)
 
     event.METnoX_phi = mock.Mock(
-        side_effect=lambda ev: np.array(inputs["mephinox"], dtype=np.float32),
+        side_effect=lambda ev, source, nsig: np.array(inputs["mephinox"], dtype=np.float32),
     )
 
-    def jet_selection(self, attr):
+    def jet_selection(self, source, nsig, attr):
         assert attr == 'phi'
         return awk.JaggedArray.fromiter(inputs["jphi"]).astype(np.float32)
     event.JetSelection = mock.Mock(side_effect=jet_selection)
 
     assert np.allclose(
-        event.MinDPhiJ1234METnoX(event),
+        event.MinDPhiJ1234METnoX(event, event.source, event.nsig),
         np.array(outputs["mindphi"], dtype=np.float32),
         rtol = 1e-6, equal_nan=True,
     )
@@ -180,14 +186,14 @@ def test_met_dcalo(event, module, inputs, outputs):
 
     event.CaloMET_pt = np.array(inputs["cmet"], dtype=np.float32)
     event.MET_ptShift = mock.Mock(
-        side_effect=lambda ev: np.array(inputs["met"], dtype=np.float32),
+        side_effect=lambda ev, source, nsig: np.array(inputs["met"], dtype=np.float32),
     )
     event.METnoX_pt = mock.Mock(
-        side_effect=lambda ev: np.array(inputs["metnox"], dtype=np.float32),
+        side_effect=lambda ev, source, nsig: np.array(inputs["metnox"], dtype=np.float32),
     )
 
     assert np.allclose(
-        event.MET_dCaloMET(event),
+        event.MET_dCaloMET(event, event.source, event.nsig),
         np.array(outputs["dcalomet"], dtype=np.float32),
         rtol=1e-6, equal_nan=True,
     )
@@ -225,16 +231,16 @@ def test_mtw(event, module, inputs, outputs):
 
     module.begin(event)
 
-    def muon_selection(self, attr):
-        if attr == "ptShift":
+    def muon_selection(self, source, nsig, attr):
+        if attr in ["ptShift", "ptMETShift"]:
             return awk.JaggedArray.fromiter(inputs["mupt"]).astype(np.float32)
         elif attr == "phi":
             return awk.JaggedArray.fromiter(inputs["muphi"]).astype(np.float32)
         else:
             print(attr)
             assert False
-    def ele_selection(self, attr):
-        if attr == "ptShift":
+    def ele_selection(self, source, nsig, attr):
+        if attr in ["ptShift", "ptMETShift"]:
             return awk.JaggedArray.fromiter(inputs["ept"]).astype(np.float32)
         elif attr == "phi":
             return awk.JaggedArray.fromiter(inputs["ephi"]).astype(np.float32)
@@ -245,16 +251,16 @@ def test_mtw(event, module, inputs, outputs):
         return awk.JaggedArray([0, 0, 0, 0, 1], [0, 0, 0, 1, 2], content)
 
     event.MET_ptShift = mock.Mock(
-        side_effect = lambda ev: np.array(inputs["met"], dtype=np.float32),
+        side_effect = lambda ev, source, nsig: np.array(inputs["met"], dtype=np.float32),
     )
     event.MET_phiShift = mock.Mock(
-        side_effect = lambda ev: np.array(inputs["mephi"], dtype=np.float32),
+        side_effect = lambda ev, source, nsig: np.array(inputs["mephi"], dtype=np.float32),
     )
     event.MuonSelection = mock.Mock(side_effect=muon_selection)
     event.ElectronSelection = mock.Mock(side_effect=ele_selection)
 
     assert np.allclose(
-        event.MTW(event),
+        event.MTW(event, event.source, event.nsig),
         np.array(outputs["mtw"], dtype=np.float32),
         rtol=1e-6, equal_nan=True,
     )
@@ -297,8 +303,8 @@ def test_mll(event, module, inputs, outputs):
 
     module.begin(event)
 
-    def muon_selection(self, attr):
-        if attr == "ptShift":
+    def muon_selection(self, source, nsig, attr):
+        if attr in ["ptShift", "ptMETShift"]:
             return awk.JaggedArray.fromiter(inputs["mupt"]).astype(np.float32)
         elif attr == "eta":
             return awk.JaggedArray.fromiter(inputs["mueta"]).astype(np.float32)
@@ -309,8 +315,8 @@ def test_mll(event, module, inputs, outputs):
         else:
             print(attr)
             assert False
-    def ele_selection(self, attr):
-        if attr == "ptShift":
+    def ele_selection(self, source, nsig, attr):
+        if attr in ["ptShift", "ptMETShift"]:
             return awk.JaggedArray.fromiter(inputs["elpt"]).astype(np.float32)
         elif attr == "eta":
             return awk.JaggedArray.fromiter(inputs["eleta"]).astype(np.float32)
@@ -326,7 +332,7 @@ def test_mll(event, module, inputs, outputs):
     event.ElectronSelection = mock.Mock(side_effect=ele_selection)
 
     assert np.allclose(
-        event.MLL(event),
+        event.MLL(event, event.source, event.nsig),
         np.array(outputs["mll"], dtype=np.float32),
         rtol=1e-6, equal_nan=True,
     )
@@ -357,17 +363,17 @@ def test_lepton_charge(event, module, inputs, outputs):
 
     module.begin(event)
 
-    def muon_selection(self, attr):
+    def muon_selection(self, source, nsig, attr):
         assert attr == 'charge'
         return awk.JaggedArray.fromiter(inputs["mucharge"]).astype(np.int32)
-    def ele_selection(self, attr):
+    def ele_selection(self, source, nsig, attr):
         assert attr == 'charge'
         return awk.JaggedArray.fromiter(inputs["elcharge"]).astype(np.int32)
     event.MuonSelection = mock.Mock(side_effect=muon_selection)
     event.ElectronSelection = mock.Mock(side_effect=ele_selection)
 
     assert np.allclose(
-        event.LeptonCharge(event),
+        event.LeptonCharge(event, event.source, event.nsig),
         np.array(outputs["lepcharge"], dtype=np.int32),
         rtol=1e-6, equal_nan=True,
     )

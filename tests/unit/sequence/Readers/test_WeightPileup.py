@@ -17,6 +17,9 @@ class DummyEvent(object):
         self.attribute_variation_sources = []
         self.cache = {}
 
+    def register_function(self, event, name, function):
+        self.__dict__[name] = function
+
 @pytest.fixture()
 def event():
     return DummyEvent()
@@ -72,7 +75,7 @@ def test_weightpileup_begin(module, event, inputs, outputs):
     event.source = inputs["source"]
     module.begin(event)
     event.Pileup_nTrueInt = np.array(inputs["nTrueInt"], dtype=np.float32)
-    wpu = event.WeightPU(event)
+    wpu = event.WeightPU(event, event.source, event.nsig)
     owpu = np.array(outputs["wpu"], dtype=np.float32)
 
     print(wpu)
