@@ -32,11 +32,11 @@ def evaluate_metnox(ev, source, nsig, attr):
     arg = 1 if attr=='phi' else 0
     return metnox_numba(
         ev.MET_ptShift(ev, source, nsig), ev.MET_phiShift(ev, source, nsig),
-        ev.MuonSelection(ev, source, nsig, 'ptShift').content,
+        ev.MuonSelection(ev, source, nsig, 'ptMETShift').content,
         ev.MuonSelection(ev, source, nsig, 'phi').content,
         ev.MuonSelection(ev, source, nsig, 'phi').starts,
         ev.MuonSelection(ev, source, nsig, 'phi').stops,
-        ev.ElectronSelection(ev, source, nsig, 'ptShift').content,
+        ev.ElectronSelection(ev, source, nsig, 'ptMETShift').content,
         ev.ElectronSelection(ev, source, nsig, 'phi').content,
         ev.ElectronSelection(ev, source, nsig, 'phi').starts,
         ev.ElectronSelection(ev, source, nsig, 'phi').stops,

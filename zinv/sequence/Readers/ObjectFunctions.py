@@ -58,19 +58,39 @@ def tau_dphimet(ev, source, nsig):
     )
 
 def muon_pt_shift(ev, source, nsig):
-    shift = (source=="muonPtScale")*ev.Muon.ptErr.content/ev.Muon.pt.content
+    shift = ((source=="muonPtScale")*ev.Muon.ptErr.content/ev.Muon.pt.content).astype(np.float32)
+    return awk.JaggedArray(ev.Muon.pt.starts, ev.Muon.pt.stops, pt_shift_numba(
+        ev.Muon.pt.content, nsig, shift, -1.*shift
+    ))
+
+def muon_pt_met(ev, source, nsig):
+    shift = ((source=="muonPtScale")*0.002*np.ones_like(ev.Muon.pt.content)).astype(np.float32)
     return awk.JaggedArray(ev.Muon.pt.starts, ev.Muon.pt.stops, pt_shift_numba(
         ev.Muon.pt.content, nsig, shift, -1.*shift
     ))
 
 def ele_pt_shift(ev, source, nsig):
-    shift = (source=="eleEnergyScale")*ev.Electron_energyErr.content/ev.Electron.pt.content
+    shift = ((source=="eleEnergyScaleBug")*ev.Electron_energyErr.content/ev.Electron.pt.content).astype(np.float32)
+    return awk.JaggedArray(ev.Electron.pt.starts, ev.Electron.pt.stops, pt_shift_numba(
+        ev.Electron.pt.content, nsig, shift, -shift
+    ))
+
+def ele_pt_met(ev, source, nsig):
+    shift = ((source=="eleEnergyScale")*(0.006*(ev.Electron_eta<=1.479) + 0.015*(ev.Electron_eta>1.479))).astype(np.float32).content
     return awk.JaggedArray(ev.Electron.pt.starts, ev.Electron.pt.stops, pt_shift_numba(
         ev.Electron.pt.content, nsig, shift, -shift
     ))
 
 def photon_pt_shift(ev, source, nsig):
-    shift = (source=="photonEnergyScale")*ev.Photon_energyErr.content/ev.Photon.pt.content
+    shift = ((source=="photonEnergyScale")*ev.Photon_energyErr.content/ev.Photon.pt.content).astype(np.float32)
+    result = awk.JaggedArray(ev.Photon.pt.starts, ev.Photon.pt.stops, pt_shift_numba(
+        ev.Photon.pt.content, nsig, shift, -shift
+    ))
+    result.content[np.isnan(result).content] = 0.
+    return result
+
+def photon_pt_met(ev, source, nsig):
+    shift = ((source=="photonEnergyScale")*(0.01*(ev.Photon_eta<=1.479) + 0.025*(ev.Photon_eta>1.479))).astype(np.float32).content
     result = awk.JaggedArray(ev.Photon.pt.starts, ev.Photon.pt.stops, pt_shift_numba(
         ev.Photon.pt.content, nsig, shift, -shift
     ))
@@ -85,6 +105,7 @@ def met_shift(ev, source, nsig, attr):
         "float32[:],float32[:],float32[:],int64[:],int64[:],"
         "float32[:],float32[:],float32[:],int64[:],int64[:],"
         "float32[:],float32[:],float32[:],int64[:],int64[:],"
+        "float32[:],float32[:],float32[:],int64[:],int64[:],"
         "float32[:],float32[:],float32"
         ")"
     ])
@@ -94,6 +115,7 @@ def met_shift(ev, source, nsig, attr):
         ept, eptcorr, ephi, estarts, estops,
         mpt, mptcorr, mphi, mstarts, mstops,
         ppt, pptcorr, pphi, pstarts, pstops,
+        tpt, tptcorr, tphi, tstarts, tstops,
         metuncx, metuncy, nsig,
     ):
         jpx_old, jpy_old = RadToCart2D(jpt, jphi)
@@ -104,10 +126,12 @@ def met_shift(ev, source, nsig, attr):
         mpx_new, mpy_new = RadToCart2D(mptcorr, mphi)
         ppx_old, ppy_old = RadToCart2D(ppt, pphi)
         ppx_new, ppy_new = RadToCart2D(pptcorr, pphi)
+        tpx_old, tpy_old = RadToCart2D(tpt, tphi)
+        tpx_new, tpy_new = RadToCart2D(tptcorr, tphi)
 
         mex, mey = RadToCart2D(met, mephi)
-        for iev, (jsta, jsto, esta, esto, msta, msto, psta, psto) in enumerate(zip(
-            jstarts, jstops, estarts, estops, mstarts, mstops, pstarts, pstops,
+        for iev, (jsta, jsto, esta, esto, msta, msto, psta, psto, tsta, tsto) in enumerate(zip(
+            jstarts, jstops, estarts, estops, mstarts, mstops, pstarts, pstops, tstarts, tstops,
         )):
             for iob in range(jsta, jsto):
                 mex[iev] += (jpx_old[iob] - jpx_new[iob])
@@ -121,6 +145,9 @@ def met_shift(ev, source, nsig, attr):
             for iob in range(psta, psto):
                 mex[iev] += (ppx_old[iob] - ppx_new[iob])
                 mey[iev] += (ppy_old[iob] - ppy_new[iob])
+            for iob in range(tsta, tsto):
+                mex[iev] += (tpx_old[iob] - tpx_new[iob])
+                mey[iev] += (tpy_old[iob] - tpy_new[iob])
 
         mex += nsig*metuncx
         mey += nsig*metuncy
@@ -133,12 +160,26 @@ def met_shift(ev, source, nsig, attr):
         ev.MET_pt, ev.MET_phi,
         ev.Jet_pt.content, ev.Jet_ptShift(ev, source, nsig).content,
         ev.Jet_phi.content, ev.Jet_pt.starts, ev.Jet_pt.stops,
-        ev.Electron_pt.content, ev.Electron_ptShift(ev, source, nsig).content,
-        ev.Electron_phi.content, ev.Electron_pt.starts, ev.Electron_pt.stops,
-        ev.Muon_pt.content, ev.Muon_ptShift(ev, source, nsig).content,
-        ev.Muon_phi.content, ev.Muon_pt.starts, ev.Muon_pt.stops,
-        ev.Photon_pt[photon_mask].content, ev.Photon_ptShift(ev, source, nsig)[photon_mask].content,
-        ev.Photon_phi[photon_mask].content, ev.Photon_pt[photon_mask].starts, ev.Photon_pt[photon_mask].stops,
+        ev.ElectronSelection(ev, source, nsig, 'pt').content,
+        ev.ElectronSelection(ev, source, nsig, 'ptMETShift').content,
+        ev.ElectronSelection(ev, source, nsig, 'phi').content,
+        ev.ElectronSelection(ev, source, nsig, 'phi').starts,
+        ev.ElectronSelection(ev, source, nsig, 'phi').stops,
+        ev.MuonSelection(ev, source, nsig, 'pt').content,
+        ev.MuonSelection(ev, source, nsig, 'ptMETShift').content,
+        ev.MuonSelection(ev, source, nsig, 'phi').content,
+        ev.MuonSelection(ev, source, nsig, 'phi').starts,
+        ev.MuonSelection(ev, source, nsig, 'phi').stops,
+        ev.PhotonSelection(ev, source, nsig, 'pt').content,
+        ev.PhotonSelection(ev, source, nsig, 'ptMETShift').content,
+        ev.PhotonSelection(ev, source, nsig, 'phi').content,
+        ev.PhotonSelection(ev, source, nsig, 'phi').starts,
+        ev.PhotonSelection(ev, source, nsig, 'phi').stops,
+        ev.TauSelection(ev, source, nsig, 'pt').content,
+        ev.TauSelection(ev, source, nsig, 'ptMETShift').content,
+        ev.TauSelection(ev, source, nsig, 'phi').content,
+        ev.TauSelection(ev, source, nsig, 'phi').starts,
+        ev.TauSelection(ev, source, nsig, 'phi').stops,
         (source=="unclust")*ev.MET_MetUnclustEnUpDeltaX,
         (source=="unclust")*ev.MET_MetUnclustEnUpDeltaY,
         nsig,
@@ -162,9 +203,13 @@ class ObjectFunctions(object):
     def begin(self, event):
         event.register_function(event, "Jet_ptShift", jet_pt_shift)
         event.register_function(event, "Muon_ptShift", muon_pt_shift)
+        event.register_function(event, "Muon_ptMETShift", muon_pt_met)
         event.register_function(event, "Electron_ptShift", ele_pt_shift)
+        event.register_function(event, "Electron_ptMETShift", ele_pt_met)
         event.register_function(event, "Photon_ptShift", photon_pt_shift)
+        event.register_function(event, "Photon_ptMETShift", photon_pt_met)
         event.register_function(event, "Tau_ptShift", lambda ev, source, nsig: ev.Tau_pt)
+        event.register_function(event, "Tau_ptMETShift", lambda ev, source, nsig: ev.Tau_pt*(1+nsig*0.03))
         event.register_function(event, "MET_ptShift", partial(met_shift, attr='pt'))
         event.register_function(event, "MET_phiShift", partial(met_shift, attr='phi'))
         event.register_function(event, "Jet_dphiMET", jet_dphimet)
