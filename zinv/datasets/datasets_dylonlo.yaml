@@ -15,7 +15,7 @@ datasets:
             - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_LO/trees/nanoAOD_8.root
             - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_LO/trees/nanoAOD_9.root
         isdata: false
-        name: DYJetsToLL
+        name: DYJetsToLL_LO
         nevents: 49144274
         parent: DYJetsToLL
         sumweights: 49144274.0
@@ -45,7 +45,7 @@ datasets:
             - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_LO_ext1/trees/nanoAOD_8.root
             - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_LO_ext1/trees/nanoAOD_9.root
         isdata: false
-        name: DYJetsToLL
+        name: DYJetsToLL_LO_ext1
         nevents: 96629816
         parent: DYJetsToLL
         sumweights: 96629816.0
@@ -80,7 +80,7 @@ datasets:
             - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_NLO/trees/nanoAOD_8.root
             - /vols/cms/ZinvWidth/NanoAOD/201904_Apr/data/DYJetsToLL_NLO/trees/nanoAOD_9.root
         isdata: false
-        name: DYJetsToLL
+        name: DYJetsToLL_NLO
         nevents: 122055388
         parent: DYJetsToLL
         sumweights: 1917228144467.0156
