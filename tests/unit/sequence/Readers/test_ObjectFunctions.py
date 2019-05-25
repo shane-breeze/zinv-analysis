@@ -2,6 +2,7 @@ import pytest
 import mock
 import numpy as np
 import awkward as awk
+import collections
 
 from zinv.sequence.Readers import ObjectFunctions
 
@@ -16,7 +17,7 @@ class DummyEvent(object):
         self.source = ''
         self.cache = {}
         self.attribute_variation_sources = [
-            "Var1", "muonPtScale", "eleEnergyScale", "photonEnergyScale",
+            "Var1", "muonPtScale", "eleEnergyScaleBug", "photonEnergyScale",
             "jesTotal", "jerSF", "unclust",
         ]
 
@@ -281,7 +282,7 @@ def test_objfunc_muptshift(module, event, inputs, outputs):
             "eptshift": [20., 40., 60., 80.],
         }], [{
             "nsig":   1,
-            "source": 'eleEnergyScale',
+            "source": 'eleEnergyScaleBug',
             "starts": [0, 1, 2],
             "stops":  [1, 2, 4],
             "ept":    [20., 40., 60., 80.],
@@ -292,7 +293,7 @@ def test_objfunc_muptshift(module, event, inputs, outputs):
             "eptshift": [21., 42., 64., 88.],
         }], [{
             "nsig":   -1,
-            "source": 'eleEnergyScale',
+            "source": 'eleEnergyScaleBug',
             "starts": [0, 1, 2],
             "stops":  [1, 2, 4],
             "ept":    [20., 40., 60., 80.],
@@ -566,6 +567,18 @@ def test_objfunc_tptshift(module, event, inputs, outputs):
     )
 )
 def test_objfunc_metshift(module, event, inputs, outputs):
+    event.Electron_pt = awk.JaggedArray.fromiter([[],[],[]]).astype(np.float32)
+    event.Muon_pt = awk.JaggedArray.fromiter([[],[],[]]).astype(np.float32)
+    event.Tau_pt = awk.JaggedArray.fromiter([[],[],[]]).astype(np.float32)
+    event.Photon_pt = awk.JaggedArray.fromiter([[],[],[]]).astype(np.float32)
+
+    def sele(ev, source, nsig, attr):
+        return awk.JaggedArray.fromiter([[],[],[]]).astype(np.float32)
+    event.ElectronSelection = mock.Mock(side_effect=sele)
+    event.MuonSelection = mock.Mock(side_effect=sele)
+    event.TauSelection = mock.Mock(side_effect=sele)
+    event.PhotonSelection = mock.Mock(side_effect=sele)
+
     event.nsig = inputs["nsig"]
     event.source = inputs["source"]
 
@@ -640,7 +653,7 @@ def test_objfunc_xclean(module, event, inputs, outputs):
     xclean_mask = awk.JaggedArray.fromiter(inputs["xclean"]).astype(np.bool8)
     mask = awk.JaggedArray.fromiter(inputs["mask"]).astype(np.bool8)
 
-    def cpt(ev):
+    def cpt(ev, source, nsig):
         return pt
 
     for objname, selection, xclean in selections:
