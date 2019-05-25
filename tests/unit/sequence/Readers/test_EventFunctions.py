@@ -70,7 +70,7 @@ def test_metnox(event, module, inputs, outputs):
     event.MET_phiShift = mock.Mock(side_effect=met_phishift)
 
     def muon_selection(self, source, nsig, attr):
-        if attr == 'ptShift':
+        if attr in ['ptShift', 'ptMETShift']:
             return awk.JaggedArray.fromiter(inputs["mupt"]).astype(np.float32)
         elif attr == 'phi':
             return awk.JaggedArray.fromiter(inputs["muphi"]).astype(np.float32)
@@ -80,7 +80,7 @@ def test_metnox(event, module, inputs, outputs):
     event.MuonSelection = mock.Mock(side_effect=muon_selection)
 
     def ele_selection(self, source, nsig, attr):
-        if attr == 'ptShift':
+        if attr in ['ptShift', 'ptMETShift']:
             return awk.JaggedArray.fromiter(inputs["ept"]).astype(np.float32)
         elif attr == 'phi':
             return awk.JaggedArray.fromiter(inputs["ephi"]).astype(np.float32)
@@ -232,7 +232,7 @@ def test_mtw(event, module, inputs, outputs):
     module.begin(event)
 
     def muon_selection(self, source, nsig, attr):
-        if attr == "ptShift":
+        if attr in ["ptShift", "ptMETShift"]:
             return awk.JaggedArray.fromiter(inputs["mupt"]).astype(np.float32)
         elif attr == "phi":
             return awk.JaggedArray.fromiter(inputs["muphi"]).astype(np.float32)
@@ -240,7 +240,7 @@ def test_mtw(event, module, inputs, outputs):
             print(attr)
             assert False
     def ele_selection(self, source, nsig, attr):
-        if attr == "ptShift":
+        if attr in ["ptShift", "ptMETShift"]:
             return awk.JaggedArray.fromiter(inputs["ept"]).astype(np.float32)
         elif attr == "phi":
             return awk.JaggedArray.fromiter(inputs["ephi"]).astype(np.float32)
@@ -304,7 +304,7 @@ def test_mll(event, module, inputs, outputs):
     module.begin(event)
 
     def muon_selection(self, source, nsig, attr):
-        if attr == "ptShift":
+        if attr in ["ptShift", "ptMETShift"]:
             return awk.JaggedArray.fromiter(inputs["mupt"]).astype(np.float32)
         elif attr == "eta":
             return awk.JaggedArray.fromiter(inputs["mueta"]).astype(np.float32)
@@ -316,7 +316,7 @@ def test_mll(event, module, inputs, outputs):
             print(attr)
             assert False
     def ele_selection(self, source, nsig, attr):
-        if attr == "ptShift":
+        if attr in ["ptShift", "ptMETShift"]:
             return awk.JaggedArray.fromiter(inputs["elpt"]).astype(np.float32)
         elif attr == "eta":
             return awk.JaggedArray.fromiter(inputs["eleta"]).astype(np.float32)
