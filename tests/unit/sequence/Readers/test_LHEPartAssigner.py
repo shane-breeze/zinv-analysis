@@ -78,6 +78,11 @@ def test_lhe_module(lhe_module, event, starts, stops, pdgs, isele, ismu, istau):
         np.array(stops, dtype=np.int32),
         np.array(pdgs, dtype=np.int32),
     )
+    event.LHEPart_pdgId = awk.JaggedArray(
+        np.array(starts, dtype=np.int32),
+        np.array(stops, dtype=np.int32),
+        np.array(pdgs, dtype=np.int32),
+    )
     lhe_module.begin(event)
     assert np.array_equal(event.LeptonIs(event, 'Electron'), np.array(isele, dtype=np.bool8))
     assert np.array_equal(event.LeptonIs(event, 'Muon'), np.array(ismu, dtype=np.bool8))
