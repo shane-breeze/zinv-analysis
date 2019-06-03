@@ -1,5 +1,4 @@
 default: {energy: 13000, lumi: 35860}
-path: /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/{}/info.yaml
 datasets:
     DYJetsToLL:
         DAS: ""
@@ -48,6 +47,7 @@ datasets:
             /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_43.root,
             /vols/cms/ZinvWidth/NanoGENSIM/NanoGenSim/DYJetsToLL/trees/tree_44.root]
         isdata: false
+        name: "DYJetsToLL"
         nevents: 122055388
         parent: DYJetsToLL
         sumweights: 1917228220416.0

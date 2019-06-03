@@ -40,6 +40,8 @@ def parse_args():
     parser.add_argument("--mode", default="multiprocessing", type=str,
                         help="Which mode to run in (multiprocessing, htcondor, "
                              "sge)")
+    parser.add_argument("--sge-opts", default="-q hep.q -l h_rt=3:0:0 -l h_vmem=24G",
+                        type=str, help="SGE options")
     parser.add_argument("--ncores", default=0, type=int,
                         help="Number of cores to run on")
     parser.add_argument("--nblocks-per-dataset", default=-1, type=int,
@@ -205,11 +207,11 @@ vmem_dict = {
 }
 
 def run(sequence, datasets, options):
-    predetermined_nevents_in_file = {
-        d.files[idx]: d.file_nevents[idx]
-        for d in datasets
-        for idx in range(len(d.files))
-    }
+    #predetermined_nevents_in_file = {
+    #    d.files[idx]: d.file_nevents[idx]
+    #    for d in datasets
+    #    for idx in range(len(d.files))
+    #}
     process = AtUproot(
         options.outdir,
         quiet = options.quiet,
@@ -227,9 +229,7 @@ def run(sequence, datasets, options):
     # Change parallel options (SGE not supported in standard `build_parallel`)
     process.parallel_mode = options.mode
     if options.mode == 'sge':
-        dispatcher_options = {
-            "job_opts": "-l h_vmem=24G -l h_rt=3:0:0"
-        }
+        dispatcher_options = {"job_opts": options.sge_opts}
         dropbox_options = {}
     elif options.mode == 'htcondor':
         dispatcher_options = {

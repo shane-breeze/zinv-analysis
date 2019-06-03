@@ -2,7 +2,7 @@ import oyaml as yaml
 
 class Dataset(object):
     args = ["name", "parent", "isdata", "xsection", "lumi", "energy", "idx",
-            "sumweights", "files", "associates", "tree", "file_nevents"]
+            "sumweights", "files", "associates", "tree"] #, "file_nevents"]
     def __init__(self, **kwargs):
         kwargs.setdefault("associates", [])
         kwargs.setdefault("tree", "Events")
