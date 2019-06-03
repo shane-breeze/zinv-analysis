@@ -32,15 +32,39 @@ def evaluate_metnox(ev, source, nsig, attr):
     arg = 1 if attr=='phi' else 0
     return metnox_numba(
         ev.MET_ptShift(ev, source, nsig), ev.MET_phiShift(ev, source, nsig),
-        ev.MuonSelection(ev, source, nsig, 'ptMETShift').content,
+        ev.MuonSelection(ev, source, nsig, 'ptShift').content,
         ev.MuonSelection(ev, source, nsig, 'phi').content,
         ev.MuonSelection(ev, source, nsig, 'phi').starts,
         ev.MuonSelection(ev, source, nsig, 'phi').stops,
-        ev.ElectronSelection(ev, source, nsig, 'ptMETShift').content,
+        ev.ElectronSelection(ev, source, nsig, 'ptShift').content,
         ev.ElectronSelection(ev, source, nsig, 'phi').content,
         ev.ElectronSelection(ev, source, nsig, 'phi').starts,
         ev.ElectronSelection(ev, source, nsig, 'phi').stops,
     )[arg].astype(np.float32)
+
+def evaluate_metnox_sumet(ev, source, nsig):
+    @nb.njit(["float32[:](float32[:], float32[:], int64[:], int64[:], float32[:], int64[:], int64[:])"])
+    def nb_evaluate_metnox_sumet(
+        sumet, mpt, mstas, mstos, ept, estas, estos,
+    ):
+        csumet = np.zeros_like(sumet, dtype=np.float32)
+
+        for iev, (msta, msto, esta, esto) in enumerate(zip(
+            mstas, mstos, estas, estos,
+        )):
+            csumet[iev] = sumet[iev] - mpt[msta:msto].sum() - ept[esta:esto].sum()
+
+        return csumet
+
+    return nb_evaluate_metnox_sumet(
+        ev.MET_sumEtShift(ev, source, nsig),
+        ev.MuonSelection(ev, source, nsig, 'ptShift').content,
+        ev.MuonSelection(ev, source, nsig, 'phi').starts,
+        ev.MuonSelection(ev, source, nsig, 'phi').stops,
+        ev.ElectronSelection(ev, source, nsig, 'ptShift').content,
+        ev.ElectronSelection(ev, source, nsig, 'phi').starts,
+        ev.ElectronSelection(ev, source, nsig, 'phi').stops,
+    )
 
 def evaluate_mindphi(ev, source, nsig, njets):
     @nb.njit(["float32[:](float32[:],int64[:],int64[:],int64,float32[:])"])
@@ -209,6 +233,7 @@ class EventFunctions(object):
     def begin(self, event):
         event.register_function(event, "METnoX_pt", partial(evaluate_metnox, attr='pt'))
         event.register_function(event, "METnoX_phi", partial(evaluate_metnox, attr='phi'))
+        event.register_function(event, "METnoX_sumEt", partial(evaluate_metnox_sumet))
         event.register_function(event, "MinDPhiJ1234METnoX", partial(evaluate_mindphi, njets=4))
         event.register_function(event, "MET_dCaloMET", evaluate_met_dcalo)
         event.register_function(event, "MTW", evaluate_mtw)

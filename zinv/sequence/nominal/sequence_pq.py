@@ -311,9 +311,9 @@ selection_producer = Readers.SelectionProducer(
     name = "selection_producer",
 )
 
-hdf5_reader = Collectors.HDF5Reader(
-    name = "hdf5_reader",
-    cfg = os.path.join(collpath, "HDF5_cfg.yaml"),
+parquet_reader = Collectors.ParquetReader(
+    name = "parquet_reader",
+    cfg = os.path.join(collpath, "Parquet_cfg.yaml"),
 )
 
 sequence = [
@@ -357,5 +357,6 @@ sequence = [
     (weight_prefiring, NullCollector()),
     # Add collectors (with accompanying readers) at the end so that all
     # event attributes are available to them
-    (hdf5_reader, NullCollector()),
+    #(sqlite_reader, NullCollector()),
+    (parquet_reader, NullCollector()),
 ]

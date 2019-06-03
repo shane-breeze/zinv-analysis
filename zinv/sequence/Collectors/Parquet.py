@@ -1,10 +1,9 @@
-import numpy as np
 import pandas as pd
 import yaml
 
 from zinv.utils.Lambda import Lambda
 
-class HDF5Reader(object):
+class ParquetReader(object):
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
@@ -17,23 +16,6 @@ class HDF5Reader(object):
         self.dtypes = cfg["dtypes"]
 
     def begin(self, event):
-        try:
-            pd.DataFrame().to_hdf("result.h5", self.name, mode='w', format='table', complevel=9, complib='blosc:lz4hc')
-        except IOError:
-            pass
-        for source, nsig in self.variations:
-            updown = "Up" if nsig>=0. else "Down"
-            updown += "{:.2f}".format(np.abs(nsig)).replace(".", "p")
-            table_name = (
-                "_".join([self.name, source+updown])
-                if source != "" else
-                self.name
-            )
-            try:
-                pd.DataFrame().to_hdf("result.h5", table_name, mode='w', format='table', complevel=9, complib='blosc:lz4hc')
-            except IOError:
-                pass
-
         data_or_mc = "Data" if event.config.dataset.isdata else "MC"
         attributes = self.attributes["Both"]
         attributes.update(self.attributes[data_or_mc])
@@ -49,32 +31,31 @@ class HDF5Reader(object):
 
     def event(self, event):
         opts = ('', 0.)
+        path = "{}.pq".format(self.name)
         for df in self.chunk_events(event, opts=opts, chunksize=int(1e7)):
-            df.to_hdf(
-                "result.h5", self.name, format='table', append=True,
-                complevel=9, complib='blosc:lz4hc',
-            )
-        print("Created result.h5 with table {}".format(self.name))
+            df.to_parquet(path, engine='pyarrow', compression='snappy')
+        print("Created {}".format(path))
 
         for source, nsig in self.variations:
             opts = (source, nsig)
             updown = "Up" if nsig>=0. else "Down"
-            updown += "{:.2f}".format(np.abs(nsig)).replace(".", "p")
-            table_name = (
+            name = (
                 "_".join([self.name, source+updown])
                 if source != "" else
                 self.name
             )
+            path = "{}.pq".format(name)
 
             for df in self.chunk_events(event, opts=opts, chunksize=int(1e7)):
-                df.to_hdf(
-                    "result.h5", table_name, format='table', append=True,
-                    complevel=9, complib='blosc:lz4hc',
-                )
-                print("Create result.h5 with table {}".format(table_name))
+                df.to_parquet(path, engine='pyarrow', compression='snappy')
+            print("Create {}".format(path))
 
     def chunk_events(self, event, opts=[], chunksize=int(1e5)):
-        # currently not chunking
+        #for start in xrange(0, event.size, chunksize):
+            #stop = start+chunksize if start+chunksize<event.size else event.size
+
+        #data = {
+        #    attr: self.lambda_functions[selection](event, *opts)[start:stop]
         data = {
             attr: self.lambda_functions[selection](event, *opts)
             for attr, selection in self.attributes.items()

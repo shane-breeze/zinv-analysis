@@ -13,16 +13,15 @@ def pt_shift_numba(pt, nsig, up, down):
     return (pt*(1 + (nsig>=0)*nsig*up - (nsig<0)*nsig*down)).astype(np.float32)
 
 def jet_pt_shift(ev, source, nsig):
-    nominal = ev.Jet.pt
-    try:
-        up = getattr(ev.Jet, 'JEC{}Up'.format(source)).content
-        down = getattr(ev.Jet, 'JEC{}Down'.format(source)).content
-    except AttributeError:
-        up = np.zeros_like(nominal.content, dtype=np.float32)
-        down = np.zeros_like(nominal.content, dtype=np.float32)
-    return awk.JaggedArray(nominal.starts, nominal.stops, pt_shift_numba(
-        nominal.content, nsig, up, down,
-    ))
+    updo = 'Up' if nsig>=0. else 'Down'
+    if source=='jerSF':
+        variation = 1. + nsig*np.abs(getattr(ev, 'Jet_JECjerSF{}'.format(updo)))
+    elif source.startswith("jes"):
+        variation = 1. + nsig*np.abs(ev.Jet_jesSF(ev, source, nsig))
+    else:
+        variation = 1.
+
+    return ev.Jet_pt * variation
 
 def jet_dphimet(ev, source, nsig):
     @nb.njit(["float32[:](float32[:], float32[:], int64[:], int64[:])"])
@@ -70,7 +69,7 @@ def muon_pt_met(ev, source, nsig):
     ))
 
 def ele_pt_shift(ev, source, nsig):
-    shift = ((source=="eleEnergyScaleBug")*ev.Electron_energyErr.content/ev.Electron.pt.content).astype(np.float32)
+    shift = ((source=="eleEnergyScale")*ev.Electron_energyErr.content/ev.Electron.pt.content).astype(np.float32)
     return awk.JaggedArray(ev.Electron.pt.starts, ev.Electron.pt.stops, pt_shift_numba(
         ev.Electron.pt.content, nsig, shift, -shift
     ))
@@ -161,22 +160,22 @@ def met_shift(ev, source, nsig, attr):
         ev.Jet_pt.content, ev.Jet_ptShift(ev, source, nsig).content,
         ev.Jet_phi.content, ev.Jet_pt.starts, ev.Jet_pt.stops,
         ev.ElectronSelection(ev, source, nsig, 'pt').content,
-        ev.ElectronSelection(ev, source, nsig, 'ptMETShift').content,
+        ev.ElectronSelection(ev, source, nsig, 'ptShift').content,
         ev.ElectronSelection(ev, source, nsig, 'phi').content,
         ev.ElectronSelection(ev, source, nsig, 'phi').starts,
         ev.ElectronSelection(ev, source, nsig, 'phi').stops,
         ev.MuonSelection(ev, source, nsig, 'pt').content,
-        ev.MuonSelection(ev, source, nsig, 'ptMETShift').content,
+        ev.MuonSelection(ev, source, nsig, 'ptShift').content,
         ev.MuonSelection(ev, source, nsig, 'phi').content,
         ev.MuonSelection(ev, source, nsig, 'phi').starts,
         ev.MuonSelection(ev, source, nsig, 'phi').stops,
         ev.PhotonSelection(ev, source, nsig, 'pt').content,
-        ev.PhotonSelection(ev, source, nsig, 'ptMETShift').content,
+        ev.PhotonSelection(ev, source, nsig, 'ptShift').content,
         ev.PhotonSelection(ev, source, nsig, 'phi').content,
         ev.PhotonSelection(ev, source, nsig, 'phi').starts,
         ev.PhotonSelection(ev, source, nsig, 'phi').stops,
         ev.TauSelection(ev, source, nsig, 'pt').content,
-        ev.TauSelection(ev, source, nsig, 'ptMETShift').content,
+        ev.TauSelection(ev, source, nsig, 'ptShift').content,
         ev.TauSelection(ev, source, nsig, 'phi').content,
         ev.TauSelection(ev, source, nsig, 'phi').starts,
         ev.TauSelection(ev, source, nsig, 'phi').stops,
@@ -184,6 +183,62 @@ def met_shift(ev, source, nsig, attr):
         (source=="unclust")*ev.MET_MetUnclustEnUpDeltaY,
         nsig,
     )[arg_].astype(np.float32)
+
+def met_sumet_shift(ev, source, nsig):
+    @nb.njit(["float32[:]("
+        "float32[:],"
+        "float32[:],float32[:],int64[:],int64[:],"
+        "float32[:],float32[:],int64[:],int64[:],"
+        "float32[:],float32[:],int64[:],int64[:],"
+        "float32[:],float32[:],int64[:],int64[:],"
+        "float32[:],float32[:],int64[:],int64[:])"
+    ])
+    def nb_met_sumet_shift(
+        sumet,
+        jpt, cjpt, jstas, jstos,
+        ept, cept, estas, estos,
+        mpt, cmpt, mstas, mstos,
+        ypt, cypt, ystas, ystos,
+        tpt, ctpt, tstas, tstos,
+    ):
+        sumet_shift = np.zeros_like(sumet, dtype=np.float32)
+
+        for iev, (jsta, jsto, esta, esto, msta, msto, ysta, ysto, tsta, tsto) in enumerate(zip(
+            jstas, jstos, estas, estos, mstas, mstos, ystas, ystos, tstas, tstos,
+        )):
+            sumet_shift[iev] = (
+                sumet[iev]
+                + (cjpt[jsta:jsto] - jpt[jsta:jsto]).sum()
+                + (cept[esta:esto] - ept[esta:esto]).sum()
+                + (cmpt[msta:msto] - mpt[msta:msto]).sum()
+                + (cypt[ysta:ysto] - ypt[ysta:ysto]).sum()
+                + (ctpt[tsta:tsto] - tpt[tsta:tsto]).sum()
+            )
+        return sumet_shift
+
+    return nb_met_sumet_shift(
+        ev.MET_sumEt,
+        ev.JetSelection(ev, source, nsig, 'pt').content,
+        ev.JetSelection(ev, source, nsig, 'ptShift').content,
+        ev.JetSelection(ev, source, nsig, 'eta').starts,
+        ev.JetSelection(ev, source, nsig, 'eta').stops,
+        ev.ElectronSelection(ev, source, nsig, 'pt').content,
+        ev.ElectronSelection(ev, source, nsig, 'ptShift').content,
+        ev.ElectronSelection(ev, source, nsig, 'eta').starts,
+        ev.ElectronSelection(ev, source, nsig, 'eta').stops,
+        ev.MuonSelection(ev, source, nsig, 'pt').content,
+        ev.MuonSelection(ev, source, nsig, 'ptShift').content,
+        ev.MuonSelection(ev, source, nsig, 'eta').starts,
+        ev.MuonSelection(ev, source, nsig, 'eta').stops,
+        ev.PhotonSelection(ev, source, nsig, 'pt').content,
+        ev.PhotonSelection(ev, source, nsig, 'ptShift').content,
+        ev.PhotonSelection(ev, source, nsig, 'eta').starts,
+        ev.PhotonSelection(ev, source, nsig, 'eta').stops,
+        ev.TauSelection(ev, source, nsig, 'pt').content,
+        ev.TauSelection(ev, source, nsig, 'ptShift').content,
+        ev.TauSelection(ev, source, nsig, 'eta').starts,
+        ev.TauSelection(ev, source, nsig, 'eta').stops,
+    )
 
 def obj_selection(ev, source, nsig, attr, name, sele, xclean=False):
     mask = getattr(ev, "{}_{}Mask".format(name, sele))(ev, source, nsig)
@@ -203,15 +258,12 @@ class ObjectFunctions(object):
     def begin(self, event):
         event.register_function(event, "Jet_ptShift", jet_pt_shift)
         event.register_function(event, "Muon_ptShift", muon_pt_shift)
-        event.register_function(event, "Muon_ptMETShift", muon_pt_met)
         event.register_function(event, "Electron_ptShift", ele_pt_shift)
-        event.register_function(event, "Electron_ptMETShift", ele_pt_met)
         event.register_function(event, "Photon_ptShift", photon_pt_shift)
-        event.register_function(event, "Photon_ptMETShift", photon_pt_met)
         event.register_function(event, "Tau_ptShift", lambda ev, source, nsig: ev.Tau_pt)
-        event.register_function(event, "Tau_ptMETShift", lambda ev, source, nsig: ev.Tau_pt*(1+nsig*0.03))
         event.register_function(event, "MET_ptShift", partial(met_shift, attr='pt'))
         event.register_function(event, "MET_phiShift", partial(met_shift, attr='phi'))
+        event.register_function(event, "MET_sumEtShift", partial(met_sumet_shift))
         event.register_function(event, "Jet_dphiMET", jet_dphimet)
         event.register_function(event, "Tau_dphiMET", tau_dphimet)
 

@@ -11,7 +11,7 @@ import zinv.sequence.Collectors as Collectors
 
 event_tools = Readers.EventTools(
     name = "event_tools",
-    maxsize = int(2*1024**3), # 6 GB
+    maxsize = int(12*1024**3), # 6 GB
 )
 
 # Initialise readers and collectors
@@ -37,13 +37,46 @@ gen_part_assigner = Readers.GenPartAssigner(
     data = False,
 )
 
-sqlite_reader = Collectors.SqliteReader(
-    name = "sqlite_reader",
-    cfg = os.path.join(collpath, "Sqlite_cfg.yaml"),
+weight_xsection_lumi = Readers.WeightXsLumi(
+    name = "weight_xsection_lumi",
+    data = False,
 )
-sqlite_collector = Collectors.SqliteCollector(
-    name = "sqlite_collector",
-    cfg = os.path.join(collpath, "Sqlite_cfg.yaml"),
+weight_pdf_scale = Readers.WeightPdfScale(
+    name = "weight_pdf_scale",
+    #parents_to_skip = ["SingleTop", "QCD", "Diboson"],
+    data = False,
+)
+weight_qcd_ewk = Readers.WeightQcdEwk(
+    name = "weight_qcd_ewk",
+    input_paths = {
+        "ZJetsToNuNu": (datapath+"/qcd_ewk/vvj.dat", "vvj_pTV_{}"),
+        "WJetsToLNu":  (datapath+"/qcd_ewk/evj.dat", "evj_pTV_{}"),
+        "DYJetsToLL":  (datapath+"/qcd_ewk/eej.dat", "eej_pTV_{}"),
+    },
+    underflow = True,
+    overflow = True,
+    formula = (
+        "((K_NNLO + d1k_qcd*d1K_NNLO + d2k_qcd*d2K_NNLO + d3k_qcd*d3K_NNLO)"
+        "*(1 + kappa_EW + d1k_ew*d1kappa_EW + isz*(d2k_ew_z*d2kappa_EW + d3k_ew_z*d3kappa_EW)"
+                                           "+ isw*(d2k_ew_w*d2kappa_EW + d3k_ew_w*d3kappa_EW))"
+        "+ dk_mix*dK_NNLO_mix)"
+        "/(K_NLO + d1k_qcd*d1K_NLO + d2k_qcd*d2K_NLO + d3k_qcd*d3K_NLO)"
+    ),
+    params = [
+        "K_NLO", "d1K_NLO", "d2K_NLO", "d3K_NLO", "K_NNLO", "d1K_NNLO",
+        "d2K_NNLO", "d3K_NNLO", "kappa_EW", "d1kappa_EW", "d2kappa_EW",
+        "d3kappa_EW", "dK_NNLO_mix",
+    ],
+    variation_names = [
+        "d1k_qcd", "d2k_qcd", "d3k_qcd", "d1k_ew", "d2k_ew_z", "d2k_ew_w",
+        "d3k_ew_z", "d3k_ew_w", "dk_mix",
+    ],
+    data = False,
+)
+
+hdf5_reader = Collectors.HDF5Reader(
+    name = "hdf5_reader",
+    cfg = os.path.join(collpath, "HDF5_gstar_cfg.yaml"),
 )
 
 sequence = [
@@ -52,13 +85,9 @@ sequence = [
     # Creates object collections accessible through the event variable. e.g.
     # event.Jet.pt rather than event.Jet_pt.
     (collection_creator, NullCollector()),
-    # selection and weight producers. They only create functions and hence can
-    # be placed near the start
-    (weight_producer, NullCollector()),
-    (selection_producer, NullCollector()),
-    # # Try to keep GenPart branch stuff before everything else. It's quite big
-    # # and is deleted after use. Don't want to add the memory consumption of
-    # # this with all other branches
+    # Try to keep GenPart branch stuff before everything else. It's quite big
+    # and is deleted after use. Don't want to add the memory consumption of
+    # this with all other branches
     (gen_boson_producer, NullCollector()),
     (lhe_part_assigner, NullCollector()),
     (gen_part_assigner, NullCollector()),
@@ -69,5 +98,5 @@ sequence = [
     (weight_qcd_ewk, NullCollector()),
     # Add collectors (with accompanying readers) at the end so that all
     # event attributes are available to them
-    (sqlite_reader, sqlite_collector),
+    (hdf5_reader, NullCollector()),
 ]

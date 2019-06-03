@@ -26,7 +26,7 @@ class EventTools(object):
         event._nonbranch_cache["register_function"] = register_function
 
     def event(self, event):
-        event.MET_pt
+        event.run
         event.nsig = 0
         event.source = ''
 
