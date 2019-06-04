@@ -6,7 +6,6 @@ import warnings
 warnings.filterwarnings('ignore')
 
 from atuproot.atuproot_main import AtUproot
-from atsge.build_parallel import build_parallel
 from zinv.utils.gittools import git_diff, git_revision_hash
 from zinv.utils.cache_funcs import get_size
 from zinv.datasets.datasets import get_datasets
@@ -16,11 +15,13 @@ import logging
 logging.getLogger(__name__).setLevel(logging.INFO)
 logging.getLogger("alphatwirl").setLevel(logging.INFO)
 logging.getLogger("atsge.SGEJobSubmitter").setLevel(logging.INFO)
+logging.getLogger("alphatwirl.progressbar.ProgressReport").setLevel(logging.ERROR)
 
 logging.getLogger(__name__).propagate = False
 logging.getLogger("alphatwirl").propagate = False
 logging.getLogger("atsge.SGEJobSubmitter").propagate = False
 logging.getLogger("atuproot.atuproot_main").propagate = False
+logging.getLogger("alphatwirl.progressbar.ProgressReport").propagate = False
 
 import argparse
 def parse_args():
@@ -40,8 +41,9 @@ def parse_args():
     parser.add_argument("--mode", default="multiprocessing", type=str,
                         help="Which mode to run in (multiprocessing, htcondor, "
                              "sge)")
-    parser.add_argument("--sge-opts", default="-q hep.q -l h_rt=3:0:0 -l h_vmem=24G",
-                        type=str, help="SGE options")
+    parser.add_argument("--sge-opts", type=str,
+                        default="-q hep.q -l h_rt=3:0:0 -l h_vmem=24G",
+                        help="SGE options")
     parser.add_argument("--ncores", default=0, type=int,
                         help="Number of cores to run on")
     parser.add_argument("--nblocks-per-dataset", default=-1, type=int,
@@ -94,163 +96,20 @@ def generate_report(outdir):
     with open(filepath, 'w') as f:
         f.write(string)
 
-vmem_dict = {
-    # 500,000 events per block:
-    "DYJetsToLL_Pt-0To50":         24,
-    "DYJetsToLL_Pt-50To100":       24,
-    "DYJetsToLL_Pt-50To100_ext1":  24,
-    "DYJetsToLL_Pt-100To250":      24,
-    "DYJetsToLL_Pt-100To250_ext1": 24,
-    "DYJetsToLL_Pt-100To250_ext2": 24,
-    "DYJetsToLL_Pt-100To250_ext3": 24,
-    "DYJetsToLL_Pt-250To400":      18,
-    "DYJetsToLL_Pt-250To400_ext1": 12,
-    "DYJetsToLL_Pt-250To400_ext2": 12,
-    "DYJetsToLL_Pt-250To400_ext3": 24,
-    "DYJetsToLL_Pt-400To650":      12,
-    "DYJetsToLL_Pt-400To650_ext1": 12,
-    "DYJetsToLL_Pt-400To650_ext2": 12,
-    "DYJetsToLL_Pt-650ToInf":      12,
-    "DYJetsToLL_Pt-650ToInf_ext1": 12,
-    "DYJetsToLL_Pt-650ToInf_ext2": 12,
-    "G1Jet_Pt-50To100":       12,
-    "G1Jet_Pt-50To100_ext1":  18,
-    "G1Jet_Pt-100To250":      12,
-    "G1Jet_Pt-100To250_ext1": 12,
-    "G1Jet_Pt-100To250_ext2": 18,
-    "G1Jet_Pt-250To400":      12,
-    "G1Jet_Pt-250To400_ext1": 12,
-    "G1Jet_Pt-250To400_ext2": 18,
-    "G1Jet_Pt-400To650":      12,
-    "G1Jet_Pt-400To650_ext1": 12,
-    "G1Jet_Pt-650ToInf":      12,
-    "G1Jet_Pt-650ToInf_ext1": 12,
-    "SingleTop_tW_antitop_InclusiveDecays":        24,
-    "SingleTop_tW_top_InclusiveDecays":            24,
-    "SingleTop_t-channel_top_InclusiveDecays":     18,
-    "SingleTop_t-channel_antitop_InclusiveDecays": 18,
-    "SingleTop_s-channel_InclusiveDecays":         18,
-    "QCD_Pt-15To30":          18,
-    "QCD_Pt-30To50":          18,
-    "QCD_Pt-50To80":          18,
-    "QCD_Pt-80To120":         18,
-    "QCD_Pt-80To120_ext1":    18,
-    "QCD_Pt-120To170":        18,
-    "QCD_Pt-120To170_ext1":   18,
-    "QCD_Pt-170To300":        18,
-    "QCD_Pt-170To300_ext1":   18,
-    "QCD_Pt-300To470":        18,
-    "QCD_Pt-300To470_ext1":   24,
-    "QCD_Pt-470To600":        18,
-    "QCD_Pt-600To800":        18,
-    "QCD_Pt-600To800_ext1":   24,
-    "QCD_Pt-800To1000":       18,
-    "QCD_Pt-800To1000_ext1":  18,
-    "QCD_Pt-1000To1400":      18,
-    "QCD_Pt-1000To1400_ext1": 24,
-    "QCD_Pt-1400To1800_ext1": 18,
-    "QCD_Pt-1400To1800_ext1": 18,
-    "QCD_Pt-1800To2400_ext1": 18,
-    "QCD_Pt-2400To3200_ext1": 18,
-    "TTJets_Inclusive": 18,
-    "WJetsToLNu_Pt-0To50":         24,
-    "WJetsToLNu_Pt-50To100":       24,
-    "WJetsToLNu_Pt-100To250":      24,
-    "WJetsToLNu_Pt-100To250_ext1": 24,
-    "WJetsToLNu_Pt-100To250_ext2": 24,
-    "WJetsToLNu_Pt-250To400":      12,
-    "WJetsToLNu_Pt-250To400_ext1": 12,
-    "WJetsToLNu_Pt-250To400_ext2": 18,
-    "WJetsToLNu_Pt-400To600":      12,
-    "WJetsToLNu_Pt-400To600_ext1": 12,
-    "WJetsToLNu_Pt-600ToInf":      12,
-    "WJetsToLNu_Pt-600ToInf_ext1": 12,
-    "WWTo1L1Nu2Q": 18,
-    "WWTo2L2Nu":   18,
-    "WWTo4Q":      18,
-    "WZTo1L1Nu2Q":    18,
-    "WZTo1L3Nu":      18,
-    "WZTo1L3Nu_ext1": 18,
-    "WZTo2L2Q":       18,
-    "WZTo2Q2Nu":      18,
-    "WZTo3L1Nu":      18,
-    "ZJetsToNuNu_Pt-0To50":         18,
-    "ZJetsToNuNu_Pt-50To100":       18,
-    "ZJetsToNuNu_Pt-100To250":      18,
-    "ZJetsToNuNu_Pt-100To250_ext1": 18,
-    "ZJetsToNuNu_Pt-100To250_ext2": 18,
-    "ZJetsToNuNu_Pt-250To400":      12,
-    "ZJetsToNuNu_Pt-250To400_ext1": 12,
-    "ZJetsToNuNu_Pt-250To400_ext2": 18,
-    "ZJetsToNuNu_Pt-400To650":      12,
-    "ZJetsToNuNu_Pt-400To650_ext1": 12,
-    "ZJetsToNuNu_Pt-650ToInf":      12,
-    "ZJetsToNuNu_Pt-650ToInf_ext1": 12,
-    "ZZTo2L2Q":       18,
-    "ZZTo2L2Nu":      18,
-    "ZZTo2L2Nu_ext1": 24,
-    "ZZTo2Q2Nu":      24,
-    "ZZTo4L":         24,
-    "ZZTo4Q":         18,
-    "ZGToLLG":       18,
-    "ZGToLLG_ext1":  18,
-    "WGToQQG":       18,
-    "WGToLNuG":      18,
-    "WGToLNuG_ext1": 18,
-    "WGToLNuG_ext2": 18,
-    "EWKWMinusToLNu2Jets_ext2": 12,
-    "EWKWPlusToLNu2Jets_ext2":  12,
-    "EWKZToNuNu2Jets":          12,
-    "EWKZToNuNu2Jets_ext2":     12,
-    "EWKZToLL2Jets_ext1":       12,
-    "EWKZToLL2Jets_ext2":       12,
-}
-
 def run(sequence, datasets, options):
-    #predetermined_nevents_in_file = {
-    #    d.files[idx]: d.file_nevents[idx]
-    #    for d in datasets
-    #    for idx in range(len(d.files))
-    #}
     process = AtUproot(
         options.outdir,
         quiet = options.quiet,
+        parallel_mode = options.mode,
+        process = options.ncores,
+        sge_opts = options.sge_opts,
         max_blocks_per_dataset = options.nblocks_per_dataset,
         max_blocks_per_process = options.nblocks_per_process,
         max_files_per_dataset = options.nfiles_per_dataset,
         max_files_per_process = options.nfiles_per_process,
         nevents_per_block = options.blocksize,
-        profile = options.profile,
-        profile_out_path = "profile.txt",
-        predetermined_nevents_in_file = {}, #predetermined_nevents_in_file,
         branch_cache = LFUCache(options.cachesize, get_size),
     )
-
-    # Change parallel options (SGE not supported in standard `build_parallel`)
-    process.parallel_mode = options.mode
-    if options.mode == 'sge':
-        dispatcher_options = {"job_opts": options.sge_opts}
-        dropbox_options = {}
-    elif options.mode == 'htcondor':
-        dispatcher_options = {
-            "job_desc_dict": {
-                "JobFlavour": "workday",
-                "RequestCpus": 4,
-            },
-        }
-        dropbox_options = {}
-    else:
-        dispatcher_options = {}
-        dropbox_options = {}
-    process.parallel = build_parallel(
-        options.mode,
-        quiet = options.quiet,
-        processes = options.ncores,
-        #user_modules = ('sequence', 'drawing', 'utils'),
-        dispatcher_options = dispatcher_options,
-        dropbox_options = dropbox_options,
-    )
-
     return process.run(datasets, sequence)
 
 if __name__ == "__main__":

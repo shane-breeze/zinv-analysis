@@ -1,6 +1,8 @@
+import os
 import numpy as np
 import pandas as pd
 import yaml
+import tqdm
 
 from zinv.utils.Lambda import Lambda
 
@@ -17,8 +19,16 @@ class HDF5Reader(object):
         self.dtypes = cfg["dtypes"]
 
     def begin(self, event):
+        task = os.path.basename(os.getcwd())
+        self.path = os.path.join(
+            self.outdir, task.replace("task", "result")+".h5",
+        )
+
         try:
-            pd.DataFrame().to_hdf("result.h5", self.name, mode='w', format='table', complevel=9, complib='blosc:lz4hc')
+            pd.DataFrame().to_hdf(
+                self.path, self.name, mode='w', format='table', complevel=9,
+                complib='blosc:lz4hc',
+            )
         except IOError:
             pass
         for source, nsig in self.variations:
@@ -30,7 +40,10 @@ class HDF5Reader(object):
                 self.name
             )
             try:
-                pd.DataFrame().to_hdf("result.h5", table_name, mode='w', format='table', complevel=9, complib='blosc:lz4hc')
+                pd.DataFrame().to_hdf(
+                    self.path, table_name, mode='w', format='table',
+                    complevel=9, complib='blosc:lz4hc',
+                )
             except IOError:
                 pass
 
@@ -51,7 +64,7 @@ class HDF5Reader(object):
         opts = ('', 0.)
         for df in self.chunk_events(event, opts=opts, chunksize=int(1e7)):
             df.to_hdf(
-                "result.h5", self.name, format='table', append=True,
+                self.path, self.name, format='table', append=True,
                 complevel=9, complib='blosc:lz4hc',
             )
         print("Created result.h5 with table {}".format(self.name))
@@ -68,7 +81,7 @@ class HDF5Reader(object):
 
             for df in self.chunk_events(event, opts=opts, chunksize=int(1e7)):
                 df.to_hdf(
-                    "result.h5", table_name, format='table', append=True,
+                    self.path, table_name, format='table', append=True,
                     complevel=9, complib='blosc:lz4hc',
                 )
                 print("Create result.h5 with table {}".format(table_name))
@@ -77,7 +90,7 @@ class HDF5Reader(object):
         # currently not chunking
         data = {
             attr: self.lambda_functions[selection](event, *opts)
-            for attr, selection in self.attributes.items()
+            for attr, selection in tqdm.tqdm(self.attributes.items(), unit='attr', dynamic_ncols=True)
         }
 
         yield (

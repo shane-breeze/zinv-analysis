@@ -2,6 +2,7 @@ import numpy as np
 import numba as nb
 import awkward as awk
 import operator
+from functools import reduce
 
 from cachetools import cachedmethod
 from cachetools.keys import hashkey
