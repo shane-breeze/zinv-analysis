@@ -100,9 +100,6 @@ def run(sequence, datasets, options):
     process = AtUproot(
         options.outdir,
         quiet = options.quiet,
-        parallel_mode = options.mode,
-        process = options.ncores,
-        sge_opts = options.sge_opts,
         max_blocks_per_dataset = options.nblocks_per_dataset,
         max_blocks_per_process = options.nblocks_per_process,
         max_files_per_dataset = options.nfiles_per_dataset,
@@ -110,7 +107,18 @@ def run(sequence, datasets, options):
         nevents_per_block = options.blocksize,
         branch_cache = LFUCache(options.cachesize, get_size),
     )
-    return process.run(datasets, sequence)
+    tasks = process.run(datasets, sequence)
+
+    if options.mode=="multiprocessing" and options.ncores==0:
+        results = pysge.local_submit(tasks)
+    elif options.mode=="multiprocessing":
+        results = pysge.mp_submit(tasks, ncores=options.ncores)
+    elif options.mode=="sge":
+        results = pysge.sge_submit(
+            "zdb", "_ccsp_temp/", tasks=tasks, options=options.sge_opts,
+            sleep=5, request_resubmission_options=True,
+        )
+    return results
 
 if __name__ == "__main__":
     options = parse_args()
