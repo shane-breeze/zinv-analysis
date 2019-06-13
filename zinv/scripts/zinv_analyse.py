@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import os
 import sys
+import pysge
 from cachetools import LFUCache
 import warnings
 warnings.filterwarnings('ignore')
@@ -115,7 +116,7 @@ def run(sequence, datasets, options):
         results = pysge.mp_submit(tasks, ncores=options.ncores)
     elif options.mode=="sge":
         results = pysge.sge_submit(
-            "zdb", "_ccsp_temp/", tasks=tasks, options=options.sge_opts,
+            "zinv", "_ccsp_temp/", tasks=tasks, options=options.sge_opts,
             sleep=5, request_resubmission_options=True,
         )
     return results
