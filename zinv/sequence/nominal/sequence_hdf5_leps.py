@@ -311,11 +311,6 @@ selection_producer = Readers.SelectionProducer(
     name = "selection_producer",
 )
 
-sqlite_reader = Collectors.SqliteReader(
-    name = "sqlite_reader",
-    cfg = os.path.join(collpath, "Sqlite_cfg.yaml"),
-)
-
 hdf5_reader = Collectors.HDF5Reader(
     name = "hdf5_reader",
     cfg = os.path.join(collpath, "HDF5_leps_cfg.yaml"),
@@ -362,6 +357,5 @@ sequence = [
     (weight_prefiring, NullCollector()),
     # Add collectors (with accompanying readers) at the end so that all
     # event attributes are available to them
-    #(sqlite_reader, NullCollector()),
     (hdf5_reader, NullCollector()),
 ]

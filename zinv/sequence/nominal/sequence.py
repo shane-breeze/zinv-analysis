@@ -311,13 +311,6 @@ selection_producer = Readers.SelectionProducer(
     name = "selection_producer",
 )
 
-sqlite_reader = Collectors.SqliteReader(
-    name = "sqlite_reader",
-    cfg = os.path.join(collpath, "Sqlite_cfg.yaml"),
-    #cfg = os.path.join(collpath, "Sqlite_objscale_cfg.yaml"),
-    #cfg = os.path.join(collpath, "Sqlite_pdfscale_cfg.yaml"),
-)
-
 sequence = [
     # Setup caching, nsig and source
     (event_tools, NullCollector()),
@@ -359,5 +352,4 @@ sequence = [
     (weight_prefiring, NullCollector()),
     # Add collectors (with accompanying readers) at the end so that all
     # event attributes are available to them
-    (sqlite_reader, NullCollector()),
 ]

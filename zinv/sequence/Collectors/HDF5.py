@@ -33,7 +33,7 @@ class HDF5Reader(object):
             pass
         for source, nsig in self.variations:
             updown = "Up" if nsig>=0. else "Down"
-            updown += "{:.2f}".format(np.abs(nsig)).replace(".", "p")
+            #updown = "{:.2f}".format(np.abs(nsig)).replace(".", "p") + updown
             table_name = (
                 "_".join([self.name, source+updown])
                 if source != "" else
@@ -72,7 +72,7 @@ class HDF5Reader(object):
         for source, nsig in self.variations:
             opts = (source, nsig)
             updown = "Up" if nsig>=0. else "Down"
-            updown += "{:.2f}".format(np.abs(nsig)).replace(".", "p")
+            #updown = "{:.2f}".format(np.abs(nsig)).replace(".", "p") + updown
             table_name = (
                 "_".join([self.name, source+updown])
                 if source != "" else

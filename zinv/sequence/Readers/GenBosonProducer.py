@@ -13,6 +13,7 @@ class GenBosonProducer(object):
 
     def begin(self, event):
         event.register_function(event, "nGenBosons", ngen_bosons)
+        event.register_function(event, "GenLepCandidates", genpart_candidates)
         event.register_function(event, "GenPartBoson", genpart_boson)
 
 def ngen_bosons(ev):
@@ -32,8 +33,68 @@ def ngen_bosons(ev):
     nbosons = awk.JaggedArray(pdgs.starts, pdgs.stops, nbosons)
     return nbosons.sum()/2
 
-def genpart_boson(ev, attr):
-    if not ev.hasbranch("GenPartBoson_{}".format(attr)):
+def create_genpart_candidates(ev, gp_mask, gdl_idx):
+    @nb.njit(["UniTuple(float32[:],5)(int32[:],float32[:],float32[:],float32[:],float32[:],int64[:],int64[:],int64[:],int32[:],float32[:],float32[:],float32[:],float32[:],int64[:],int64[:])"])
+    def create_genpart_candidates_jit(
+        gps_pdgId, gps_pt, gps_eta, gps_phi, gps_mass, gps_gdidx, gps_starts, gps_stops,
+        gds_pdgId, gds_pt, gds_eta, gds_phi, gds_mass, gds_starts, gds_stops,
+    ):
+
+        nev = gps_stops.shape[0]
+        pdgs = np.zeros(nev*2, dtype=np.float32)
+        pts = np.zeros(nev*2, dtype=np.float32)
+        etas = np.zeros(nev*2, dtype=np.float32)
+        phis = np.zeros(nev*2, dtype=np.float32)
+        masss = np.zeros(nev*2, dtype=np.float32)
+
+        for iev, (gps_start, gps_stop, gds_start, gds_stop) in enumerate(zip(
+            gps_starts, gps_stops, gds_starts, gds_stops,
+        )):
+            x, y, z, e = 0., 0., 0., 0.
+            for pos, igps in enumerate(range(gps_start, gps_stop)):
+                igds = gps_gdidx[igps]
+                if igds >= 0:
+                    igds += gds_start
+                    pdgs[iev+pos] = gds_pdgId[igds]
+                    pts[iev+pos] = gds_pt[igds]
+                    etas[iev+pos] = gds_eta[igds]
+                    phis[iev+pos] = gds_phi[igds]
+                    masss[iev+pos] = gds_mass[igds]
+                else:
+                    pdgs[iev+pos] = gps_pdgId[igps]
+                    pts[iev+pos] = gps_pt[igps]
+                    etas[iev+pos] = gps_eta[igps]
+                    phis[iev+pos] = gps_phi[igps]
+                    masss[iev+pos] = gps_mass[igps]
+        return pdgs, pts, etas, phis, masss
+
+    pdg, pt, eta, phi, mass = create_genpart_candidates_jit(
+        ev.GenPart.pdgId[gp_mask].content,
+        ev.GenPart.pt[gp_mask].content,
+        ev.GenPart.eta[gp_mask].content,
+        ev.GenPart.phi[gp_mask].content,
+        ev.GenPart.mass[gp_mask].content,
+        gdl_idx,
+        ev.GenPart.pt[gp_mask].starts,
+        ev.GenPart.pt[gp_mask].stops,
+        ev.GenDressedLepton.pdgId.content,
+        ev.GenDressedLepton.pt.content,
+        ev.GenDressedLepton.eta.content,
+        ev.GenDressedLepton.phi.content,
+        ev.GenDressedLepton.mass.content,
+        ev.GenDressedLepton.pt.starts,
+        ev.GenDressedLepton.pt.stops,
+    )
+    return (
+        awk.JaggedArray.fromiter(pdg.reshape(ev.size, 2)),
+        awk.JaggedArray.fromiter(pt.reshape(ev.size, 2)),
+        awk.JaggedArray.fromiter(eta.reshape(ev.size, 2)),
+        awk.JaggedArray.fromiter(phi.reshape(ev.size, 2)),
+        awk.JaggedArray.fromiter(mass.reshape(ev.size, 2)),
+    )
+
+def genpart_candidates(ev, attr):
+    if not ev.hasbranch("GenLepCandidates_{}".format(attr)):
         gp = ev.GenPart
         flags = gp.statusFlags
         pdgs = gp.pdgId
@@ -50,9 +111,21 @@ def genpart_boson(ev, attr):
         )
 
         genpart_dressedlepidx = genpart_matched_dressedlepton(ev, gp_mask)
-        pt, eta, phi, mass = create_genpart_boson(
+
+        pdgId, pt, eta, phi, mass = create_genpart_candidates(
             ev, gp_mask, genpart_dressedlepidx,
         )
+        ev.GenLepCandidates_pdgId = pdgId.astype(np.int32)
+        ev.GenLepCandidates_pt = pt
+        ev.GenLepCandidates_eta = eta
+        ev.GenLepCandidates_phi = phi
+        ev.GenLepCandidates_mass = mass
+
+    return getattr(ev, "GenLepCandidates_{}".format(attr))
+
+def genpart_boson(ev, attr):
+    if not ev.hasbranch("GenPartBoson_{}".format(attr)):
+        pt, eta, phi, mass = create_genpart_boson(ev)
         ev.GenPartBoson_pt = pt
         ev.GenPartBoson_eta = eta
         ev.GenPartBoson_phi = phi
@@ -60,63 +133,39 @@ def genpart_boson(ev, attr):
 
     return getattr(ev, "GenPartBoson_{}".format(attr))
 
-def create_genpart_boson(ev, gp_mask, gdl_idx):
-    @nb.njit(["UniTuple(float32[:],4)(float32[:],float32[:],float32[:],float32[:],int64[:],int64[:],int64[:],float32[:],float32[:],float32[:],float32[:],int64[:],int64[:])"])
-    def create_genpart_boson_jit(
-        gps_pt, gps_eta, gps_phi, gps_mass, gps_gdidx, gps_starts, gps_stops,
-        gds_pt, gds_eta, gds_phi, gds_mass, gds_starts, gds_stops,
-    ):
+def create_genpart_boson(ev):
+    @nb.njit(["UniTuple(float32[:],4)(float32[:],float32[:],float32[:],float32[:],int64[:],int64[:])"])
+    def create_genpart_boson_jit(pt, eta, phi, mass, starts, stops):
+        nev = stops.shape[0]
+        opt = np.zeros(nev, dtype=np.float32)
+        oeta = np.zeros(nev, dtype=np.float32)
+        ophi = np.zeros(nev, dtype=np.float32)
+        omass = np.zeros(nev, dtype=np.float32)
 
-        nev = gps_stops.shape[0]
-        pts = np.zeros(nev, dtype=np.float32)
-        etas = np.zeros(nev, dtype=np.float32)
-        phis = np.zeros(nev, dtype=np.float32)
-        masss = np.zeros(nev, dtype=np.float32)
-
-        for iev, (gps_start, gps_stop, gds_start, gds_stop) in enumerate(zip(
-            gps_starts, gps_stops, gds_starts, gds_stops,
-        )):
+        for iev, (start, stop) in enumerate(zip(starts, stops)):
             x, y, z, e = 0., 0., 0., 0.
-            for igps in range(gps_start, gps_stop):
-                igds = gps_gdidx[igps]
-                if igds >= 0:
-                    igds += gds_start
-                    tx, ty, tz, te = LorTHPMToXYZE(
-                        gds_pt[igds], gds_eta[igds], gds_phi[igds], gds_mass[igds],
-                    )
-                    x += tx
-                    y += ty
-                    z += tz
-                    e += te
-                else:
-                    tx, ty, tz, te = LorTHPMToXYZE(
-                        gps_pt[igps], gps_eta[igps], gps_phi[igps], gps_mass[igps],
-                    )
-                    x += tx
-                    y += ty
-                    z += tz
-                    e += te
+            for iob in range(start, stop):
+                tx, ty, tz, te = LorTHPMToXYZE(
+                    pt[iob], eta[iob], phi[iob], mass[iob],
+                )
+                x += tx
+                y += ty
+                z += tz
+                e += te
             t, h, p, m = LorXYZEToTHPM(x, y, z, e)
-            pts[iev] = t
-            etas[iev] = h
-            phis[iev] = p
-            masss[iev] = m
-        return pts, etas, phis, masss
+            opt[iev] = t
+            oeta[iev] = h
+            ophi[iev] = p
+            omass[iev] = m
+        return opt, oeta, ophi, omass
 
     return create_genpart_boson_jit(
-        ev.GenPart.pt[gp_mask].content,
-        ev.GenPart.eta[gp_mask].content,
-        ev.GenPart.phi[gp_mask].content,
-        ev.GenPart.mass[gp_mask].content,
-        gdl_idx,
-        ev.GenPart.pt[gp_mask].starts,
-        ev.GenPart.pt[gp_mask].stops,
-        ev.GenDressedLepton.pt.content,
-        ev.GenDressedLepton.eta.content,
-        ev.GenDressedLepton.phi.content,
-        ev.GenDressedLepton.mass.content,
-        ev.GenDressedLepton.pt.starts,
-        ev.GenDressedLepton.pt.stops,
+        ev.GenLepCandidates(ev, 'pt').content,
+        ev.GenLepCandidates(ev, 'eta').content,
+        ev.GenLepCandidates(ev, 'phi').content,
+        ev.GenLepCandidates(ev, 'mass').content,
+        ev.GenLepCandidates(ev, 'pt').starts,
+        ev.GenLepCandidates(ev, 'pt').stops,
     )
 
 def genpart_matched_dressedlepton(ev, gpmask):
