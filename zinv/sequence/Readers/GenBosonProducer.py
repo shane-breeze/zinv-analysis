@@ -85,12 +85,16 @@ def create_genpart_candidates(ev, gp_mask, gdl_idx):
         ev.GenDressedLepton.pt.starts,
         ev.GenDressedLepton.pt.stops,
     )
+
+    starts = np.arange(0, ev.size, 2)
+    stops = starts[:] + 2
+
     return (
-        awk.JaggedArray.fromiter(pdg.reshape(ev.size, 2)),
-        awk.JaggedArray.fromiter(pt.reshape(ev.size, 2)),
-        awk.JaggedArray.fromiter(eta.reshape(ev.size, 2)),
-        awk.JaggedArray.fromiter(phi.reshape(ev.size, 2)),
-        awk.JaggedArray.fromiter(mass.reshape(ev.size, 2)),
+        awk.JaggedArray(starts, stops, pdg),
+        awk.JaggedArray(starts, stops, pt),
+        awk.JaggedArray(starts, stops, eta),
+        awk.JaggedArray(starts, stops, phi),
+        awk.JaggedArray(starts, stops, mass),
     )
 
 def genpart_candidates(ev, attr):
@@ -134,9 +138,8 @@ def genpart_boson(ev, attr):
     return getattr(ev, "GenPartBoson_{}".format(attr))
 
 def create_genpart_boson(ev):
-    @nb.njit(["UniTuple(float32[:],4)(float32[:],float32[:],float32[:],float32[:],int64[:],int64[:])"])
-    def create_genpart_boson_jit(pt, eta, phi, mass, starts, stops):
-        nev = stops.shape[0]
+    @nb.njit(["UniTuple(float32[:],4)(float32[:],float32[:],float32[:],float32[:],int64[:],int64[:],int64)"])
+    def create_genpart_boson_jit(pt, eta, phi, mass, starts, stops, nev):
         opt = np.zeros(nev, dtype=np.float32)
         oeta = np.zeros(nev, dtype=np.float32)
         ophi = np.zeros(nev, dtype=np.float32)
@@ -166,6 +169,7 @@ def create_genpart_boson(ev):
         ev.GenLepCandidates(ev, 'mass').content,
         ev.GenLepCandidates(ev, 'pt').starts,
         ev.GenLepCandidates(ev, 'pt').stops,
+        ev.size,
     )
 
 def genpart_matched_dressedlepton(ev, gpmask):

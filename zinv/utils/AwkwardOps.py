@@ -13,7 +13,7 @@ def get_nth_sorted_object_indices(array, refarray, id_, ev_size):
         for iev, (start, stop) in enumerate(zip(_starts, _stops)):
             if _id_ >= stop-start:
                 continue
-            new_array[iev] = _arr[start:stop][(-_ref[start:stop]).argsort()[_id_]]
+            new_array[iev] = _arr[start:stop][_ref[start:stop].argsort()[::-1][_id_]]
         return new_array
     return njit_get_nth_sorted_object_indices(
         array.content, refarray.content, refarray.starts, refarray.stops,

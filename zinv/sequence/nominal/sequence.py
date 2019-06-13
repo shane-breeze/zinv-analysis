@@ -311,6 +311,10 @@ selection_producer = Readers.SelectionProducer(
     name = "selection_producer",
 )
 
+hdf5_reader = Collectors.HDF5Reader(
+    name = "hdf5_reader",
+)
+
 sequence = [
     # Setup caching, nsig and source
     (event_tools, NullCollector()),
@@ -352,4 +356,5 @@ sequence = [
     (weight_prefiring, NullCollector()),
     # Add collectors (with accompanying readers) at the end so that all
     # event attributes are available to them
+    (hdf5_reader, NullCollector()),
 ]

@@ -10,15 +10,14 @@ class HDF5Reader(object):
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
 
-        with open(self.cfg, 'r') as f:
+    def begin(self, event):
+        with open(self.hdf5_config_path, 'r') as f:
             cfg = yaml.load(f)
-
         self.name = cfg["name"]
         self.attributes = cfg["attributes"]
         self.variations = cfg["variations"]
         self.dtypes = cfg["dtypes"]
 
-    def begin(self, event):
         task = os.path.basename(os.getcwd())
         self.path = os.path.join(
             self.outdir, task.replace("task", "result")+".h5",

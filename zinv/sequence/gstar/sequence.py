@@ -76,7 +76,6 @@ weight_qcd_ewk = Readers.WeightQcdEwk(
 
 hdf5_reader = Collectors.HDF5Reader(
     name = "hdf5_reader",
-    cfg = os.path.join(collpath, "HDF5_gstar_cfg.yaml"),
 )
 
 sequence = [

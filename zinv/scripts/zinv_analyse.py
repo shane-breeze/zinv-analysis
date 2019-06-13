@@ -37,6 +37,8 @@ def parse_args():
                         help="Config for the physics object selection")
     parser.add_argument("trigger_cfg", type=str,
                         help="Config for the HLT trigger paths")
+    parser.add_argument("hdf_cfg", type=str,
+                        help="Config for the output HDF files")
     parser.add_argument("-o", "--outdir", default="output", type=str,
                         help="Where to save the results")
     parser.add_argument("--mode", default="multiprocessing", type=str,
@@ -61,14 +63,9 @@ def parse_args():
                         help="Branch cache size")
     parser.add_argument("--quiet", default=False, action='store_true',
                         help="Keep progress report quiet")
-    parser.add_argument("--profile", default=False, action='store_true',
-                        help="Profile the code")
     parser.add_argument("--sample", default=None, type=str,
                         help="Select some sample (comma delimited). Can "
                         "selected from (data, mc and more)")
-    parser.add_argument("--nuisances", default="", type=str,
-                        help="Nuisances to process in the systematics "
-                        "analyzer. Comma-delimited.")
     return parser.parse_args()
 
 def generate_report(outdir):
@@ -129,8 +126,7 @@ if __name__ == "__main__":
 
     sequence = build_sequence(
         options.sequence_cfg, options.outdir, options.event_selection_cfg,
-        options.physics_object_cfg, options.trigger_cfg,
-        options.nuisances.split(","),
+        options.physics_object_cfg, options.trigger_cfg, options.hdf_cfg,
     )
     datasets = get_datasets(options.dataset_cfg)
 
