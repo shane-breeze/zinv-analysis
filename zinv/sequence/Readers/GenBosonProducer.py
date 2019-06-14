@@ -40,33 +40,35 @@ def create_genpart_candidates(ev, gp_mask, gdl_idx):
         gds_pdgId, gds_pt, gds_eta, gds_phi, gds_mass, gds_starts, gds_stops,
     ):
 
-        nev = gps_stops.shape[0]
-        pdgs = np.zeros(nev*2, dtype=np.float32)
-        pts = np.zeros(nev*2, dtype=np.float32)
-        etas = np.zeros(nev*2, dtype=np.float32)
-        phis = np.zeros(nev*2, dtype=np.float32)
-        masss = np.zeros(nev*2, dtype=np.float32)
+        pdgs = np.zeros_like(gps_pt, dtype=np.float32)
+        pts = np.zeros_like(gps_pt, dtype=np.float32)
+        etas = np.zeros_like(gps_pt, dtype=np.float32)
+        phis = np.zeros_like(gps_pt, dtype=np.float32)
+        masss = np.zeros_like(gps_pt, dtype=np.float32)
 
         for iev, (gps_start, gps_stop, gds_start, gds_stop) in enumerate(zip(
             gps_starts, gps_stops, gds_starts, gds_stops,
         )):
             x, y, z, e = 0., 0., 0., 0.
-            for pos, igps in enumerate(range(gps_start, gps_stop)):
+            for igps in range(gps_start, gps_stop):
                 igds = gps_gdidx[igps]
                 if igds >= 0:
                     igds += gds_start
-                    pdgs[2*iev+pos] = gds_pdgId[igds]
-                    pts[2*iev+pos] = gds_pt[igds]
-                    etas[2*iev+pos] = gds_eta[igds]
-                    phis[2*iev+pos] = gds_phi[igds]
-                    masss[2*iev+pos] = gds_mass[igds]
+                    pdgs[igps] = gds_pdgId[igds]
+                    pts[igps] = gds_pt[igds]
+                    etas[igps] = gds_eta[igds]
+                    phis[igps] = gds_phi[igds]
+                    masss[igps] = gds_mass[igds]
                 else:
-                    pdgs[2*iev+pos] = gps_pdgId[igps]
-                    pts[2*iev+pos] = gps_pt[igps]
-                    etas[2*iev+pos] = gps_eta[igps]
-                    phis[2*iev+pos] = gps_phi[igps]
-                    masss[2*iev+pos] = gps_mass[igps]
+                    pdgs[igps] = gps_pdgId[igps]
+                    pts[igps] = gps_pt[igps]
+                    etas[igps] = gps_eta[igps]
+                    phis[igps] = gps_phi[igps]
+                    masss[igps] = gps_mass[igps]
         return pdgs, pts, etas, phis, masss
+
+    starts = ev.GenPart.pt[gp_mask].starts
+    stops = ev.GenPart.pt[gp_mask].stops
 
     pdg, pt, eta, phi, mass = create_genpart_candidates_jit(
         ev.GenPart.pdgId[gp_mask].content,
@@ -74,9 +76,7 @@ def create_genpart_candidates(ev, gp_mask, gdl_idx):
         ev.GenPart.eta[gp_mask].content,
         ev.GenPart.phi[gp_mask].content,
         ev.GenPart.mass[gp_mask].content,
-        gdl_idx,
-        ev.GenPart.pt[gp_mask].starts,
-        ev.GenPart.pt[gp_mask].stops,
+        gdl_idx, starts, stops,
         ev.GenDressedLepton.pdgId.content,
         ev.GenDressedLepton.pt.content,
         ev.GenDressedLepton.eta.content,
@@ -85,9 +85,6 @@ def create_genpart_candidates(ev, gp_mask, gdl_idx):
         ev.GenDressedLepton.pt.starts,
         ev.GenDressedLepton.pt.stops,
     )
-
-    starts = np.arange(0, 2*ev.size, 2)
-    stops = starts[:] + 2
 
     return (
         awk.JaggedArray(starts, stops, pdg),
