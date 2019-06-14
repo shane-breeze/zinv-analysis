@@ -42,24 +42,6 @@ def get_bin_indices(vars, mins, maxs, size):
     else:
         return get_multibin_indices(vars, mins, maxs, size)
 
-@nb.njit(["int64[:](int64,float32[:],int64[:],int64[:])"])
-def get_nth_sorted_object_indices(n, pts, starts, stops):
-    idxs = -1*np.ones_like(starts, dtype=np.int64)
-    for iev, (start, stop) in enumerate(zip(starts, stops)):
-        if n < stop-start:
-            idxs[iev] = start + np.argsort(pts[start:stop])[::-1][n]
-    return idxs
-
-@nb.njit(["UniTuple(int64[:],2)(float32[:],int64[:],int64[:])"])
-def get_event_object_idx(contents, starts, stops):
-    evidx = -1*np.ones_like(contents, dtype=np.int64)
-    obidx = -1*np.ones_like(contents, dtype=np.int64)
-    for idx, (start, stop) in enumerate(zip(starts, stops)):
-        evidx[start:stop] = idx
-        for subidx in range(start, stop):
-            obidx[subidx] = subidx-start
-    return evidx, obidx
-
 @nb.njit(["float32[:](float32[:],int64[:],int64[:])"])
 def event_to_object_var(variable, starts, stops):
     new_obj_var = np.zeros(stops[-1], dtype=np.float32)
@@ -107,47 +89,3 @@ def interpolate(x, xp, fp):
 ])
 def weight_numba(nominal, nsig, up, down):
     return nominal * (1 + (nsig>=0)*nsig*up - (nsig<0)*nsig*down)
-
-# This is slow for some reason!?
-@nb.njit
-def histogramdd_numba(event_attrs, mins, maxs, weights):
-    ndim = len(event_attrs)
-    nev = event_attrs[0].shape[0]
-    nib = mins[0].shape[0]
-    hist = np.zeros(nib, dtype=np.float32)
-
-    for iev in range(nev):
-        for ib in range(nib):
-            accept = True
-            for idx in range(ndim):
-                if not (mins[idx][ib] <= event_attrs[idx][iev] < maxs[idx][ib]):
-                    accept = False
-
-            if accept:
-                hist[ib] += weights[iev]
-
-    return hist
-
-@nb.njit(["int32(float32,float32[:])"])
-def compute_bin(x, bin_edges):
-    n = bin_edges.shape[0] - 1
-    a_min = bin_edges[0]
-    a_max = bin_edges[-1]
-
-    if x == a_max:
-        return n
-
-    bin = int(n * (x - a_min) / (a_max - a_min))
-    bin = -1 if bin < 0 else n if bin >= n else bin
-    return bin+1
-
-@nb.njit(["float32[:](float32[:],float32[:],float32[:])"])
-def histogram1d_numba(attr, bins, weights):
-    hist = np.zeros(bins.shape[0]+1, dtype=np.float32)
-
-    for a, w in zip(attr, weights):
-        bin = compute_bin(a, bins)
-        if bin is not None:
-            hist[int(bin)] += w
-
-    return hist
