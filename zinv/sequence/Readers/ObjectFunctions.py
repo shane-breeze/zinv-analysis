@@ -15,9 +15,9 @@ def pt_shift_numba(pt, nsig, up, down):
 def jet_pt_shift(ev, source, nsig):
     updo = 'Up' if nsig>=0. else 'Down'
     if source=='jerSF':
-        variation = 1. + nsig*np.abs(getattr(ev, 'Jet_JECjerSF{}'.format(updo)))
+        variation = 1. + np.abs(nsig)*getattr(ev, 'Jet_JECjerSF{}'.format(updo))
     elif source.startswith("jes"):
-        variation = 1. + nsig*np.abs(ev.Jet_jesSF(ev, source, nsig))
+        variation = 1. + np.abs(nsig)*ev.Jet_jesSF(ev, source, nsig)
     else:
         variation = 1.
 
