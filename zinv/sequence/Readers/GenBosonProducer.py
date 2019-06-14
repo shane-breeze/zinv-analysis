@@ -55,17 +55,17 @@ def create_genpart_candidates(ev, gp_mask, gdl_idx):
                 igds = gps_gdidx[igps]
                 if igds >= 0:
                     igds += gds_start
-                    pdgs[iev+pos] = gds_pdgId[igds]
-                    pts[iev+pos] = gds_pt[igds]
-                    etas[iev+pos] = gds_eta[igds]
-                    phis[iev+pos] = gds_phi[igds]
-                    masss[iev+pos] = gds_mass[igds]
+                    pdgs[2*iev+pos] = gds_pdgId[igds]
+                    pts[2*iev+pos] = gds_pt[igds]
+                    etas[2*iev+pos] = gds_eta[igds]
+                    phis[2*iev+pos] = gds_phi[igds]
+                    masss[2*iev+pos] = gds_mass[igds]
                 else:
-                    pdgs[iev+pos] = gps_pdgId[igps]
-                    pts[iev+pos] = gps_pt[igps]
-                    etas[iev+pos] = gps_eta[igps]
-                    phis[iev+pos] = gps_phi[igps]
-                    masss[iev+pos] = gps_mass[igps]
+                    pdgs[2*iev+pos] = gps_pdgId[igps]
+                    pts[2*iev+pos] = gps_pt[igps]
+                    etas[2*iev+pos] = gps_eta[igps]
+                    phis[2*iev+pos] = gps_phi[igps]
+                    masss[2*iev+pos] = gps_mass[igps]
         return pdgs, pts, etas, phis, masss
 
     pdg, pt, eta, phi, mass = create_genpart_candidates_jit(
@@ -86,7 +86,7 @@ def create_genpart_candidates(ev, gp_mask, gdl_idx):
         ev.GenDressedLepton.pt.stops,
     )
 
-    starts = np.arange(0, ev.size, 2)
+    starts = np.arange(0, 2*ev.size, 2)
     stops = starts[:] + 2
 
     return (
