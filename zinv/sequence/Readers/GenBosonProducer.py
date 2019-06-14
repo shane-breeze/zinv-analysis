@@ -5,7 +5,6 @@ from functools import partial
 
 from . import Collection
 from zinv.utils.Geometry import DeltaR2, LorTHPMToXYZE, LorXYZEToTHPM
-from zinv.utils.NumbaFuncs import get_nth_sorted_object_indices
 
 class GenBosonProducer(object):
     def __init__(self, **kwargs):
