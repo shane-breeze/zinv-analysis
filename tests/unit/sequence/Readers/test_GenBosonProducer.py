@@ -60,6 +60,7 @@ def module():
     )
 )
 def test_genbosonproducer_event(module, event, inputs, outputs):
+    event.size = len(inputs["gp_pdg"])
     event.GenPart.pdgId = awk.JaggedArray.fromiter(inputs["gp_pdg"]).astype(np.int32)
     event.GenPart.pt = awk.JaggedArray.fromiter(inputs["gp_pt"]).astype(np.float32)
     event.GenPart.eta = awk.JaggedArray.fromiter(inputs["gp_eta"]).astype(np.float32)
