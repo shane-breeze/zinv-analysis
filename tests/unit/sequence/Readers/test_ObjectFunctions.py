@@ -131,9 +131,11 @@ def test_objfunc_jptshift(module, event, inputs, outputs):
     event.nsig = inputs["nsig"]
     event.source = inputs["source"]
 
-    event.Jet.pt = awk.JaggedArray(
+    jet_pt = awk.JaggedArray(
         inputs["starts"], inputs["stops"], np.array(inputs["jpt"], dtype=np.float32),
     )
+    event.Jet_pt = jet_pt
+    event.Jet.pt = jet_pt
 
     for key, val in inputs["evvars"].items():
         setattr(event.Jet, key, awk.JaggedArray(
