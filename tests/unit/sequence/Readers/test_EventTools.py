@@ -8,7 +8,7 @@ from zinv.sequence.Readers.EventTools import get_size
 
 class DummyEvent(object):
     def __init__(self):
-        self.MET_pt = np.array([1., 2.])
+        self.run = np.array([100001, 100002])
         self._nonbranch_cache = {}
 
 @pytest.fixture()

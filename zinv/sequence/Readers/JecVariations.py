@@ -32,6 +32,20 @@ def met_shift(ev):
         ev.Jet_pt.starts, ev.Jet_pt.stops,
     )
 
+def met_sumet_shift(ev):
+    @nb.jit(["float32[:](float32[:], float32[:], float32[:], int64[:], int64[:])"])
+    def nb_met_sumet_shift(sumet, jpt, cjpt, jstas, jstos):
+        csumet = np.zeros_like(sumet, dtype=np.float32)
+        for iev, (start, stop) in enumerate(zip(jstas, jstos)):
+            csumet[iev] = sumet[iev] + (cjpt[start:stop] - jpt[start:stop]).sum()
+        return csumet
+
+    return nb_met_sumet_shift(
+        ev.MET_sumEtJESOnly,
+        ev.Jet_ptJESOnly.content, ev.Jet_pt.content,
+        ev.Jet_pt.starts, ev.Jet_pt.stops,
+    )
+
 def match_jets_from_genjets(event, maxdr, ndpt):
     @nb.njit(["int64[:](float32[:],float32[:],float32[:],float32[:],int64[:],int64[:],float32[:],float32[:],float32[:],int64[:],int64[:],float32,float32)"])
     def numba_function(
@@ -115,18 +129,23 @@ class JecVariations(object):
         event.Jet_ptJESOnly = event.Jet_pt[:,:]
         event.MET_ptJESOnly = event.MET_pt[:]
         event.MET_phiJESOnly = event.MET_phi[:]
+        event.MET_sumEtJESOnly = event.MET_sumEt[:]
 
         if self.apply_jer_corrections:
             sf = event.Jet_jerSF(event, "", 0.)
-            event.Jet_pt = (event.Jet_pt*sf)[:,:].astype(np.float32)
+            event.Jet_pt = (event.Jet_ptJESOnly*sf)[:,:].astype(np.float32)
+
             met, mephi = met_shift(event)
             event.MET_pt = met[:].astype(np.float32)
             event.MET_phi = mephi[:].astype(np.float32)
 
+            met_sumet = met_sumet_shift(event)
+            event.MET_sumEt = met_sumet[:].astype(np.float32)
+
 def jet_pt_res(ev, jers):
     indices = get_bin_indices(
         [np.abs(ev.Jet_eta.content),
-         event_to_object_var(ev.fixedGridRhoFastjetAll, ev.Jet_pt.starts, ev.Jet_pt.stops)],
+         event_to_object_var(ev.fixedGridRhoFastjetAll, ev.Jet_ptJESOnly.starts, ev.Jet_ptJESOnly.stops)],
         [jers["eta_low"].values, jers["rho_low"].values],
         [jers["eta_high"].values, jers["rho_high"].values],
         1,
@@ -135,16 +154,16 @@ def jet_pt_res(ev, jers):
     params = df[["param0", "param1", "param2", "param3"]].values.astype(np.float32)
     ptbounds = df[["pt_low", "pt_high"]].values
     return awk.JaggedArray(
-        ev.Jet_pt.starts, ev.Jet_pt.stops,
+        ev.Jet_ptJESOnly.starts, ev.Jet_ptJESOnly.stops,
         jer_formula(
-            np.minimum(np.maximum(ev.Jet_pt.content, ptbounds[:,0]), ptbounds[:,1]).astype(np.float32),
+            np.minimum(np.maximum(ev.Jet_ptJESOnly.content, ptbounds[:,0]), ptbounds[:,1]).astype(np.float32),
             params[:,0], params[:,1], params[:,2], params[:,3],
         ),
     )
 
 def jer_corr(ev, source, nsig, jersfs, maxdr_jets_with_genjets, ndpt_jets_with_genjets):
     flavour = "jerSF"
-    if source == "jer" and nsig != 0.:
+    if source == "jerSF" and nsig != 0.:
         updown = "Up" if nsig>0. else "Down"
         flavour += updown
 
@@ -156,9 +175,9 @@ def jer_corr(ev, source, nsig, jersfs, maxdr_jets_with_genjets, ndpt_jets_with_g
             1,
         )[:,0]
         ressfs = jersfs.iloc[indices][["corr", "corr_up", "corr_down"]].values
-        cjer = np.ones_like(ev.Jet_pt.content, dtype=np.float32)
-        cjer_up = np.ones_like(ev.Jet_pt.content, dtype=np.float32)
-        cjer_down = np.ones_like(ev.Jet_pt.content, dtype=np.float32)
+        cjer = np.ones_like(ev.Jet_ptJESOnly.content, dtype=np.float32)
+        cjer_up = np.ones_like(ev.Jet_ptJESOnly.content, dtype=np.float32)
+        cjer_down = np.ones_like(ev.Jet_ptJESOnly.content, dtype=np.float32)
 
         # match gen jets
         gidx = match_jets_from_genjets(
@@ -169,7 +188,7 @@ def jer_corr(ev, source, nsig, jersfs, maxdr_jets_with_genjets, ndpt_jets_with_g
         gpt_matched = ev.GenJet_pt.content[indices]
         mask = mask.content
 
-        gen_var = np.abs(1.-gpt_matched/ev.Jet_pt.content[mask])
+        gen_var = np.abs(1.-gpt_matched/ev.Jet_ptJESOnly.content[mask])
         gaus_var = np.random.normal(0., gen_var)
         cjer[mask] = 1. + (ressfs[mask,0]-1.)*gaus_var
         cjer_up[mask] = 1. + (ressfs[mask,1]-1.)*gaus_var
@@ -194,7 +213,7 @@ def jer_corr(ev, source, nsig, jersfs, maxdr_jets_with_genjets, ndpt_jets_with_g
         cjer_down[cjer==0.] = 0.
 
         # write to event
-        starts, stops = ev.Jet_pt.starts, ev.Jet_pt.stops
+        starts, stops = ev.Jet_ptJESOnly.starts, ev.Jet_ptJESOnly.stops
         ev.Jet_JECjerSF = awk.JaggedArray(starts, stops, cjer)
         ev.Jet_JECjerSFUp = awk.JaggedArray(starts, stops, cjer_up)
         ev.Jet_JECjerSFDown = awk.JaggedArray(starts, stops, cjer_down)

@@ -61,15 +61,16 @@ def event_module_run(module, event):
         return 0.5
     np.random.normal = mock.Mock(side_effect=norm)
     inputs = {
-        "jpt":    [[], [16.],   [60., 70.]],
-        "jeta":   [[], [-3.1],  [0.5, 3.1]],
-        "jphi":   [[], [0.1],   [0.3, 0.5]],
-        "gjpt":   [[], [17.],   [65., 75.]],
-        "gjeta":  [[], [-3.11], [1.0, 3.09]],
-        "gjphi":  [[], [0.1],   [0.3, 0.5]],
-        "rho":    [0.,   20.,  50.],
-        "met":    [200., 220., 240.],
-        "mephi":  [0.9,  0.1,  -0.7],
+        "jpt":       [[], [16.],   [60., 70.]],
+        "jeta":      [[], [-3.1],  [0.5, 3.1]],
+        "jphi":      [[], [0.1],   [0.3, 0.5]],
+        "gjpt":      [[], [17.],   [65., 75.]],
+        "gjeta":     [[], [-3.11], [1.0, 3.09]],
+        "gjphi":     [[], [0.1],   [0.3, 0.5]],
+        "rho":       [0.,   20.,  50.],
+        "met":       [200., 220., 240.],
+        "mephi":     [0.9,  0.1,  -0.7],
+        "met_sumet": [400., 600., 800.],
     }
     outputs = {
         "jpt":         [[], [18.624],            [76.29538585,    81.48]],
@@ -96,9 +97,12 @@ def event_module_run(module, event):
     rho = np.array(inputs["rho"], dtype=np.float32)
     met_pt = np.array(inputs["met"], dtype=np.float32)
     met_phi = np.array(inputs["mephi"], dtype=np.float32)
+    met_sumet = np.array(inputs["met_sumet"], dtype=np.float32)
 
     event.Jet_pt = jet_pt
     event.Jet.pt = jet_pt
+    event.Jet_ptJESOnly = jet_pt
+    event.Jet.ptJESOnly = jet_pt
     event.Jet_eta = jet_eta
     event.Jet.eta = jet_eta
     event.Jet_phi = jet_phi
@@ -114,8 +118,17 @@ def event_module_run(module, event):
     event.fixedGridRhoFastjetAll = rho
     event.MET_pt = met_pt
     event.MET.pt = met_pt
+    event.MET_ptJESOnly = met_pt
+    event.MET.ptJESOnly = met_pt
     event.MET_phi = met_phi
     event.MET.phi = met_phi
+    event.MET_phiJESOnly = met_phi
+    event.MET.phiJESOnly = met_phi
+
+    event.MET_sumEt = met_sumet
+    event.MET.sumEt = met_sumet
+    event.MET_sumEtJESOnly = met_sumet
+    event.MET.sumEtJESOnly = met_sumet
 
     module.begin(event)
     #module.event(event)
@@ -136,7 +149,7 @@ def test_jec_variations_jersfdown(event_module_run):
     event = event_module_run[0]
     outputs = event.outputs
     assert np.allclose(
-        event.Jet_jerSF(event, "jer", -1.).content,
+        event.Jet_jerSF(event, "jerSF", -1.).content,
         awk.JaggedArray.fromiter(outputs["jjersfdown"]).astype(np.float32).content,
         rtol=1e-5, equal_nan=True,
     )
@@ -145,7 +158,7 @@ def test_jec_variations_jersfup(event_module_run):
     event = event_module_run[0]
     outputs = event.outputs
     assert np.allclose(
-        event.Jet_jerSF(event, "jer", 1.).content,
+        event.Jet_jerSF(event, "jerSF", 1.).content,
         awk.JaggedArray.fromiter(outputs["jjersfup"]).astype(np.float32).content,
         rtol=1e-5, equal_nan=True,
     )

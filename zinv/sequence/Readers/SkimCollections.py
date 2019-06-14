@@ -5,7 +5,7 @@ import operator
 
 from cachetools import cachedmethod
 from cachetools.keys import hashkey
-from functools import partial
+from functools import partial, reduce
 
 from zinv.utils.Lambda import Lambda
 

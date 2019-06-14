@@ -3,26 +3,22 @@ JetVeto:
     selections:
         - "ev, source, nsig: ev.Jet_ptShift(ev, source, nsig)>40"
         - "ev, source, nsig: ev.Jet.jetId>=1"
-        - "ev, source, nsig: (ev.Jet.puId>=1) | (ev.Jet_ptShift(ev, source, nsig)>50.)"
 JetSelection:
     original: "Jet"
     selections:
         - "ev, source, nsig: ev.Jet_ptShift(ev, source, nsig)>40"
         - "ev, source, nsig: np.abs(ev.Jet.eta)<2.4"
         - "ev, source, nsig: ev.Jet.jetId>=1"
-        - "ev, source, nsig: (ev.Jet.puId>=1) | (ev.Jet_ptShift(ev, source, nsig)>50.)"
 JetFwdSelection:
     original: "Jet"
     selections:
         - "ev, source, nsig: np.abs(ev.Jet.eta)>=2.4"
         - "ev, source, nsig: ev.Jet.jetId>=1"
-        - "ev, source, nsig: (ev.Jet.puId>=1) | (ev.Jet_ptShift(ev, source, nsig)>50.)"
 JetBVeto:
     original: "Jet"
     selections:
         - "ev, source, nsig: ev.Jet_ptShift(ev, source, nsig)>40"
         - "ev, source, nsig: ev.Jet.jetId>=1"
-        - "ev, source, nsig: (ev.Jet.puId>=1) | (ev.Jet_ptShift(ev, source, nsig)>50.)"
         - "ev, source, nsig: ev.Jet.btagCSVV2>0.8484"
 JetBSelection:
     original: "Jet"
@@ -30,7 +26,6 @@ JetBSelection:
         - "ev, source, nsig: ev.Jet_ptShift(ev, source, nsig)>40"
         - "ev, source, nsig: np.abs(ev.Jet.eta)<2.4"
         - "ev, source, nsig: ev.Jet.jetId>=1"
-        - "ev, source, nsig: (ev.Jet.puId>=1) | (ev.Jet_ptShift(ev, source, nsig)>50.)"
         - "ev, source, nsig: ev.Jet.btagCSVV2>0.8484"
 MuonVeto:
     original: "Muon"

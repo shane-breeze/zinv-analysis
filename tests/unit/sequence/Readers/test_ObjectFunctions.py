@@ -17,7 +17,7 @@ class DummyEvent(object):
         self.source = ''
         self.cache = {}
         self.attribute_variation_sources = [
-            "Var1", "muonPtScale", "eleEnergyScaleBug", "photonEnergyScale",
+            "Var1", "muonPtScale", "eleEnergyScale", "photonEnergyScale",
             "jesTotal", "jerSF", "unclust",
         ]
 
@@ -79,48 +79,37 @@ def test_objfunc_begin(module, event):
             "jptshift": [20., 40., 60., 80.],
         }], [{
             "nsig":   1,
-            "source": 'Var1',
+            "source": 'jesVar1',
             "starts": [0, 1, 2],
             "stops":  [1, 2, 4],
             "jpt":    [20., 40., 60., 80.],
             "evvars": {
-                "JECVar1Up": [0.1, 0.2, 0.3, 0.4],
-                "JECVar1Down": [-0.05, 0.1, -0.6, -0.9],
+                "jesVar1Up": [0.1, 0.2, 0.3, 0.4],
+                "jesVar1Down": [-0.05, 0.1, -0.6, -0.9],
             },
         }, {
             "jptshift": [20.*1.1, 40.*1.2, 60.*1.3, 80.*1.4],
         }], [{
             "nsig":   -1,
-            "source": 'Var1',
+            "source": 'jesVar1',
             "starts": [0, 1, 2],
             "stops":  [1, 2, 4],
             "jpt":    [20., 40., 60., 80.],
             "evvars": {
-                "JECVar1Up": [0.1, 0.2, 0.3, 0.4],
-                "JECVar1Down": [-0.05, 0.1, -0.6, -0.9],
+                "jesVar1Up": [0.1, 0.2, 0.3, 0.4],
+                "jesVar1Down": [-0.05, 0.1, -0.6, -0.9],
             },
         }, {
             "jptshift": [20.*0.95, 40.*1.1, 60.*0.4, 80.*0.1],
         }], [{
             "nsig":   1,
-            "source": 'Var1',
+            "source": 'jesVar1',
             "starts": [0, 1, 2],
             "stops":  [1, 2, 4],
             "jpt":    [20., 40., 60., 80.],
             "evvars": {
-                "JECVar1Up": [0.1, 0.2, 0.3, 0.4],
-            },
-        }, {
-            "jptshift": [20., 40., 60., 80.],
-        }], [{
-            "nsig":   1,
-            "source": 'Var1',
-            "starts": [0, 1, 2],
-            "stops":  [1, 2, 4],
-            "jpt":    [20., 40., 60., 80.],
-            "evvars": {
-                "JECVar2Up": [0.1, 0.2, 0.3, 0.4],
-                "JECVar2Down": [-0.05, 0.1, -0.6, -0.9],
+                "jesVar2Up": [0.1, 0.2, 0.3, 0.4],
+                "jesVar2Down": [-0.05, 0.1, -0.6, -0.9],
             },
         }, {
             "jptshift": [20., 40., 60., 80.],
@@ -131,17 +120,42 @@ def test_objfunc_jptshift(module, event, inputs, outputs):
     event.nsig = inputs["nsig"]
     event.source = inputs["source"]
 
-    event.Jet.pt = awk.JaggedArray(
+    jet_pt = awk.JaggedArray(
         inputs["starts"], inputs["stops"], np.array(inputs["jpt"], dtype=np.float32),
     )
+    event.Jet_pt = jet_pt
+    event.Jet.pt = jet_pt
 
+    curr_source = ""
+    arr_up = awk.JaggedArray(
+        inputs["starts"], inputs["stops"], np.zeros_like(inputs["jpt"], dtype=np.float32),
+    )
+    arr_down = awk.JaggedArray(
+        inputs["starts"], inputs["stops"], np.zeros_like(inputs["jpt"], dtype=np.float32),
+    )
     for key, val in inputs["evvars"].items():
-        setattr(event.Jet, key, awk.JaggedArray(
-            inputs["starts"], inputs["stops"], np.array(val, dtype=np.float32),
-        ))
+        curr_source = key.replace("Up", "").replace("Down", "")
+        if key.endswith("Up"):
+            arr_up = awk.JaggedArray(
+                inputs["starts"], inputs["stops"], np.array(val, dtype=np.float32),
+            )
+        elif key.endswith("Down"):
+            arr_down = awk.JaggedArray(
+                inputs["starts"], inputs["stops"], np.array(val, dtype=np.float32),
+            )
+
+    jer_sf = lambda ev, source, nsig: (
+        (arr_up if nsig>=0. else arr_down) if source==curr_source else
+        awk.JaggedArray(inputs["starts"], inputs["stops"], np.zeros_like(inputs["jpt"], dtype=np.float32))
+    )
+    event.Jet_jesSF = jer_sf
+    event.Jet.jesSF = jer_sf
 
     module.begin(event)
     jptshift = event.Jet_ptShift(event, event.source, event.nsig)
+
+    print(jptshift.content)
+    print(np.array(outputs["jptshift"]))
 
     assert np.array_equal(jptshift.starts, np.array(inputs["starts"]))
     assert np.array_equal(jptshift.stops, np.array(inputs["stops"]))
@@ -282,7 +296,7 @@ def test_objfunc_muptshift(module, event, inputs, outputs):
             "eptshift": [20., 40., 60., 80.],
         }], [{
             "nsig":   1,
-            "source": 'eleEnergyScaleBug',
+            "source": 'eleEnergyScale',
             "starts": [0, 1, 2],
             "stops":  [1, 2, 4],
             "ept":    [20., 40., 60., 80.],
@@ -293,7 +307,7 @@ def test_objfunc_muptshift(module, event, inputs, outputs):
             "eptshift": [21., 42., 64., 88.],
         }], [{
             "nsig":   -1,
-            "source": 'eleEnergyScaleBug',
+            "source": 'eleEnergyScale',
             "starts": [0, 1, 2],
             "stops":  [1, 2, 4],
             "ept":    [20., 40., 60., 80.],
