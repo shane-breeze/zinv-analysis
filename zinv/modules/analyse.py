@@ -48,7 +48,7 @@ def run(
         max_files_per_dataset = nfiles_per_dataset,
         max_files_per_process = nfiles_per_process,
         nevents_per_block = blocksize,
-        branch_cache = LFUCache(cachesize, get_size),
+        branch_cache = LFUCache(int(cachesize*1024**3), get_size),
     )
     tasks = process.run(datasets, sequence)
 
@@ -68,7 +68,7 @@ def analyse(
     trigger_cfg, hdf_cfg, name="zinv", output="output", tempdir="_ccsp_temp",
     mode="multiprocessing", batch_opts="-q hep.q", ncores=0,
     nblocks_per_dataset=-1, nblocks_per_process=-1, nfiles_per_dataset=-1,
-    nfiles_per_process=1, blocksize=1_000_000, cachesize=8*1024**3,
+    nfiles_per_process=1, blocksize=1000000, cachesize=8,
     quiet=False, sample=None,
 ):
     if not os.path.exists(output):

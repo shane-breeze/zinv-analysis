@@ -21,8 +21,8 @@ class EventTools(object):
         event.source = ''
 
         # Not callable but want it to persist on across event blocks
-        # Return object sizes in bytes
-        event._nonbranch_cache["cache"] = LRUCache(self.maxsize, get_size)
+        # Return object sizes in GB
+        event._nonbranch_cache["cache"] = LRUCache(int(self.maxsize*1024**3), get_size)
         event._nonbranch_cache["register_function"] = register_function
 
     def event(self, event):
