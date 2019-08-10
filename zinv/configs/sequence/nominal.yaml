@@ -1,11 +1,11 @@
 sequence:
     - name: "event_tools"
-      module: "zinv.readers.EventTools"
+      module: "zinv.modules.readers.EventTools"
       args:
           maxsize: 8
       collector: "alphatwirl.loop.NullCollector"
     - name: "collection_creator"
-      module: "zinv.readers.CollectionCreator"
+      module: "zinv.modules.readers.CollectionCreator"
       args:
           collections: [
               "CaloMET", "MET", "Jet", "Electron", "Muon", "Photon", "Tau",
@@ -13,28 +13,28 @@ sequence:
           ]
       collector: "alphatwirl.loop.NullCollector"
     - name: "gen_boson_producer"
-      module: "zinv.readers.GenBosonProducer"
+      module: "zinv.modules.readers.GenBosonProducer"
       args:
           data: False
       collector: "alphatwirl.loop.NullCollector"
     - name: "lhe_part_assigner"
-      module: "zinv.readers.LHEPartAssigner"
+      module: "zinv.modules.readers.LHEPartAssigner"
       args:
           old_parents: ["WJetsToLNu", "DYJetsToLL", "ZJetsToLL", "GStarJetsToLL"]
           data: False
       collector: "alphatwirl.loop.NullCollector"
     - name: "gen_part_assigner"
-      module: "zinv.readers.GenPartAssigner"
+      module: "zinv.modules.readers.GenPartAssigner"
       args:
           old_parents: ["WJetsToLNu", "DYJetsToLL", "ZJetsToLL", "GStarJetsToLL"]
           data: False
       collector: "alphatwirl.loop.NullCollector"
     - name: "jec_variations"
-      module: "zinv.readers.JecVariations"
+      module: "zinv.modules.readers.JecVariations"
       args:
-          jes_unc_file: ""
-          jer_sf_file: ""
-          jer_file: ""
+          jes_unc_file: "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/jecs/Summer16_23Sep2016V4_MC_UncertaintySources_AK4PFchs.txt"
+          jer_sf_file: "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data//jecs/Spring16_25nsV10a_MC_SF_AK4PFchs.txt"
+          jer_file: "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/jecs/Spring16_25nsV10_MC_PtResolution_AK4PFchs.txt"
           apply_jer_corrections: True
           jes_regex: "jes(?P<source>.*)"
           unclust_threshold: 15.
@@ -43,7 +43,7 @@ sequence:
           data: False
       collector: "alphatwirl.loop.NullCollector"
     - name: "object_functions"
-      module: "zinv.readers.ObjectFunctions"
+      module: "zinv.modules.readers.ObjectFunctions"
       args:
           unclust_threshold: 15.
           selections: [
@@ -69,153 +69,165 @@ sequence:
           ]
       collector: "alphatwirl.loop.NullCollector"
     - name: "skim_collections"
-      module: "zinv.readers.SkimCollections"
+      module: "zinv.modules.readers.SkimCollections"
       collector: "alphatwirl.loop.NullCollector"
     - name: "tau_cross_cleaning"
-      module: "zinv.readers.ObjectCrossCleaning"
+      module: "zinv.modules.readers.ObjectCrossCleaning"
       args:
           collections: ["Tau"]
           ref_collections: ["MuonVeto", "ElectronVeto"]
           mindr: 0.4
       collector: "alphatwirl.loop.NullCollector"
     - name: "jet_cross_cleaning"
-      module: "zinv.readers.ObjectCrossCleaning"
+      module: "zinv.modules.readers.ObjectCrossCleaning"
       args:
           collections: ["Jet"]
           ref_collections: ["MuonVeto", "ElectronVeto", "PhotonVeto", "TauVeto"]
           mindr: 0.4
       collector: "alphatwirl.loop.NullCollector"
     - name: "event_functions"
-      module: "zinv.readers.EventFunctions"
+      module: "zinv.modules.readers.EventFunctions"
       collector: "alphatwirl.loop.NullCollector"
     - name: "trigger_checker"
-      module: "zinv.readers.TriggerChecker"
+      module: "zinv.modules.readers.TriggerChecker"
       collector: "alphatwirl.loop.NullCollector"
     - name: "certified_lumi_checker"
-      module: "zinv.readers.CertifiedLumiChecker"
+      module: "zinv.modules.readers.CertifiedLumiChecker"
       args:
-          lumi_json_path: ""
+          lumi_json_path: "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/json/Cert_271036-284044_13TeV_23Sep2016ReReco_Collisions16_JSON.txt"
           mc: False
       collector: "alphatwirl.loop.NullCollector"
     - name: "selection_producer"
-      module: "zinv.readers.SelectionProducer"
+      module: "zinv.modules.readers.SelectionProducer"
       collector: "alphatwirl.loop.NullCollector"
     - name: "weight_xsection_lumi"
-      module: "zinv.readers.WeightXsLumi"
+      module: "zinv.modules.readers.WeightXsLumi"
       args:
           data: False
       collector: "alphatwirl.loop.NullCollector"
     - name: "weight_pdf_scale"
-      module: "zinv.readers.WeightPdfScale"
+      module: "zinv.modules.readers.WeightPdfScale"
       args:
           data: False
       collector: "alphatwirl.loop.NullCollector"
     - name: "weight_pu"
-      module: "zinv.readers.WeightPileup"
+      module: "zinv.modules.readers.WeightPileup"
       args:
-          correction_file: ""
+          correction_file: "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/pileup/nTrueInt_corrections.txt"
           variable: "Pileup_nTrueInt"
           data: False
       collector: "alphatwirl.loop.NullCollector"
     - name: "weight_met_trigger"
-      module: "zinv.readers.WeightMetTrigger"
+      module: "zinv.modules.readers.WeightMetTrigger"
       args:
           correction_files:
-              0: ""
-              1: ""
-              2: ""
+              0: "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/mettrigger/met_trigger_correction_0mu.txt"
+              1: "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/mettrigger/met_trigger_correction_1mu.txt"
+              2: "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/mettrigger/met_trigger_correction_2mu.txt"
           data: False
       collector: "alphatwirl.loop.NullCollector"
     - name: "weight_electrons"
-      module: "zinv.readers.WeightObjects"
+      module: "zinv.modules.readers.WeightObjects"
       args:
           correctors:
               - name: "eleIdIsoTight"
                 collection: "Electron"
-                binning_variables: ["ev, source, nsig: ev.Electron.eta", "ev, source, nsig: ev.Electron_ptShift(ev, source, nsig)"]
-                weighted_paths: [[1, ""]]
+                binning_variables:
+                    - "ev, source, nsig: ev.Electron.eta"
+                    - "ev, source, nsig: ev.Electron_ptShift(ev, source, nsig)"
+                weighted_paths:
+                    - [1, "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/electrons/electron_idiso_tight.txt"]
                 add_syst: "ev, source, nsig: awk.JaggedArray.zeros_like(ev.Electron.eta)"
                 nuisances: ["eleIdIsoTight", "eleEnergyScale"]
               - name: "eleIdIsoVeto"
                 collection: "Electron"
-                binning_variables: ["ev, source, nsig: ev.Electron.eta", "ev, source, nsig: ev.Electron_ptShift(ev, source, nsig)"]
-                weighted_paths: [[1, ""]]
+                binning_variables:
+                    - "ev, source, nsig: ev.Electron.eta"
+                    - "ev, source, nsig: ev.Electron_ptShift(ev, source, nsig)"
+                weighted_paths:
+                    - [1, "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/electrons/electron_idiso_veto.txt"]
                 add_syst: "ev, source, nsig: awk.JaggedArray.zeros_like(ev.Electron.eta)"
                 nuisances: ["eleIdIsoVeto", "eleEnergyScale"]
               - name: "eleReco"
                 collection: "Electron"
-                binning_variables: ["ev, source, nsig: ev.Electron.eta", "ev, source, nsig: ev.Electron_ptShift(ev, source, nsig)"]
-                weighted_paths: [[1, ""]]
+                binning_variables:
+					- "ev, source, nsig: ev.Electron.eta"
+					- "ev, source, nsig: ev.Electron_ptShift(ev, source, nsig)"
+                weighted_paths:
+                    - [1, "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/electrons/electron_reconstruction.txt"]
                 add_syst: "ev, source, nsig: 0.01*((ev.Electron_ptShift(ev, source, nsig)<20) | (ev.Electron_ptShift(ev, source, nsig)>80))"
                 nuisances: ["eleReco", "eleEnergyScale"]
               - name: "eleTrig"
                 collection: "Electron"
                 binning_variables: ["ev, source, nsig: ev.Electron_ptShift(ev, source, nsig)", "ev, source, nsig: np.abs(ev.Electron.eta)"]
-                weighted_paths: [[1, ""]]
+                weighted_paths:
+                    - [1, "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/electrons/electron_trigger_v2.txt"]
                 add_syst: "ev, source, nsig: awk.JaggedArray.zeros_like(ev.Electron.eta)"
                 nuisances: ["eleTrig", "eleEnergyScale"]
           data: False
       collector: "alphatwirl.loop.NullCollector"
     - name: "weight_muons"
-      module: "zinv.readers.WeightObjects"
+      module: "zinv.modules.readers.WeightObjects"
       args:
           correctors:
               - name: "muonIdTight"
                 collection: "Muon"
                 binning_variables: ["ev, source, nsig: np.abs(ev.Muon.eta)", "ev, source, nsig: ev.Muon_ptShift(ev, source, nsig)"]
                 weighted_paths:
-                    - [19.7, ""]
-                    - [16.2, ""]
+                    - [19.7, "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/muons/muon_id_loose_runBCDEF.txt"]
+                    - [16.2, "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/muons/muon_id_loose_runGH.txt"]
                 add_syst: "ev, source, nsig: 0.01*awk.JaggedArray.ones_like(ev.Muon.eta)"
                 nuisances: ["muonIdTight", "muonPtScale"]
               - name: "muonIdLoose"
                 collection: "Muon"
                 binning_variables: ["ev, source, nsig: np.abs(ev.Muon.eta)", "ev, source, nsig: ev.Muon_ptShift(ev, source, nsig)"]
                 weighted_paths:
-                    - [19.7, ""]
-                    - [16.2, ""]
+                    - [19.7, "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/muons/muon_id_loose_runBCDEF.txt"]
+                    - [16.2, "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/muons/muon_id_loose_runGH.txt"]
                 add_syst: "ev, source, nsig: 0.01*awk.JaggedArray.ones_like(ev.Muon.eta)"
                 nuisances: ["muonIdLoose", "muonPtScale"]
               - name: "muonIsoTight"
                 collection: "Muon"
                 binning_variables: ["ev, source, nsig: np.abs(ev.Muon.eta)", "ev, source, nsig: ev.Muon_ptShift(ev, source, nsig)"]
                 weighted_paths:
-                    - [19.7, ""]
-                    - [16.2, ""]
+                    - [19.7, "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/muons/muon_iso_tight_tightID_runBCDEF.txt"]
+                    - [16.2, "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/muons/muon_iso_tight_tightID_runGH.txt"]
                 add_syst: "ev, source, nsig: 0.005*awk.JaggedArray.ones_like(ev.Muon.eta)"
                 nuisances: ["muonIsoTight", "muonPtScale"]
               - name: "muonIsoLoose"
                 collection: "Muon"
                 binning_variables: ["ev, source, nsig: np.abs(ev.Muon.eta)", "ev, source, nsig: ev.Muon_ptShift(ev, source, nsig)"]
                 weighted_paths:
-                    - [19.7, ""]
-                    - [16.2, ""]
+                    - [19.7, "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/muons/muon_iso_loose_looseID_runBCDEF.txt"]
+                    - [16.2, "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/muons/muon_iso_loose_looseID_runGH.txt"]
                 add_syst: "ev, source, nsig: 0.005*awk.JaggedArray.ones_like(ev.Muon.eta)"
                 nuisances: ["muonIsoLoose", "muonPtScale"]
               - name: "muonTrig"
                 collection: "Muon"
                 binning_variables: ["ev, source, nsig: np.abs(ev.Muon.eta)", "ev, source, nsig: ev.Muon_ptShift(ev, source, nsig)"]
                 weighted_paths:
-                    - [19.7, ""]
-                    - [16.2, ""]
+                    - [19.7, "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/muons/muon_trigger_IsoMu24_OR_IsoTkMu24_runBCDEF.txt"]
+                    - [16.2, "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/muons/muon_trigger_IsoMu24_OR_IsoTkMu24_runGH.txt"]
                 add_syst: "ev, source, nsig: 0.005*awk.JaggedArray.ones_like(ev.Muon.eta)"
                 nuisances: ["muonTrig", "muonPtScale"]
           data: False
       collector: "alphatwirl.loop.NullCollector"
     - name: "weight_taus"
-      module: "zinv.readers.WeightObjects"
+      module: "zinv.modules.readers.WeightObjects"
       args:
           correctors:
               - name: "tauIdTight"
                 collection: "Tau"
-                binning_variables: ["ev, source, nsig: ev.Tau_ptShift(ev, source, nsig)"]
-                weighted_paths: [[1, ""]]
+                binning_variables:
+				    - "ev, source, nsig: ev.Tau_ptShift(ev, source, nsig)"
+                weighted_paths:
+                    - [1, "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/taus/tau_id_tight.txt"]
                 add_syst: "ev, source, nsig: 0.05*awk.JaggedArray.ones_like(ev.Tau.eta)"
                 nuisances: ["tauIdTight", "tauEnergyScale"]
           data: False
       collector: "alphatwirl.loop.NullCollector"
     - name: "weight_photon"
-      module: "zinv.readers.WeightObjects"
+      module: "zinv.modules.readers.WeightObjects"
       args:
           correctors:
               - name: "photonIdLoose"
@@ -223,7 +235,8 @@ sequence:
                 binning_variables:
                     - "ev, source, nsig: ev.Photon.eta"
                     - "ev, source, nsig: ev.Photon_ptShift(ev, source, nsig)"
-                weighted_paths: [[1, ""]]
+                weighted_paths:
+                    - [1, "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/photons/photon_cutbasedid_loose.txt"]
                 add_syst: "ev, source, nsig: awk.JaggedArray.zeros_like(ev.Photon.eta)"
                 nuisances: ["photonIdLoose", "photonEnergyScale"]
               - name: "photonPixelSeedVeto"
@@ -232,13 +245,14 @@ sequence:
                     - "ev, source, nsig: ev.Photon.r9"
                     - "ev, source, nsig: np.abs(ev.Photon.eta)"
                     - "ev, source, nsig: ev.Photon_ptShift(ev, source, nsig)"
-                weighted_paths: [[1, ""]]
+                weighted_paths:
+                    - [1, "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/photons/photon_pixelseedveto.txt"]
                 add_syst: "ev, source, nsig: awk.JaggedArray.zeros_like(ev.Photon.eta)"
                 nuisances: ["photonPixelSeedVeto", "photonEnergyScale"]
           data: False
       collector: "alphatwirl.loop.NullCollector"
     - name: "weight_btags"
-      module: "zinv.readers.WeightBTagging"
+      module: "zinv.modules.readers.WeightBTagging"
       args:
           operating_point: "medium"
           threshold: 0.8484
@@ -246,16 +260,16 @@ sequence:
               b: "comb"
               c: "comb"
               udsg: "incl"
-          calibration_file: ""
+          calibration_file: "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/btagging/CSVv2_Moriond17_B_H_params.csv"
           data: False
       collector: "alphatwirl.loop.NullCollector"
     - name: "weight_qcd_ewk"
-      module: "zinv.readers.WeightQcdEwk"
+      module: "zinv.modules.readers.WeightQcdEwk"
       args:
           input_paths:
-              ZJetsToNuNu: ""
-              WJetsToLNu: ""
-              DYJetsToLL: ""
+              ZJetsToNuNu: ["http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/qcd_ewk/vvj.dat", "vvj_PIV_{}"]
+              WJetsToLNu: ["http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/qcd_ewk/evj.dat", "evj_PIV_{}"]
+              DYJetsToLL: ["http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/qcd_ewk/eej.dat", "eej_PIV_{}"]
           underflow: True
           overflow: True
           formula: "((K_NNLO + d1k_qcd*d1K_NNLO + d2k_qcd*d2K_NNLO + d3k_qcd*d3K_NNLO)*(1 + kappa_EW + d1k_ew*d1kappa_EW + isz*(d2k_ew_z*d2kappa_EW + d3k_ew_z*d3kappa_EW) + isw*(d2k_ew_w*d2kappa_EW + d3k_ew_w*d3kappa_EW)) + dk_mix*dK_NNLO_mix)/(K_NLO + d1k_qcd*d1K_NLO + d2k_qcd*d2K_NLO + d3k_qcd*d3K_NLO)"
@@ -271,10 +285,10 @@ sequence:
           data: False
       collector: "alphatwirl.loop.NullCollector"
     - name: "weight_prefiring"
-      module: "zinv.readers.WeightPreFiring"
+      module: "zinv.modules.readers.WeightPreFiring"
       args:
-          jet_eff_map_path: ""
-          photon_eff_map_path: ""
+          jet_eff_map_path: "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/prefiring/L1prefiring_jetpt_2016BtoH.txt"
+          photon_eff_map_path: "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/prefiring/L1prefiring_photonpt_2016BtoH.txt"
           jet_selection: "ev, source, nsig: (ev.Jet_ptShift(ev, source, nsig)>20) & ((2<np.abs(ev.Jet_eta)) & (np.abs(ev.Jet_eta)<3))"
           photon_selection: "ev, source, nsig: (ev.Photon_ptShift(ev, source, nsig)>20) & ((2<np.abs(ev.Photon_eta)) & (np.abs(ev.Photon_eta)<3))"
           syst: 0.2

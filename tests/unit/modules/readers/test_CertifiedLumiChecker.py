@@ -26,16 +26,27 @@ def obj():
     return CertifiedLumiChecker(lumi_json_path="test.json")
 
 def test_open(obj, event):
-    data = """{"1": [[2, 5]], "2": [[0, 9], [11, 20]]}"""
-    mocked_open = mock.mock_open(read_data=data)
-    with mock.patch("builtins.open", mocked_open):
+    data = """{"1": [[2, 5]], "2": [[0, 9], [11, 20]]}""".encode('utf-8')
+
+    mock_file = mock.MagicMock()
+    mock_file.read.return_value = data
+
+    cxtmgr = mock.MagicMock()
+    cxtmgr.__enter__.return_value = mock_file
+    with mock.patch('urllib.request.urlopen', return_value=cxtmgr):
         obj.begin(event)
-    assert mocked_open.call_args_list == [mock.call("test.json", "r")]
+
+    assert True
 
 def test_is_certified(obj, event):
-    data = """{"1": [[2, 5]], "2": [[0, 9], [11, 20]]}"""
-    mocked_open = mock.mock_open(read_data=data)
-    with mock.patch("builtins.open", mocked_open):
+    data = """{"1": [[2, 5]], "2": [[0, 9], [11, 20]]}""".encode('utf-8')
+
+    mock_file = mock.MagicMock()
+    mock_file.read.return_value = data
+
+    cxtmgr = mock.MagicMock()
+    cxtmgr.__enter__.return_value = mock_file
+    with mock.patch('urllib.request.urlopen', return_value=cxtmgr):
         obj.begin(event)
 
     assert np.array_equal(

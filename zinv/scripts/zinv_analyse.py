@@ -31,7 +31,7 @@ def parse_args():
                         help="Config for the output HDF files")
     parser.add_argument("-n", "--name", default="zinv", type=str,
                         help="Name to pass to batch")
-    parser.add_argument("-o", "--output", default="output", type=str,
+    parser.add_argument("-o", "--outdir", default="output", type=str,
                         help="Where to save the results")
     parser.add_argument("-t", "--tempdir", default="_ccsp_temp", type=str,
                         help="Where to store the temp directory")

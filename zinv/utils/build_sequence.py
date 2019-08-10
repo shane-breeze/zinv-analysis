@@ -7,16 +7,21 @@ def open_yaml(path):
     with open(path, 'r') as f:
         return yaml.full_load(f)
 
+def import_function(module):
+    path = ".".join(module.split(".")[:-1])
+    attr = module.split(".")[-1]
+    return getattr(importlib.import_module(path), attr)
+
 def build_sequence(
     sequence_cfg_path, outdir, es_path, pos_path, ts_path, hdf_path,
 ):
     sequence = []
     sequence_cfg = open_yaml(sequence_cfg_path)
     for module in sequence_cfg["sequence"]:
-        reader_cls = importlib.import_module(module["module"])
-        reader = reader_cls(module["name"], **module.get("args", {}))
+        reader_cls = import_function(module["module"])
+        reader = reader_cls(name=module["name"], **module.get("args", {}))
 
-        collector_cls = importlib.import_module(module["collector"])
+        collector_cls = import_function(module["collector"])
         collector = collector_cls()
 
         reader.event_selection_path = os.path.abspath(es_path)
