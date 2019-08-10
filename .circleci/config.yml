@@ -16,7 +16,7 @@ jobs:
                 name: install dependencies
                 command: |
                     pip install --user -r requirements.txt --quiet
-                    pip install --user --quiet pytest
+                    pip install --user --quiet codecov coverage pytest pytest-cov mock
 
             - run:
                 name: run tests
