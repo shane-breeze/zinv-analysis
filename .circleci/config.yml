@@ -5,7 +5,7 @@ orbs:
 jobs:
     build:
         docker:
-            - image: circleci/python:2.7.15
+            - image: circleci/python:3.7.3
         working_directory: ~/repo
         environment:
             NUMBA_DISABLE_JIT: 1
@@ -14,7 +14,9 @@ jobs:
             - checkout
             - run:
                 name: install dependencies
-                command: pip install --user -r requirements.txt --quiet
+                command: |
+                    pip install --user -r requirements.txt --quiet
+                    pip install --user --quiet codecov coverage pytest pytest-cov mock
 
             - run:
                 name: run tests
