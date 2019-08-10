@@ -64,7 +64,7 @@ def test_triggerchecker_regex(module, inputs, outputs):
 def test_triggerchecker_open(module, event):
     data = """Data:\n    MET:\n        F1:\n            - 'HLT_PFMETNoMu90_PFMHTNoMu90_IDTight'"""
     mocked_open = mock.mock_open(read_data=data)
-    with mock.patch("__builtin__.open", mocked_open):
+    with mock.patch("builtins.open", mocked_open):
         module.begin(event)
     assert mocked_open.call_args_list == [mock.call("dummy_path.yaml", "r")]
 
@@ -94,7 +94,7 @@ def test_triggerchecker_begin(module, event, inputs):
     setattr(event, inputs["path"], np.array(inputs["trigger"], dtype=np.int32))
 
     mocked_open = mock.mock_open(read_data=data)
-    with mock.patch("__builtin__.open", mocked_open):
+    with mock.patch("builtins.open", mocked_open):
         module.begin(event)
 
     trigger = getattr(event, "Is{}Triggered".format(inputs["dataset"]))(event)

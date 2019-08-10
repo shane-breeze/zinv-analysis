@@ -40,7 +40,7 @@ def test_skimcollections_init(module):
 def test_skimcollections_open(module, event):
     data = """C1Sub:\n    original: \"C1\"\n    selections:\n        - \"ev, source, nsig: ev.C1Selection(ev, source, nsig)\""""
     mocked_open = mock.mock_open(read_data=data)
-    with mock.patch("__builtin__.open", mocked_open):
+    with mock.patch("builtins.open", mocked_open):
         module.begin(event)
     assert mocked_open.call_args_list == [mock.call("dummy_path.yaml", "r")]
 
@@ -60,7 +60,7 @@ def test_skimcollections_begin_onemask(module, event, inputs, outputs):
 
     data = """C1Sub:\n    original: \"C1\"\n    selections:\n        - \"ev, source, nsig: ev.C1Selection(ev, source, nsig)\""""
     mocked_open = mock.mock_open(read_data=data)
-    with mock.patch("__builtin__.open", mocked_open):
+    with mock.patch("builtins.open", mocked_open):
         module.begin(event)
 
     mask = event.C1_C1SubMask(event, event.source, event.nsig)
@@ -91,7 +91,7 @@ def test_skimcollections_begin_allmasks(module, event, inputs, outputs):
     data = """C1Veto:\n    original: \"C1\"\n    selections:\n        - \"ev, source, nsig: ev.C1Veto(ev, source, nsig)\"\n"""\
             + """C1Selection:\n    original: \"C1\"\n    selections:\n        - \"ev, source, nsig: ev.C1Selection(ev, source, nsig)\""""
     mocked_open = mock.mock_open(read_data=data)
-    with mock.patch("__builtin__.open", mocked_open):
+    with mock.patch("builtins.open", mocked_open):
         module.begin(event)
 
     mask_veto = event.C1_C1VetoMask(event, event.source, event.nsig)

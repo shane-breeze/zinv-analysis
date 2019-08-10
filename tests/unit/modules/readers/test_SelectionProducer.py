@@ -36,7 +36,7 @@ def test_selectionproducer_open(module, event):
         + """grouped_selections:\n    dummy_cat_sele:\n        - \"dummy_selection\"\n"""\
         + """cutflows:\n    dummy_cutflow:\n        dummy_cat:\n            - \"dummy_cat_sele\""""
     mocked_open = mock.mock_open(read_data=data)
-    with mock.patch("__builtin__.open", mocked_open):
+    with mock.patch("builtins.open", mocked_open):
         module.begin(event)
     assert mocked_open.call_args_list == [mock.call("dummy_path.yaml", "r")]
 
@@ -46,7 +46,7 @@ def test_selectionproducer_begin_selections(module, event):
         + """grouped_selections:\n    dummy_cat_sele:\n        - \"dummy_selection\"\n"""\
         + """cutflows:\n    dummy_cutflow:\n        Data:\n            - \"dummy_cat_sele\""""
     mocked_open = mock.mock_open(read_data=data)
-    with mock.patch("__builtin__.open", mocked_open):
+    with mock.patch("builtins.open", mocked_open):
         module.begin(event)
 
     assert module.selections == {
@@ -78,7 +78,7 @@ def test_selectionproducer_begin_evattr(module, event, inputs, outputs):
         + """grouped_selections:\n    dummy_cat_sele:\n        - \"dummy_selection\"\n"""\
         + """cutflows:\n    dummy_cutflow:\n        Data:\n            - \"dummy_cat_sele\""""
     mocked_open = mock.mock_open(read_data=data)
-    with mock.patch("__builtin__.open", mocked_open):
+    with mock.patch("builtins.open", mocked_open):
         module.begin(event)
 
     for cutflow, outsele in [
