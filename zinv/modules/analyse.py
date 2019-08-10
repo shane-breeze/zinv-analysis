@@ -6,8 +6,8 @@ from cachetools import LFUCache
 from atuproot.atuproot_main import AtUproot
 from zinv.utils.gittools import git_diff, git_revision_hash
 from zinv.utils.cache_funcs import get_size
-from zinv.datasets.datasets import get_datasets
-from zinv.sequence.config import build_sequence
+from zinv.utils.datasets import get_datasets
+from zinv.utils import build_sequence
 
 def generate_report(outdir):
     # command
