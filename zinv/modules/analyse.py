@@ -68,7 +68,7 @@ def analyse(
     trigger_cfg, hdf_cfg, name="zinv", output="output", tempdir="_ccsp_temp",
     mode="multiprocessing", batch_opts="-q hep.q", ncores=0,
     nblocks_per_dataset=-1, nblocks_per_process=-1, nfiles_per_dataset=-1,
-    nfiles_per_process=1, blocksize=1000000, cachesize=8,
+    nfiles_per_process=1, blocksize=1_000_000, cachesize=8,
     quiet=False, sample=None,
 ):
     if not os.path.exists(output):
