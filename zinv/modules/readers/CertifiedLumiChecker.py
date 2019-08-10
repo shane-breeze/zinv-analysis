@@ -1,3 +1,4 @@
+import urllib2
 import json
 import operator
 import numpy as np
@@ -47,7 +48,7 @@ class CertifiedLumiChecker(object):
         )
 
 def read_json(path):
-    with open(path, 'r') as f:
+    with urllib2.urlopen(path) as f:
         data = json.load(f)
     runs = np.array(list(sorted(int(k) for k in data.keys())))
     lumis = [np.array(data[str(r)], dtype=np.int32) for r in runs]

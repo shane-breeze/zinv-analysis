@@ -1,3 +1,4 @@
+import urllib2
 import numpy as np
 import pandas as pd
 import operator
@@ -110,7 +111,7 @@ class WeightQcdEwk(object):
         )
 
 def read_input(path, histname):
-    with open(path, 'r') as f:
+    with urllib2.urlopen(path) as f:
         lines = f.read().splitlines()
 
     start_idx = next(
