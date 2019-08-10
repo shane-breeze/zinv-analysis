@@ -1,7 +1,7 @@
 import os
 import importlib
 import oyaml as yaml
-from zinv.sequence.Readers import ScribblerWrapper
+from zinv.modules.readers import ScribblerWrapper
 
 def open_yaml(path):
     with open(path, 'r') as f:
