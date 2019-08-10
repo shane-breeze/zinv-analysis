@@ -8,10 +8,10 @@ with open("requirements.txt", 'r') as fh:
 
 setuptools.setup(
     name="zinv-analysis",
-    version="0.2.1",
+    version="0.2.2",
     author="Shane Breeze",
     author_email="sdb15@ic.ac.uk",
-    scripts=["zinv/scripts/run_zinv.py"],
+    scripts=["zinv/scripts/zinv_analyse.py", "zinv/scripts/zinv_resume.py"],
     description="AlphaTwirl + uproot for the Z inv. width analysis",
     long_description=long_description,
     long_description_content_type="text/markdown",
