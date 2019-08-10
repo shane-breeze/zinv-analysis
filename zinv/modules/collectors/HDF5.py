@@ -2,7 +2,7 @@ import os
 import numpy as np
 import pandas as pd
 import yaml
-import tqdm
+from tqdm.auto import tqdm
 
 from zinv.utils.Lambda import Lambda
 
@@ -89,7 +89,7 @@ class HDF5Reader(object):
         # currently not chunking
         data = {
             attr: self.lambda_functions[selection](event, *opts)
-            for attr, selection in tqdm.tqdm(self.attributes.items(), unit='attr', dynamic_ncols=True)
+            for attr, selection in tqdm(self.attributes.items(), unit='attr', dynamic_ncols=True)
         }
 
         yield (

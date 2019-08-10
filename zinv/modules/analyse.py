@@ -9,6 +9,16 @@ from zinv.utils.cache_funcs import get_size
 from zinv.utils.datasets import get_datasets
 from zinv.utils import build_sequence
 
+import logging
+logging.getLogger(__name__).setLevel(logging.INFO)
+logging.getLogger("alphatwirl").setLevel(logging.INFO)
+logging.getLogger("alphatwirl.progressbar.ProgressReport").setLevel(logging.ERROR)
+
+logging.getLogger(__name__).propagate = False
+logging.getLogger("alphatwirl").propagate = False
+logging.getLogger("atuproot.atuproot_main").propagate = False
+logging.getLogger("alphatwirl.progressbar.ProgressReport").propagate = False
+
 def generate_report(outdir):
     # command
     filepath = os.path.join(outdir, "report.txt")

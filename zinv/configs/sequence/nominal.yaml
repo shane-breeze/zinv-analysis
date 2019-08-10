@@ -295,5 +295,5 @@ sequence:
           data: False
       collector: "alphatwirl.loop.NullCollector"
     - name: "hdf5_reader"
-      module: "zinv.collectors.HDF5Reader"
+      module: "zinv.modules.collectors.HDF5Reader"
       collector: "alphatwirl.loop.NullCollector"
