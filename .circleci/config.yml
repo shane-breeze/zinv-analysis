@@ -16,7 +16,7 @@ jobs:
                 name: install dependencies
                 command: |
                     pip install --user -r requirements.txt --quiet
-                    pip install pytest
+                    pip install --user --quiet pytest
 
             - run:
                 name: run tests
