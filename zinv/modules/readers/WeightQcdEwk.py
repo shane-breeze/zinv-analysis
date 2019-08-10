@@ -112,7 +112,7 @@ class WeightQcdEwk(object):
 
 def read_input(path, histname):
     with urllib.request.urlopen(path) as f:
-        lines = f.read().splitlines()
+        lines = f.read().decode("utf-8").splitlines()
 
     start_idx = next(
         idx for idx in range(len(lines))

@@ -23,18 +23,12 @@ def event():
     return DummyEvent()
 
 @pytest.fixture()
-def path():
-    toppath = os.path.abspath(os.environ["TOPDIR"])
-    datapath = os.path.join(toppath, "zinv/data")
-    return datapath
-
-@pytest.fixture()
-def module(path):
+def module():
     return WeightQcdEwk(
         input_paths = {
-            "ZJetsToNuNu": (path+"/qcd_ewk/vvj.dat", "vvj_pTV_{}"),
-            "WJetsToLNu":  (path+"/qcd_ewk/evj.dat", "evj_pTV_{}"),
-            "DYJetsToLL":  (path+"/qcd_ewk/eej.dat", "eej_pTV_{}"),
+            "ZJetsToNuNu": ("http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/qcd_ewk/vvj.dat", "vvj_pTV_{}"),
+            "WJetsToLNu":  ("http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/qcd_ewk/evj.dat", "evj_pTV_{}"),
+            "DYJetsToLL":  ("http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/qcd_ewk/eej.dat", "eej_pTV_{}"),
         },
         underflow = True,
         overflow = True,
@@ -50,11 +44,11 @@ def module(path):
                            "d2k_ew_w", "d3k_ew_z", "d3k_ew_w", "dk_mix"],
     )
 
-def test_weightqcdewk_init(module, path):
+def test_weightqcdewk_init(module):
     assert module.input_paths == {
-        "ZJetsToNuNu": (path+"/qcd_ewk/vvj.dat", "vvj_pTV_{}"),
-        "WJetsToLNu":  (path+"/qcd_ewk/evj.dat", "evj_pTV_{}"),
-        "DYJetsToLL":  (path+"/qcd_ewk/eej.dat", "eej_pTV_{}"),
+        "ZJetsToNuNu": ("http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/qcd_ewk/vvj.dat", "vvj_pTV_{}"),
+        "WJetsToLNu":  ("http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/qcd_ewk/evj.dat", "evj_pTV_{}"),
+        "DYJetsToLL":  ("http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/qcd_ewk/eej.dat", "eej_pTV_{}"),
     }
     assert module.underflow == True
     assert module.overflow == True
