@@ -89,7 +89,7 @@ class HDF5Reader(object):
         # currently not chunking
         data = {
             attr: self.lambda_functions[selection](event, *opts)
-            for attr, selection in tqdm(self.attributes.items(), unit='attr', dynamic_ncols=True)
+            for attr, selection in tqdm(self.attributes.items(), unit='attr')
         }
 
         yield (
