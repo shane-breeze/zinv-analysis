@@ -1,5 +1,4 @@
 import os
-import sys
 import pysge
 from cachetools import LFUCache
 
@@ -19,11 +18,16 @@ logging.getLogger("alphatwirl").propagate = False
 logging.getLogger("atuproot.atuproot_main").propagate = False
 logging.getLogger("alphatwirl.progressbar.ProgressReport").propagate = False
 
-def generate_report(outdir):
+def generate_report(outdir, fname, args, values):
     # command
     filepath = os.path.join(outdir, "report.txt")
+
+    cmd_block = ["{}(".format(fname)]
+    for arg in args:
+        cmd_block.append("\t{} = {},".format(arg, values[arg]))
+    cmd_block.append(")")
     with open(filepath, 'w') as f:
-        f.write("python "+" ".join(sys.argv)+"\n")
+        f.write("\n".join(cmd_block)+"\n")
 
     # git hash
     filepath = os.path.join(outdir, "git_hash.txt")
@@ -49,6 +53,7 @@ def run(
     sequence, datasets, name, outdir, tempdir, mode, batch_opts, ncores,
     nblocks_per_dataset, nblocks_per_process, nfiles_per_dataset,
     nfiles_per_process, blocksize, cachesize, quiet, sample,
+    predetermined_nevents_in_file,
 ):
     process = AtUproot(
         outdir,
@@ -58,6 +63,7 @@ def run(
         max_files_per_dataset = nfiles_per_dataset,
         max_files_per_process = nfiles_per_process,
         nevents_per_block = blocksize,
+        predetermined_nevents_in_file=predetermined_nevents_in_file,
         branch_cache = LFUCache(int(cachesize*1024**3), get_size),
     )
     tasks = process.run(datasets, sequence)
@@ -91,7 +97,11 @@ def analyse(
 
     if not os.path.exists(outdir):
         os.makedirs(outdir)
-    generate_report(outdir)
+
+    frame = inspect.currentframe()
+    args, _, _, values = inspect.getargvalues(frame)
+    fname = inspect.getframeinfo(frame)[2]
+    generate_report(outdir, fname, args, values)
 
     sequence = build_sequence(
         sequence_cfg, outdir, event_selection_cfg, physics_object_cfg,
@@ -111,6 +121,12 @@ def analyse(
             datasets = [d for d in datasets
                         if d.name in samples or d.parent in samples]
 
+    predetermined_nevents_in_file = {
+        f: n
+        for d in datasets
+        for f, n in zip(d.files, d.file_nevents)
+    }
+
     # Pass any other options through to the datasets
     #for d in datasets:
     #    pass
@@ -118,4 +134,5 @@ def analyse(
         sequence, datasets, name, outdir, tempdir, mode, batch_opts, ncores,
         nblocks_per_dataset, nblocks_per_process, nfiles_per_dataset,
         nfiles_per_process, blocksize, cachesize, quiet, sample,
+        predetermined_nevents_in_file,
     )
