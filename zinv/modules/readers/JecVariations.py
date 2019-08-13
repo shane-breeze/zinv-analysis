@@ -13,7 +13,7 @@ from zinv.utils.Geometry import RadToCart2D, CartToRad2D, DeltaR2
 def jer_formula(x, p0, p1, p2, p3):
     return np.sqrt(p0*np.abs(p0)/(x*x)+p1*p1*np.power(x,p3)+p2*p2)
 
-def met_shift(ev):
+def met_shift(ev, coll):
     @nb.njit(["UniTuple(float32[:],2)(float32[:],float32[:],float32[:],float32[:],float32[:],int64[:],int64[:])"])
     def met_shift_numba(met, mephi, jpt, jptshift, jphi, jstarts, jstops):
         jpx_old, jpy_old = RadToCart2D(jpt, jphi)
@@ -27,12 +27,14 @@ def met_shift(ev):
 
         return CartToRad2D(mex, mey)
     return met_shift_numba(
-        ev.MET_ptJESOnly, ev.MET_phiJESOnly, ev.Jet_ptJESOnly.content,
+        getattr(ev, "{}_ptJESOnly".format(coll)),
+        getattr(ev, "{}_phiJESOnly".format(coll)),
+        ev.Jet_ptJESOnly.content,
         ev.Jet_pt.content, ev.Jet_phi.content,
         ev.Jet_pt.starts, ev.Jet_pt.stops,
     )
 
-def met_sumet_shift(ev):
+def met_sumet_shift(ev, coll):
     @nb.jit(["float32[:](float32[:], float32[:], float32[:], int64[:], int64[:])"])
     def nb_met_sumet_shift(sumet, jpt, cjpt, jstas, jstos):
         csumet = np.zeros_like(sumet, dtype=np.float32)
@@ -41,7 +43,7 @@ def met_sumet_shift(ev):
         return csumet
 
     return nb_met_sumet_shift(
-        ev.MET_sumEtJESOnly,
+        getattr(ev, "{}_sumEtJESOnly".format(coll)),
         ev.Jet_ptJESOnly.content, ev.Jet_pt.content,
         ev.Jet_pt.starts, ev.Jet_pt.stops,
     )
@@ -130,17 +132,27 @@ class JecVariations(object):
         event.MET_ptJESOnly = event.MET_pt[:]
         event.MET_phiJESOnly = event.MET_phi[:]
         event.MET_sumEtJESOnly = event.MET_sumEt[:]
+        event.PuppiMET_ptJESOnly = event.PuppiMET_pt[:]
+        event.PuppiMET_phiJESOnly = event.PuppiMET_phi[:]
+        event.PuppiMET_sumEtJESOnly = event.PuppiMET_sumEt[:]
 
         if self.apply_jer_corrections:
             sf = event.Jet_jerSF(event, "", 0.)
             event.Jet_pt = (event.Jet_ptJESOnly*sf)[:,:].astype(np.float32)
 
-            met, mephi = met_shift(event)
+            met, mephi = met_shift(event, coll="MET")
             event.MET_pt = met[:].astype(np.float32)
             event.MET_phi = mephi[:].astype(np.float32)
 
-            met_sumet = met_sumet_shift(event)
+            met_sumet = met_sumet_shift(event, coll="MET")
             event.MET_sumEt = met_sumet[:].astype(np.float32)
+
+            met, mephi = met_shift(event, coll="PuppiMET")
+            event.PuppiMET_pt = met[:].astype(np.float32)
+            event.PuppiMET_phi = mephi[:].astype(np.float32)
+
+            met_sumet = met_sumet_shift(event, coll="PuppiMET")
+            event.PuppiMET_sumEt = met_sumet[:].astype(np.float32)
 
 def jet_pt_res(ev, jers):
     indices = get_bin_indices(
