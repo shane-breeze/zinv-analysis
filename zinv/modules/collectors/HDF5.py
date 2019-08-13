@@ -66,7 +66,7 @@ class HDF5Reader(object):
                 self.path, self.name, format='table', append=True,
                 complevel=9, complib='blosc:lz4hc',
             )
-        print("Created result.h5 with table {}".format(self.name))
+        #print("Created result.h5 with table {}".format(self.name))
 
         for source, nsig in self.variations:
             opts = (source, nsig)
