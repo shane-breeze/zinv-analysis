@@ -10,7 +10,7 @@ from zinv.utils.Geometry import (
     BoundPhi, RadToCart2D, CartToRad2D, LorTHPMToXYZE, LorXYZEToTHPM
 )
 
-def evaluate_metnox(ev, source, nsig, attr):
+def evaluate_metnox(ev, source, nsig, coll, attr):
     @nb.njit(["UniTuple(float32[:],2)(float32[:],float32[:],float32[:],float32[:],int64[:],int64[:],float32[:],float32[:],int64[:],int64[:])"])
     def metnox_numba(
         met, mephi,
@@ -31,7 +31,8 @@ def evaluate_metnox(ev, source, nsig, attr):
 
     arg = 1 if attr=='phi' else 0
     return metnox_numba(
-        ev.MET_ptShift(ev, source, nsig), ev.MET_phiShift(ev, source, nsig),
+        getattr(ev, "{}_ptShift".format(coll))(ev, source, nsig),
+        getattr(ev, "{}_phiShift".format(coll))(ev, source, nsig),
         ev.MuonSelection(ev, source, nsig, 'ptShift').content,
         ev.MuonSelection(ev, source, nsig, 'phi').content,
         ev.MuonSelection(ev, source, nsig, 'phi').starts,
@@ -42,7 +43,7 @@ def evaluate_metnox(ev, source, nsig, attr):
         ev.ElectronSelection(ev, source, nsig, 'phi').stops,
     )[arg].astype(np.float32)
 
-def evaluate_metnox_sumet(ev, source, nsig):
+def evaluate_metnox_sumet(ev, source, nsig, coll):
     @nb.njit(["float32[:](float32[:], float32[:], int64[:], int64[:], float32[:], int64[:], int64[:])"])
     def nb_evaluate_metnox_sumet(
         sumet, mpt, mstas, mstos, ept, estas, estos,
@@ -57,7 +58,7 @@ def evaluate_metnox_sumet(ev, source, nsig):
         return csumet
 
     return nb_evaluate_metnox_sumet(
-        ev.MET_sumEtShift(ev, source, nsig),
+        getattr(ev, "{}_sumEtShift".format(coll))(ev, source, nsig),
         ev.MuonSelection(ev, source, nsig, 'ptShift').content,
         ev.MuonSelection(ev, source, nsig, 'phi').starts,
         ev.MuonSelection(ev, source, nsig, 'phi').stops,
@@ -66,7 +67,7 @@ def evaluate_metnox_sumet(ev, source, nsig):
         ev.ElectronSelection(ev, source, nsig, 'phi').stops,
     )
 
-def evaluate_mindphi(ev, source, nsig, njets):
+def evaluate_mindphi(ev, source, nsig, coll, njets):
     @nb.njit(["float32[:](float32[:],int64[:],int64[:],int64,float32[:])"])
     def mindphi_numba(jphi, jstarts, jstops, njets_, mephi):
         dphi = np.zeros_like(mephi, dtype=np.float32)
@@ -83,17 +84,18 @@ def evaluate_mindphi(ev, source, nsig, njets):
     jphis = ev.JetSelection(ev, source, nsig, 'phi')
     return mindphi_numba(
         jphis.content, jphis.starts, jphis.stops, njets,
-        ev.METnoX_phi(ev, source, nsig),
+        getattr(ev, "{}_phi".format(coll))(ev, source, nsig),
     )
 
-def evaluate_met_dcalo(ev, source, nsig):
+def evaluate_met_dcalo(ev, source, nsig, coll):
     @nb.njit(["float32[:](float32[:],float32[:],float32[:])"])
     def met_dcalo_numba(pfmet, calomet, metnox):
         return np.abs(pfmet-calomet)/metnox
 
     return met_dcalo_numba(
-        ev.MET_ptShift(ev, source, nsig), ev.CaloMET_pt,
-        ev.METnoX_pt(ev, source, nsig),
+        getattr(ev, "{}_ptShift".format(coll))(ev, source, nsig),
+        ev.CaloMET_pt,
+        getattr(ev, "{}noX_pt".format(coll))(ev, source, nsig),
     )
 
     def return_evaluate_met_dcalo(ev):
@@ -104,7 +106,7 @@ def evaluate_met_dcalo(ev, source, nsig):
 
     return return_evaluate_met_dcalo
 
-def evaluate_mtw(ev, source, nsig):
+def evaluate_mtw(ev, source, nsig, coll):
     @nb.njit(["float32(float32,float32)"])
     def mtw_numba(ptprod, dphi):
         return np.sqrt(2*ptprod*(1-np.cos(dphi)))
@@ -135,7 +137,8 @@ def evaluate_mtw(ev, source, nsig):
     mupts = ev.MuonSelection(ev, source, nsig, 'ptShift')
     epts = ev.ElectronSelection(ev, source, nsig, 'ptShift')
     return event_mtw_numba(
-        ev.MET_ptShift(ev, source, nsig), ev.MET_phiShift(ev, source, nsig),
+        getattr(ev, "{}_ptShift".format(coll))(ev, source, nsig),
+        getattr(ev, "{}_phiShift".format(coll))(ev, source, nsig),
         mupts.content, ev.MuonSelection(ev, source, nsig, 'phi').content,
         mupts.starts, mupts.stops,
         epts.content, ev.ElectronSelection(ev, source, nsig, 'phi').content,
@@ -231,11 +234,17 @@ class EventFunctions(object):
         self.__dict__.update(kwargs)
 
     def begin(self, event):
-        event.register_function(event, "METnoX_pt", partial(evaluate_metnox, attr='pt'))
-        event.register_function(event, "METnoX_phi", partial(evaluate_metnox, attr='phi'))
-        event.register_function(event, "METnoX_sumEt", partial(evaluate_metnox_sumet))
-        event.register_function(event, "MinDPhiJ1234METnoX", partial(evaluate_mindphi, njets=4))
-        event.register_function(event, "MET_dCaloMET", evaluate_met_dcalo)
-        event.register_function(event, "MTW", evaluate_mtw)
+        event.register_function(event, "METnoX_pt", partial(evaluate_metnox, coll="MET", attr='pt'))
+        event.register_function(event, "METnoX_phi", partial(evaluate_metnox, coll="MET", attr='phi'))
+        event.register_function(event, "METnoX_sumEt", partial(evaluate_metnox_sumet, coll="MET"))
+        event.register_function(event, "MinDPhiJ1234METnoX", partial(evaluate_mindphi, coll="METnoX", njets=4))
+        event.register_function(event, "MET_dCaloMET", partial(evaluate_met_dcalo, coll="MET"))
+        event.register_function(event, "PuppiMETnoX_pt", partial(evaluate_metnox, coll="MET", attr='pt'))
+        event.register_function(event, "PuppiMETnoX_phi", partial(evaluate_metnox, coll="MET", attr='phi'))
+        event.register_function(event, "PuppiMETnoX_sumEt", partial(evaluate_metnox_sumet, coll="PuppiMET"))
+        event.register_function(event, "MinDPhiJ1234PuppiMETnoX", partial(evaluate_mindphi, coll="PuppiMETnoX", njets=4))
+        event.register_function(event, "PuppiMET_dCaloMET", partial(evaluate_met_dcalo, coll="PuppiMET"))
+        event.register_function(event, "MTW", partial(evaluate_mtw, coll="MET"))
+        event.register_function(event, "PuppiMTW", partial(evaluate_mtw, coll="PuppiMET"))
         event.register_function(event, "MLL", evaluate_mll)
         event.register_function(event, "LeptonCharge", evaluate_lepton_charge)
