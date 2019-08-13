@@ -6,7 +6,8 @@ from cachetools import cachedmethod
 from cachetools.keys import hashkey
 from functools import partial
 
-from zinv.utils.Geometry import RadToCart2D, CartToRad2D, BoundPhi
+from zinv.utils.Geometry import RadToCart2D, CartToRad2D, BoundPhi, DeltaR2
+from zinv.utils.Lambda import Lambda
 
 @nb.njit(["float32[:](float32[:], float32, float32[:], float32[:])"])
 def pt_shift_numba(pt, nsig, up, down):
@@ -23,7 +24,7 @@ def jet_pt_shift(ev, source, nsig):
 
     return ev.Jet_pt * variation
 
-def jet_dphimet(ev, source, nsig):
+def jet_dphimet(ev, source, nsig, coll):
     @nb.njit(["float32[:](float32[:], float32[:], int64[:], int64[:])"])
     def dphi_met(mephi, jphi, starts, stops):
         dphi = np.pi*np.ones_like(jphi, dtype=np.float32)
@@ -36,11 +37,12 @@ def jet_dphimet(ev, source, nsig):
     jphi = ev.Jet.phi
     return awk.JaggedArray(
         jphi.starts, jphi.stops, dphi_met(
-            ev.MET_phiShift(ev, source, nsig), jphi.content, jphi.starts, jphi.stops,
+            getattr(ev, "{}_phiShift".format(coll))(ev, source, nsig),
+            jphi.content, jphi.starts, jphi.stops,
         ),
     )
 
-def tau_dphimet(ev, source, nsig):
+def tau_dphimet(ev, source, nsig, coll):
     def dphi_met(mephi, tphi, starts, stops):
         dphi = np.pi*np.ones_like(tphi, dtype=np.float32)
         for iev, (start, stop) in enumerate(zip(starts, stops)):
@@ -52,7 +54,8 @@ def tau_dphimet(ev, source, nsig):
     tphi = ev.Tau.phi
     return awk.JaggedArray(
         tphi.starts, tphi.stops, dphi_met(
-            ev.MET_phiShift(ev, source, nsig), tphi.content, tphi.starts, tphi.stops,
+            getattr(ev, "{}_phiShift".format(coll))(ev, source, nsig),
+            tphi.content, tphi.starts, tphi.stops,
         ),
     )
 
@@ -96,7 +99,7 @@ def photon_pt_met(ev, source, nsig):
     result.content[np.isnan(result).content] = 0.
     return result
 
-def met_shift(ev, source, nsig, attr):
+def met_shift(ev, source, nsig, coll, attr):
     @nb.njit([
         "UniTuple(float32[:],2)("
         "float32[:],float32[:],"
@@ -156,7 +159,8 @@ def met_shift(ev, source, nsig, attr):
     arg_ = 1 if attr=='phi' else 0
     photon_mask = (~np.isnan(ev.Photon_pt))
     return met_shift_numba(
-        ev.MET_pt, ev.MET_phi,
+        getattr(ev, "{}_pt".format(coll)),
+        getattr(ev, "{}_phi".format(coll)),
         ev.Jet_pt.content, ev.Jet_ptShift(ev, source, nsig).content,
         ev.Jet_phi.content, ev.Jet_pt.starts, ev.Jet_pt.stops,
         ev.ElectronSelection(ev, source, nsig, 'pt').content,
@@ -184,7 +188,7 @@ def met_shift(ev, source, nsig, attr):
         nsig,
     )[arg_].astype(np.float32)
 
-def met_sumet_shift(ev, source, nsig):
+def met_sumet_shift(ev, source, nsig, coll):
     @nb.njit(["float32[:]("
         "float32[:],"
         "float32[:],float32[:],int64[:],int64[:],"
@@ -217,7 +221,7 @@ def met_sumet_shift(ev, source, nsig):
         return sumet_shift
 
     return nb_met_sumet_shift(
-        ev.MET_sumEt,
+        getattr(ev, "{}_sumEt".format(coll)),
         ev.JetSelection(ev, source, nsig, 'pt').content,
         ev.JetSelection(ev, source, nsig, 'ptShift').content,
         ev.JetSelection(ev, source, nsig, 'eta').starts,
@@ -251,6 +255,41 @@ def obj_selection(ev, source, nsig, attr, name, sele, xclean=False):
 
     return obj[mask]
 
+def obj_drtrig(ev, source, nsig, coll, ref, ref_selection):
+    @nb.njit(["float32[:](int64[:], int64[:], float32[:], float32[:], int64[:], int64[:], float32[:], float32[:])"])
+    def nb_dr_coll_ref(
+        coll_starts, coll_stops, coll_eta, coll_phi,
+        ref_starts, ref_stops, ref_eta, ref_phi,
+    ):
+        # maximally opposite in eta and phi
+        coll_dr = (10.+np.pi)*np.ones_like(coll_eta, dtype=np.float32)
+
+        for iev, (cstart, cstop, rstart, rstop) in enumerate(zip(
+            coll_starts, coll_stops, ref_starts, ref_stops,
+        )):
+            for ic in range(cstart, cstop):
+                coll_dr[ic] = min(
+                    DeltaR2(
+                        coll_eta[ic]-ref_eta[ir],
+                        coll_phi[ic]-ref_phi[ir],
+                    ) for ir in range(rstart, rstop)
+                )
+        return coll_dr
+
+    mask = Lambda(ref_selection)(ev, source, nsig)
+    starts, stops = getattr(ev, coll).eta.starts, getattr(ev, coll).eta.stops
+    return awk.JaggedArray(
+        starts, stops,
+        nb_dr_coll_ref(
+            starst, stops,
+            getattr(ev, coll).eta.content,
+            getattr(ev, coll).phi.content,
+            mask.starts, mask.stops,
+            getattr(ev, ref).eta[mask].content,
+            getattr(ev, ref).phi[mask].content,
+        ),
+    )
+
 class ObjectFunctions(object):
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
@@ -261,11 +300,44 @@ class ObjectFunctions(object):
         event.register_function(event, "Electron_ptShift", ele_pt_shift)
         event.register_function(event, "Photon_ptShift", photon_pt_shift)
         event.register_function(event, "Tau_ptShift", lambda ev, source, nsig: ev.Tau_pt)
-        event.register_function(event, "MET_ptShift", partial(met_shift, attr='pt'))
-        event.register_function(event, "MET_phiShift", partial(met_shift, attr='phi'))
-        event.register_function(event, "MET_sumEtShift", partial(met_sumet_shift))
-        event.register_function(event, "Jet_dphiMET", jet_dphimet)
-        event.register_function(event, "Tau_dphiMET", tau_dphimet)
+        event.register_function(event, "MET_ptShift", partial(met_shift, coll="MET", attr='pt'))
+        event.register_function(event, "MET_phiShift", partial(met_shift, coll="MET", attr='phi'))
+        event.register_function(event, "MET_sumEtShift", partial(met_sumet_shift, coll="MET"))
+        event.register_function(event, "PuppiMET_ptShift", partial(met_shift, coll="PuppiMET", attr='pt'))
+        event.register_function(event, "PuppiMET_phiShift", partial(met_shift, coll="PuppiMET", attr='phi'))
+        event.register_function(event, "PuppiMET_sumEtShift", partial(met_sumet_shift, coll="PuppiMET"))
+        event.register_function(event, "Jet_dphiMET", partial(jet_dphimet, coll="MET"))
+        event.register_function(event, "Jet_dphiPuppiMET", partial(jet_dphimet, coll="PuppiMET"))
+        event.register_function(event, "Tau_dphiMET", partial(tau_dphimet, coll="MET"))
+        event.register_function(event, "Tau_dphiPuppiMET", partial(tau_dphimet, coll="PuppiMET"))
+        event.register_function(event, "Muon_dRTrigIsoMu24", partial(
+            obj_drtrig, coll="Muon", ref="TrigObjMuon",
+            ref_selection="ev, source, nsig: (ev.TrigObjMuon_pt>24) & ((ev.TrigObjMuon_filterBits&2)==2)",
+        ))
+        event.register_function(event, "Muon_dRTrigIsoTkMu24", partial(
+            obj_drtrig, coll="Muon", ref="TrigObjMuon",
+            ref_selection="ev, source, nsig: (ev.TrigObjMuon_pt>24) & ((ev.TrigObjMuon_filterBits&8)==8)",
+        ))
+        event.register_function(event, "Muon_dRTrigMu50", partial(
+            obj_drtrig, coll="Muon", ref="TrigObjMuon",
+            ref_selection="ev, source, nsig: (ev.TrigObjMuon_pt>50)",
+        ))
+        event.register_function(event, "Muon_dRTrigTrkIsoVVLMu17", partial(
+            obj_drtrig, coll="Muon", ref="TrigObjMuon",
+            ref_selection="ev, source, nsig: (ev.TrigObjMuon_pt>17) & ((ev.TrigObjMuon_filterBits&1)==1)",
+        ))
+        event.register_function(event, "Muon_dRTrigTrkIsoVVLMu8", partial(
+            obj_drtrig, coll="Muon", ref="TrigObjMuon",
+            ref_selection="ev, source, nsig: (ev.TrigObjMuon_pt>8) & ((ev.TrigObjMuon_filterBits&1)==1)",
+        ))
+        event.register_function(event, "Electron_dRTrigWPTightEle27", partial(
+            obj_drtrig, coll="Electron", ref="TrigObjElectron",
+            ref_selection="ev, source, nsig: (ev.TrigObjElectron_pt>27) & ((ev.TrigObjElectron_filterBits&2)==2)",
+        ))
+        event.register_function(event, "Electron_dRTrigWPTightEta2p1Ele25", partial(
+            obj_drtrig, coll="Electron", ref="TrigObjElectron",
+            ref_selection="ev, source, nsig: (ev.TrigObjElectron_pt>25) & (np.abs(ev.TrigObjElectron_eta)<2.1) & ((ev.TrigObjElectron_filterBits&2)==2)",
+        ))
 
         for objname, selection, xclean in self.selections:
             if xclean:
