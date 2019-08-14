@@ -1,4 +1,5 @@
 import os
+import time
 import numpy as np
 import pandas as pd
 import yaml
@@ -8,7 +9,23 @@ from zinv.utils.Lambda import Lambda
 
 class HDF5Reader(object):
     def __init__(self, **kwargs):
+        self.measure_timing = False
+        self.attribute_timing = {}
         self.__dict__.update(kwargs)
+
+    def merge(self, other):
+        attribute_timing = {}
+        for keys in set(
+            self.attribute_timing.keys()+other.attribute_timing.keys()
+        ):
+            attribute_timing[keys] = (
+                self.attribute_timing.get(keys, 0.)
+                + other.attribute_timing.get(keys, 0.)
+            )
+        self.attribute_timing = attribute_timing
+
+#    def collect(self):
+#        return self.attribute_timing
 
     def begin(self, event):
         with open(self.hdf5_config_path, 'r') as f:
@@ -83,10 +100,27 @@ class HDF5Reader(object):
                     self.path, table_name, format='table', append=True,
                     complevel=9, complib='blosc:lz4hc',
                 )
-                print("Create result.h5 with table {}".format(table_name))
+                #print("Create result.h5 with table {}".format(table_name))
 
-    def chunk_events(self, event, opts=[], chunksize=int(1e5)):
+    def chunk_events(self, event, opts=[], chunksize=int(1e7)):
         # currently not chunking
+        data = {}
+        for attr, selection in tqdm(self.attributes.items(), unit='attr'):
+            # Initialise timing
+            if self.measure_timing:
+                start = time.time_ns()
+
+            # Process
+            attr_val = self.lambda_functions[selection](event, *opts)
+            data[attr] = attr_val
+
+            # End timing
+            if self.measure_timing:
+                end = time.time_ns()
+                if attr not in self.attribute_timing:
+                    self.attribute_timing[attr] = 0.
+                self.attribute_timing[attr] += (end - start)
+
         data = {
             attr: self.lambda_functions[selection](event, *opts)
             for attr, selection in tqdm(self.attributes.items(), unit='attr')

@@ -1,4 +1,5 @@
 import os
+import inspect
 import pysge
 from cachetools import LFUCache
 
@@ -7,6 +8,9 @@ from zinv.utils.gittools import git_diff, git_revision_hash
 from zinv.utils.cache_funcs import get_size
 from zinv.utils.datasets import get_datasets
 from zinv.utils import build_sequence
+
+import numpy as np
+import pandas as pd
 
 import logging
 logging.getLogger(__name__).setLevel(logging.INFO)
@@ -24,7 +28,7 @@ def generate_report(outdir, fname, args, values):
 
     cmd_block = ["{}(".format(fname)]
     for arg in args:
-        cmd_block.append("\t{} = {},".format(arg, values[arg]))
+        cmd_block.append("    {} = {},".format(arg, repr(values[arg])))
     cmd_block.append(")")
     with open(filepath, 'w') as f:
         f.write("\n".join(cmd_block)+"\n")
@@ -48,6 +52,26 @@ def generate_report(outdir, fname, args, values):
     filepath = os.path.join(outdir, "git_checkout.sh")
     with open(filepath, 'w') as f:
         f.write(string)
+
+def process_results(results, outdir):
+    dfs = []
+    for res in results:
+        df_data = []
+        for r in results[0].readers:
+            name = r.name
+            coll = r.collect()
+
+            for k, v in coll.items():
+                df_data.append({
+                    "layer": name,
+                    "object": k,
+                    "time": pd.Timedelta(np.timedelta64(int(v), 'ns')),
+                })
+                dfs.append(pd.DataFrame(df_data))
+    df = pd.concat(dfs).groupby(["layer", "object"]).sum()
+    with open(os.path.join(outdir, "timing_report.txt"), 'w') as f:
+        f.write(df.sort_values("time", ascending=False).to_string())
+    return results
 
 def run(
     sequence, datasets, name, outdir, tempdir, mode, batch_opts, ncores,
@@ -77,7 +101,7 @@ def run(
             name, tempdir, tasks=tasks, options=batch_opts,
             sleep=5, request_resubmission_options=True,
         )
-    return results
+    return process_results(results, outdir)
 
 def analyse(
     dataset_cfg, sequence_cfg, event_selection_cfg, physics_object_cfg,
@@ -130,7 +154,7 @@ def analyse(
     # Pass any other options through to the datasets
     #for d in datasets:
     #    pass
-    results = run(
+    return run(
         sequence, datasets, name, outdir, tempdir, mode, batch_opts, ncores,
         nblocks_per_dataset, nblocks_per_process, nfiles_per_dataset,
         nfiles_per_process, blocksize, cachesize, quiet, sample,
