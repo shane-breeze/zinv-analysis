@@ -1,6 +1,7 @@
 import os
 import importlib
 import oyaml as yaml
+from alphatwirl.loop import NullCollector
 from zinv.modules.readers import ScribblerWrapper
 
 def open_yaml(path):
@@ -21,15 +22,11 @@ def build_sequence(
         reader_cls = import_function(module["module"])
         reader = reader_cls(name=module["name"], **module.get("args", {}))
 
-        collector_cls = import_function(module["collector"])
-        collector = collector_cls()
-
         reader.event_selection_path = os.path.abspath(es_path)
         reader.physics_object_selection_path = os.path.abspath(pos_path)
         reader.trigger_selection_path = os.path.abspath(ts_path)
         reader.hdf5_config_path = os.path.abspath(hdf_path)
         reader.outdir = os.path.abspath(outdir)
-        collector.outdir = os.path.abspath(outdir)
 
-        sequence.append((ScribblerWrapper(reader), collector))
+        sequence.append((ScribblerWrapper(reader), NullCollector()))
     return sequence
