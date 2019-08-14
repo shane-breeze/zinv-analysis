@@ -15,23 +15,37 @@ def evaluate_object_weights(
     ev, source, nsig, df, bins_vars, add_syst, name,
 ):
     @nb.njit
-    def weighted_mean_numba(objattr, w, k, dkup, dkdown, addsyst, nweight):
+    def weighted_mean_numba(
+        objattr, w, k, statup, statdown, systup, systdown, addsyst, nweight,
+    ):
         wsum = np.zeros_like(objattr, dtype=np.float32)
         wksum = np.zeros_like(objattr, dtype=np.float32)
-        wdkupsum = np.zeros_like(objattr, dtype=np.float32)
-        wdkdownsum = np.zeros_like(objattr, dtype=np.float32)
+        wdkstatupsum = np.zeros_like(objattr, dtype=np.float32)
+        wdkstatdownsum = np.zeros_like(objattr, dtype=np.float32)
+        wdksystupsum = np.zeros_like(objattr, dtype=np.float32)
+        wdksystdownsum = np.zeros_like(objattr, dtype=np.float32)
 
         for idx in range(objattr.shape[0]):
             for subidx in range(nweight*idx, nweight*(idx+1)):
                 wsum[idx] += w[subidx]
                 wksum[idx] += w[subidx]*k[subidx]
-                wdkupsum[idx] += (w[subidx]*dkup[subidx])**2
-                wdkdownsum[idx] += (w[subidx]*dkdown[subidx])**2
+                wdkstatupsum[idx] += (w[subidx]*statup[subidx])**2
+                wdkstatdownsum[idx] += (w[subidx]*statdown[subidx])**2
+                wdksystupsum[idx] += (w[subidx]*systup[subidx])**2
+                wdksystdownsum[idx] += (w[subidx]*systdown[subidx])**2
 
         mean = wksum / wsum
-        unc_up = np.sqrt((wdkupsum / wsum**2) + addsyst**2)
-        unc_down = -1.*np.sqrt((wdkdownsum / wsum**2) + addsyst**2)
-        return mean.astype(np.float32), unc_up.astype(np.float32), unc_down.astype(np.float32)
+        stat_up = np.sqrt((wdkstatupsum / wsum**2) + addsyst**2)
+        stat_down = -1.*np.sqrt((wdkstatdownsum / wsum**2) + addsyst**2)
+        syst_up = np.sqrt((wdksystupsum / wsum**2) + addsyst**2)
+        syst_down = -1.*np.sqrt((wdksystdownsum / wsum**2) + addsyst**2)
+        return (
+            mean.astype(np.float32),
+            stat_up.astype(np.float32),
+            stat_down.astype(np.float32),
+            syst_up.astype(np.float32),
+            syst_down.astype(np.float32),
+        )
 
     event_vars = [v(ev, source, nsig) for v in bins_vars]
     for v in event_vars:
@@ -45,12 +59,15 @@ def evaluate_object_weights(
     ).ravel()
     dfw = df.iloc[indices]
 
-    sf, sfup, sfdown = weighted_mean_numba(
+    sf, sf_statup, sf_statdown, sf_systup, sf_systdown = weighted_mean_numba(
         event_vars[0].content, dfw["weight"].values, dfw["corr"].values,
-        dfw["unc_up"].values, dfw["unc_down"].values,
+        dfw["stat_up"].values, dfw["stat_down"].values,
+        dfw["syst_up"].values, dfw["syst_down"].values,
         add_syst(ev, source, nsig).content, df["weight"].unique().shape[0],
     )
 
+    sfup = sf_systup if "syst" in source.lower() else sf_statup
+    sfdown = sf_systdown if "syst" in source.lower() else sf_statdown
     return awk.JaggedArray(
         event_vars[0].starts, event_vars[0].stops,
         weight_numba(sf, nsig, sfup, sfdown),
@@ -65,13 +82,24 @@ class WeightObjects(object):
             dfs = []
             for w, path in corrector["weighted_paths"]:
                 ndims = len(corrector["binning_variables"])
-                file_form = [("bin{}_low".format(idx), "bin{}_upp".format(idx))
-                             for idx in range(ndims)]
-                file_form = [bin_label
-                             for bin_pair in file_form
-                             for bin_label in bin_pair] + ["corr", "unc_up", "unc_down"]
+                file_form = [
+                    ("bin{}_low".format(idx), "bin{}_upp".format(idx))
+                    for idx in range(ndims)
+                ]
+                file_form = [
+                    bin_label
+                    for bin_pair in file_form
+                    for bin_label in bin_pair
+                ] + ["corr", "stat_up", "stat_down", "syst_up", "syst_down"]
 
-                df = pd.read_csv(path, sep='\s+')
+                try:
+                    df = (
+                        pd.read_csv(path)
+                        .set_index(["label", "vars"])
+                        .loc[corrector["selection"],:]
+                    )
+                except Exception as e:
+                    raise IOError(e, path)
                 df.columns = file_form
                 df = df.sort_values(file_form).reset_index(drop=True)
 
