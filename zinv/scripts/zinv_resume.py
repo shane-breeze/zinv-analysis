@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import argparse
-import pysge
+from zinv.modules import resume
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -13,10 +13,7 @@ def parse_args():
 
 def main():
     options = parse_args()
-    results = pysge.sge_resume(
-        "zinv", options.path, options=options.sge_opts, sleep=5,
-        request_resubmission_options=True,
-    )
+    resume(**options)
 
 if __name__ == "__main__":
     main()
