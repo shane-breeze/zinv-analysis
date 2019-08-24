@@ -98,8 +98,9 @@ def run(
         results = pysge.mp_submit(tasks, ncores=ncores)
     elif mode=="sge":
         results = pysge.sge_submit(
-            name, tempdir, tasks=tasks, options=batch_opts,
+            tasks, name, tempdir, options=batch_opts,
             sleep=5, request_resubmission_options=True,
+            return_files=True,
         )
     return process_results(results, outdir)
 
