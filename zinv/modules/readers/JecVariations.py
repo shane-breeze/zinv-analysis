@@ -90,7 +90,6 @@ class JecVariations(object):
         self.jesuncs = read_table(
             self.jes_unc_file,
             underflow_cols=["eta_low"], overflow_cols=["eta_high"],
-            csv=True,
         )
 
         self.jersfs = read_table(
@@ -271,12 +270,8 @@ def jes_corr(ev, source, nsig, jesuncs):
 
     return getattr(ev, "Jet_JEC{}".format(flavour))
 
-def read_table(path, underflow_cols=[], overflow_cols=[], csv=False):
-    if not csv:
-        df = pd.read_csv(path, sep='\s+')
-    else:
-        df = pd.read_csv(path, sep=',')
-
+def read_table(path, underflow_cols=[], overflow_cols=[]):
+    df = pd.read_csv(path, sep=',')
     for c in underflow_cols:
         df.loc[df[c]==df[c].min(), c] = -np.inf
     for c in overflow_cols:
