@@ -255,7 +255,7 @@ def obj_selection(ev, source, nsig, attr, name, sele, xclean=False):
 
     return obj[mask]
 
-def obj_drtrig(ev, source, nsig, coll, ref, ref_selection):
+def obj_drtrig(ev, source, nsig, coll, ref, ref_selection=None):
     @nb.njit(["float32[:](int64[:], int64[:], float32[:], float32[:], int64[:], int64[:], float32[:], float32[:])"])
     def nb_dr_coll_ref(
         coll_starts, coll_stops, coll_eta, coll_phi,
@@ -276,7 +276,15 @@ def obj_drtrig(ev, source, nsig, coll, ref, ref_selection):
                 )
         return coll_dr
 
-    mask = Lambda(ref_selection)(ev, source, nsig)
+    ref_eta = getattr(ev, ref).eta
+    if ref_selection is not None:
+        mask = Lambda(ref_selection)(ev, source, nsig)
+    else:
+        mask = awk.JaggedArray(
+            ref_eta.starts, ref_eta.stops,
+            np.ones_like(ref_eta.content),
+        )
+
     starts, stops = getattr(ev, coll).eta.starts, getattr(ev, coll).eta.stops
     return awk.JaggedArray(
         starts, stops,
@@ -284,8 +292,8 @@ def obj_drtrig(ev, source, nsig, coll, ref, ref_selection):
             starst, stops,
             getattr(ev, coll).eta.content,
             getattr(ev, coll).phi.content,
-            mask.starts, mask.stops,
-            getattr(ev, ref).eta[mask].content,
+            ref_eta.starts, ref_eta.stops,
+            ref_eta[mask].content,
             getattr(ev, ref).phi[mask].content,
         ),
     )
@@ -310,33 +318,11 @@ class ObjectFunctions(object):
         event.register_function(event, "Jet_dphiPuppiMET", partial(jet_dphimet, coll="PuppiMET"))
         event.register_function(event, "Tau_dphiMET", partial(tau_dphimet, coll="MET"))
         event.register_function(event, "Tau_dphiPuppiMET", partial(tau_dphimet, coll="PuppiMET"))
-        event.register_function(event, "Muon_dRTrigIsoMu24", partial(
+        event.register_function(event, "Muon_dRTrigMuon", partial(
             obj_drtrig, coll="Muon", ref="TrigObjMuon",
-            ref_selection="ev, source, nsig: (ev.TrigObjMuon_pt>24) & ((ev.TrigObjMuon_filterBits&2)==2)",
         ))
-        event.register_function(event, "Muon_dRTrigIsoTkMu24", partial(
-            obj_drtrig, coll="Muon", ref="TrigObjMuon",
-            ref_selection="ev, source, nsig: (ev.TrigObjMuon_pt>24) & ((ev.TrigObjMuon_filterBits&8)==8)",
-        ))
-        event.register_function(event, "Muon_dRTrigMu50", partial(
-            obj_drtrig, coll="Muon", ref="TrigObjMuon",
-            ref_selection="ev, source, nsig: (ev.TrigObjMuon_pt>50)",
-        ))
-        event.register_function(event, "Muon_dRTrigTrkIsoVVLMu17", partial(
-            obj_drtrig, coll="Muon", ref="TrigObjMuon",
-            ref_selection="ev, source, nsig: (ev.TrigObjMuon_pt>17) & ((ev.TrigObjMuon_filterBits&1)==1)",
-        ))
-        event.register_function(event, "Muon_dRTrigTrkIsoVVLMu8", partial(
-            obj_drtrig, coll="Muon", ref="TrigObjMuon",
-            ref_selection="ev, source, nsig: (ev.TrigObjMuon_pt>8) & ((ev.TrigObjMuon_filterBits&1)==1)",
-        ))
-        event.register_function(event, "Electron_dRTrigWPTightEle27", partial(
+        event.register_function(event, "Electron_dRTrigElectron", partial(
             obj_drtrig, coll="Electron", ref="TrigObjElectron",
-            ref_selection="ev, source, nsig: (ev.TrigObjElectron_pt>27) & ((ev.TrigObjElectron_filterBits&2)==2)",
-        ))
-        event.register_function(event, "Electron_dRTrigWPTightEta2p1Ele25", partial(
-            obj_drtrig, coll="Electron", ref="TrigObjElectron",
-            ref_selection="ev, source, nsig: (ev.TrigObjElectron_pt>25) & (np.abs(ev.TrigObjElectron_eta)<2.1) & ((ev.TrigObjElectron_filterBits&2)==2)",
         ))
 
         for objname, selection, xclean in self.selections:
