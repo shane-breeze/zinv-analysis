@@ -23,45 +23,43 @@ class DummyEvent(object):
         self.__dict__[name] = function
 
 @pytest.fixture()
-def path():
-    toppath = os.path.abspath(os.environ["TOPDIR"])
-    datapath = os.path.join(toppath, "zinv/data")
-    return datapath
-
-@pytest.fixture()
 def event():
     return DummyEvent()
 
 @pytest.fixture()
-def module(path):
+def module():
     return WeightObjects(
         correctors = [
             {
                 "name": "eleIdIsoTight",
                 "collection": "Electron",
                 "binning_variables": ("ev, source, nsig: ev.Electron.eta", "ev, source, nsig: ev.Electron_ptShift(ev, source, nsig)"),
-                "weighted_paths": [(1, path+"/electrons/electron_idiso_tight.txt")],
+                "weighted_paths": [(1, "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/electrons/electron_idiso_tight.csv")],
+                "selection": ["CutBasedTightWP", "eta_pt"],
                 "add_syst": "ev, source, nsig: awk.JaggedArray.zeros_like(ev.Electron.eta)",
                 "nuisances": ["eleIdIsoTight", "eleEnergyScale"],
             }, {
                 "name": "eleIdIsoVeto",
                 "collection": "Electron",
                 "binning_variables": ("ev, source, nsig: ev.Electron.eta", "ev, source, nsig: ev.Electron_ptShift(ev, source, nsig)"),
-                "weighted_paths": [(1, path+"/electrons/electron_idiso_veto.txt")],
+                "weighted_paths": [(1, "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/electrons/electron_idiso_veto.csv")],
+                "selection": ["CutBasedVetoWP", "eta_pt"],
                 "add_syst": "ev, source, nsig: awk.JaggedArray.zeros_like(ev.Electron.eta)",
                 "nuisances": ["eleIdIsoVeto", "eleEnergyScale"],
             }, {
                 "name": "eleReco",
                 "collection": "Electron",
                 "binning_variables": ("ev, source, nsig: ev.Electron.eta", "ev, source, nsig: ev.Electron_ptShift(ev, source, nsig)"),
-                "weighted_paths": [(1, path+"/electrons/electron_reconstruction.txt")],
+                "weighted_paths": [(1, "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/electrons/electron_reconstruction.csv")],
+                "selection": ["Reco", "eta_pt"],
                 "add_syst": "ev, source, nsig: 0.01*((ev.Electron_ptShift(ev, source, nsig)<20) | (ev.Electron_ptShift(ev, source, nsig)>80))",
                 "nuisances": ["eleReco", "eleEnergyScale"],
             }, {
                 "name": "eleTrig",
                 "collection": "Electron",
                 "binning_variables": ("ev, source, nsig: ev.Electron_ptShift(ev, source, nsig)", "ev, source, nsig: np.abs(ev.Electron.eta)"),
-                "weighted_paths": [(1, path+"/electrons/electron_trigger_v2.txt")],
+                "weighted_paths": [(1, "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/electrons/electron_trigger_v2.csv")],
+                "selection": ["HLT_Ele27_WPTight_Gsf", "pt_eta"],
                 "add_syst": "ev, source, nsig: awk.JaggedArray.zeros_like(ev.Electron.eta)",
                 "nuisances": ["eleTrig", "eleEnergyScale"],
             },

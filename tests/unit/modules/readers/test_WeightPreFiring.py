@@ -28,24 +28,18 @@ def event():
     return DummyEvent()
 
 @pytest.fixture()
-def path():
-    toppath = os.path.abspath(os.environ["TOPDIR"])
-    datapath = os.path.join(toppath, "zinv/data")
-    return datapath
-
-@pytest.fixture()
-def module(path):
+def module():
     return WeightPreFiring(
-        jet_eff_map_path = path+"/prefiring/L1prefiring_jetpt_2016BtoH.txt",
-        photon_eff_map_path = path+"/prefiring/L1prefiring_photonpt_2016BtoH.txt",
+        jet_eff_map_path = "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/prefiring/L1prefiring_jetpt_2016BtoH.txt",
+        photon_eff_map_path = "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/prefiring/L1prefiring_photonpt_2016BtoH.txt",
         jet_selection = "ev, source, nsig: (ev.Jet_ptShift(ev, source, nsig)>20) & ((2<np.abs(ev.Jet_eta)) & (np.abs(ev.Jet_eta)<3))",
         photon_selection = "ev, source, nsig: (ev.Photon_ptShift(ev, source, nsig)>20) & ((2<np.abs(ev.Photon_eta)) & (np.abs(ev.Photon_eta)<3))",
         syst = 0.2,
     )
 
-def test_weightprefiring_init(module, path):
-    assert module.jet_eff_map_path == path + "/prefiring/L1prefiring_jetpt_2016BtoH.txt"
-    assert module.photon_eff_map_path == path + "/prefiring/L1prefiring_photonpt_2016BtoH.txt"
+def test_weightprefiring_init(module):
+    assert module.jet_eff_map_path == "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/prefiring/L1prefiring_jetpt_2016BtoH.txt"
+    assert module.photon_eff_map_path == "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/prefiring/L1prefiring_photonpt_2016BtoH.txt"
     assert module.jet_selection == "ev, source, nsig: (ev.Jet_ptShift(ev, source, nsig)>20) & ((2<np.abs(ev.Jet_eta)) & (np.abs(ev.Jet_eta)<3))"
     assert module.photon_selection == "ev, source, nsig: (ev.Photon_ptShift(ev, source, nsig)>20) & ((2<np.abs(ev.Photon_eta)) & (np.abs(ev.Photon_eta)<3))"
     assert module.syst == 0.2

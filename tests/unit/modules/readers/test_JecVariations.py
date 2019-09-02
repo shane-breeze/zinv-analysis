@@ -23,6 +23,7 @@ class DummyEvent(object):
         self.Jet = DummyColl()
         self.GenJet = DummyColl()
         self.MET = DummyColl()
+        self.PuppiMET = DummyColl()
 
     def register_function(self, event, name, function):
         self.__dict__[name] = function
@@ -36,12 +37,10 @@ def event():
 
 @pytest.fixture()
 def module():
-    toppath = os.path.abspath(os.environ["TOPDIR"])
-    datapath = os.path.join(toppath, "zinv/data")
     return JecVariations(
-        jes_unc_file = datapath + "/jecs/Summer16_23Sep2016V4_MC_UncertaintySources_AK4PFchs.txt",
-        jer_sf_file = datapath + "/jecs/Spring16_25nsV10a_MC_SF_AK4PFchs.txt",
-        jer_file = datapath + "/jecs/Spring16_25nsV10_MC_PtResolution_AK4PFchs.txt",
+        jes_unc_file = "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/jecs/Summer16_23Sep2016V4_MC_UncertaintySources_AK4PFchs.csv",
+        jer_sf_file = "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/jecs/Spring16_25nsV10a_MC_SF_AK4PFchs.csv",
+        jer_file = "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/jecs/Spring16_25nsV10_MC_PtResolution_AK4PFchs.csv",
         apply_jer_corrections = True,
         jes_regex = "jes(?P<source>.*)",
         unclust_threshold = 15.,
@@ -129,6 +128,20 @@ def event_module_run(module, event):
     event.MET.sumEt = met_sumet
     event.MET_sumEtJESOnly = met_sumet
     event.MET.sumEtJESOnly = met_sumet
+
+    event.PuppiMET_pt = met_pt
+    event.PuppiMET.pt = met_pt
+    event.PuppiMET_ptJESOnly = met_pt
+    event.PuppiMET.ptJESOnly = met_pt
+    event.PuppiMET_phi = met_phi
+    event.PuppiMET.phi = met_phi
+    event.PuppiMET_phiJESOnly = met_phi
+    event.PuppiMET.phiJESOnly = met_phi
+
+    event.PuppiMET_sumEt = met_sumet
+    event.PuppiMET.sumEt = met_sumet
+    event.PuppiMET_sumEtJESOnly = met_sumet
+    event.PuppiMET.sumEtJESOnly = met_sumet
 
     module.begin(event)
     #module.event(event)

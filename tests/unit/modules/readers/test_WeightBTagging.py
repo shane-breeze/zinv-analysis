@@ -23,25 +23,19 @@ class DummyEvent(object):
         self.__dict__[name] = function
 
 @pytest.fixture()
-def path():
-    toppath = os.path.abspath(os.environ["TOPDIR"])
-    datapath = os.path.join(toppath, "zinv/data")
-    return datapath
-
-@pytest.fixture()
 def event():
     return DummyEvent()
 
 @pytest.fixture()
-def module(path):
+def module():
     return WeightBTagging(
         operating_point = "medium",
         threshold = 0.8484,
         measurement_types = {"b": "comb", "c": "comb", "udsg": "incl"},
-        calibration_file = path+"/btagging/CSVv2_Moriond17_B_H_params.csv",
+        calibration_file = "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/btagging/CSVv2_Moriond17_B_H_params.csv",
     )
 
-def test_weightbtagging_init(module, path):
+def test_weightbtagging_init(module):
     assert module.ops == {"loose": 0, "medium": 1, "tight": 2, "reshaping": 3}
     assert module.flavours == {"b": 0, "c": 1, "udsg": 2}
     assert module.hadron_to_flavour == {
@@ -52,7 +46,7 @@ def test_weightbtagging_init(module, path):
     assert module.operating_point == "medium"
     assert module.threshold == 0.8484
     assert module.measurement_types == {"b": "comb", "c": "comb", "udsg": "incl"}
-    assert module.calibration_file == path+"/btagging/CSVv2_Moriond17_B_H_params.csv"
+    assert module.calibration_file == "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/btagging/CSVv2_Moriond17_B_H_params.csv"
     assert hasattr(module, 'calibrations')
 
 def test_weightbtagging_end(module):

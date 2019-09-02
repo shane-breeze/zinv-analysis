@@ -25,20 +25,14 @@ def event():
     return DummyEvent()
 
 @pytest.fixture()
-def path():
-    toppath = os.path.abspath(os.environ["TOPDIR"])
-    datapath = os.path.join(toppath, "zinv/data")
-    return datapath
-
-@pytest.fixture()
-def module(path):
+def module():
     return WeightPileup(
-        correction_file = path + "/pileup/nTrueInt_corrections.txt",
+        correction_file = "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/pileup/nTrueInt_corrections.txt",
         variable = "Pileup_nTrueInt",
     )
 
-def test_weightpileup_init(module, path):
-    assert module.correction_file == path + "/pileup/nTrueInt_corrections.txt"
+def test_weightpileup_init(module):
+    assert module.correction_file == "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/pileup/nTrueInt_corrections.txt"
     assert module.variable == "Pileup_nTrueInt"
 
 @pytest.mark.parametrize(

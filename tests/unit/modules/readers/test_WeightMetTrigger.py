@@ -21,30 +21,24 @@ class DummyEvent(object):
         self.__dict__[name] = function
 
 @pytest.fixture()
-def path():
-    toppath = os.path.abspath(os.environ["TOPDIR"])
-    datapath = os.path.join(toppath, "zinv/data")
-    return datapath
-
-@pytest.fixture()
 def event():
     return DummyEvent()
 
 @pytest.fixture()
-def module(path):
+def module():
     return WeightMetTrigger(
         correction_files = {
-            0: path+"/mettrigger/met_trigger_correction_0mu.txt",
-            1: path+"/mettrigger/met_trigger_correction_1mu.txt",
-            2: path+"/mettrigger/met_trigger_correction_2mu.txt",
+            0: "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/mettrigger/met_trigger_correction_0mu.txt",
+            1: "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/mettrigger/met_trigger_correction_1mu.txt",
+            2: "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/mettrigger/met_trigger_correction_2mu.txt",
         },
     )
 
-def test_weightmettrigger_init(module, path):
+def test_weightmettrigger_init(module):
     assert module.correction_files == {
-        0: path+"/mettrigger/met_trigger_correction_0mu.txt",
-        1: path+"/mettrigger/met_trigger_correction_1mu.txt",
-        2: path+"/mettrigger/met_trigger_correction_2mu.txt",
+        0: "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/mettrigger/met_trigger_correction_0mu.txt",
+        1: "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/mettrigger/met_trigger_correction_1mu.txt",
+        2: "http://www.hep.ph.ic.ac.uk/~sdb15/Analysis/ZinvWidth/data/mettrigger/met_trigger_correction_2mu.txt",
     }
     assert module.cats == [0, 1, 2]
     assert all([hasattr(module, attr) for attr in [

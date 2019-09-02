@@ -122,6 +122,7 @@ def analyse(
 
     if not os.path.exists(outdir):
         os.makedirs(outdir)
+        os.makedirs(os.path.join(outdir, "failed"))
 
     frame = inspect.currentframe()
     args, _, _, values = inspect.getargvalues(frame)
