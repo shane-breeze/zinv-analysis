@@ -1,8 +1,10 @@
 import os
+import shutil
 import time
 import numpy as np
 import pandas as pd
 import yaml
+from scipy.special import erfinv
 from tqdm.auto import tqdm
 
 from zinv.utils.Lambda import Lambda
@@ -16,16 +18,14 @@ class HDF5Reader(object):
     def merge(self, other):
         attribute_timing = {}
         for keys in set(
-            self.attribute_timing.keys()+other.attribute_timing.keys()
+            list(self.attribute_timing.keys())
+            + list(other.attribute_timing.keys())
         ):
             attribute_timing[keys] = (
                 self.attribute_timing.get(keys, 0.)
                 + other.attribute_timing.get(keys, 0.)
             )
         self.attribute_timing = attribute_timing
-
-#    def collect(self):
-#        return self.attribute_timing
 
     def begin(self, event):
         with open(self.hdf5_config_path, 'r') as f:
@@ -36,32 +36,26 @@ class HDF5Reader(object):
         self.dtypes = cfg["dtypes"]
 
         task = os.path.basename(os.getcwd())
-        self.path = os.path.join(
-            self.outdir, task.replace("task", "result")+".h5",
-        )
+        outfile = "result.h5"
+        if "SGE_TASK_ID" in os.environ:
+            outfile = "result_{:05d}.h5".format(int(os.environ["SGE_TASK_ID"])-1)
+        self.path = os.path.join(self.outdir, outfile)
 
-        try:
-            pd.DataFrame().to_hdf(
-                self.path, self.name, mode='w', format='table', complevel=9,
-                complib='blosc:lz4hc',
-            )
-        except IOError:
-            pass
-        for source, nsig in self.variations:
-            updown = "Up" if nsig>=0. else "Down"
-            #updown = "{:.2f}".format(np.abs(nsig)).replace(".", "p") + updown
-            table_name = (
-                "_".join([self.name, source+updown])
-                if source != "" else
-                self.name
-            )
-            try:
-                pd.DataFrame().to_hdf(
-                    self.path, table_name, mode='w', format='table',
-                    complevel=9, complib='blosc:lz4hc',
-                )
-            except IOError:
-                pass
+        if os.path.exists(self.path):
+            print("File already exists {}".format(self.path))
+
+            failed_dir = os.path.join(os.path.dirname(self.path), "failed")
+            fail_idx = 0
+            failed_path = os.path.join(
+                os.path.dirname(self.path),
+                "failed",
+                os.path.basename(self.path),
+            ) + ".{:05d}".format(fail_idx)
+            while os.path.exists(fail_idx):
+                fail_idx += 1
+                failed_path = failed_path[:-5] + "{:05d}".format(fail_idx)
+
+            shutil.move(self.path, failed_path)
 
         data_or_mc = "Data" if event.config.dataset.isdata else "MC"
         attributes = self.attributes["Both"]
@@ -78,34 +72,52 @@ class HDF5Reader(object):
 
     def event(self, event):
         opts = ('', 0.)
-        for df in self.chunk_events(event, opts=opts, chunksize=int(1e7)):
-            df.to_hdf(
-                self.path, self.name, format='table', append=True,
-                complevel=9, complib='blosc:lz4hc',
-            )
-        #print("Created result.h5 with table {}".format(self.name))
+        if len(self.variations) == 0:
+            for df in self.chunk_events(event, opts=opts, chunksize=int(1e7)):
+                df.to_hdf(
+                    self.path, self.name, format='table', append=True,
+                    complevel=9, complib='blosc:lz4hc',
+                )
 
-        for source, nsig in self.variations:
+        for source, vlabel, vval in self.variations:
+            if vlabel == "percentile":
+                nsig = np.sqrt(2)*erfinv(2*vval/100.-1)
+                table_name = (
+                    "_".join([self.name, "{}{}".format(source, vval)])
+                    if source != "" else
+                    self.name
+                )
+            elif vlabel == "sigmaval":
+                nsig = vval
+                updown = "Up" if nsig>=0. else "Down"
+                updown = "{:.2f}".format(np.abs(nsig)).replace(".", "p") + updown
+                table_name = (
+                    "_".join([self.name, "{}{}".format(source, updown)])
+                    if source != "" else
+                    self.name
+                )
+            else:
+                nsig = 1. if vlabel.lower()=="up" else -1.
+                table_name = (
+                    "_".join([self.name, "{}{}".format(source, vlabel)])
+                    if source != "" else
+                    self.name
+                )
+
             opts = (source, nsig)
-            updown = "Up" if nsig>=0. else "Down"
-            #updown = "{:.2f}".format(np.abs(nsig)).replace(".", "p") + updown
-            table_name = (
-                "_".join([self.name, source+updown])
-                if source != "" else
-                self.name
-            )
-
             for df in self.chunk_events(event, opts=opts, chunksize=int(1e7)):
                 df.to_hdf(
                     self.path, table_name, format='table', append=True,
                     complevel=9, complib='blosc:lz4hc',
                 )
-                #print("Create result.h5 with table {}".format(table_name))
 
     def chunk_events(self, event, opts=[], chunksize=int(1e7)):
         # currently not chunking
         data = {}
-        for attr, selection in tqdm(self.attributes.items(), unit='attr'):
+
+        pbar = tqdm(self.attributes.items(), unit='attr')
+        for attr, selection in pbar:
+            pbar.set_description("{}, {}, {:.2f}".format(attr, *opts))
             # Initialise timing
             if self.measure_timing:
                 start = time.time_ns()
@@ -120,11 +132,6 @@ class HDF5Reader(object):
                 if attr not in self.attribute_timing:
                     self.attribute_timing[attr] = 0.
                 self.attribute_timing[attr] += (end - start)
-
-        data = {
-            attr: self.lambda_functions[selection](event, *opts)
-            for attr, selection in tqdm(self.attributes.items(), unit='attr')
-        }
 
         yield (
             pd.DataFrame(data, columns=self.attributes.keys())

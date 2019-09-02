@@ -264,17 +264,17 @@ def obj_drtrig(ev, source, nsig, coll, ref, ref_selection=None):
         # maximally opposite in eta and phi
         coll_dr = (10.+np.pi)*np.ones_like(coll_eta, dtype=np.float32)
 
-        for iev, (cstart, cstop, rstart, rstop) in enumerate(zip(
+        for cstart, cstop, rstart, rstop in zip(
             coll_starts, coll_stops, ref_starts, ref_stops,
-        )):
+        ):
             for ic in range(cstart, cstop):
-                coll_dr[ic] = min(
+                coll_dr[ic] = min([
                     DeltaR2(
                         coll_eta[ic]-ref_eta[ir],
                         coll_phi[ic]-ref_phi[ir],
                     ) for ir in range(rstart, rstop)
-                )
-        return coll_dr
+                ]+[10.+np.pi])
+        return coll_dr.astype(np.float32)
 
     ref_eta = getattr(ev, ref).eta
     if ref_selection is not None:
@@ -289,10 +289,10 @@ def obj_drtrig(ev, source, nsig, coll, ref, ref_selection=None):
     return awk.JaggedArray(
         starts, stops,
         nb_dr_coll_ref(
-            starst, stops,
+            starts, stops,
             getattr(ev, coll).eta.content,
             getattr(ev, coll).phi.content,
-            ref_eta.starts, ref_eta.stops,
+            ref_eta[mask].starts, ref_eta[mask].stops,
             ref_eta[mask].content,
             getattr(ev, ref).phi[mask].content,
         ),
@@ -319,10 +319,10 @@ class ObjectFunctions(object):
         event.register_function(event, "Tau_dphiMET", partial(tau_dphimet, coll="MET"))
         event.register_function(event, "Tau_dphiPuppiMET", partial(tau_dphimet, coll="PuppiMET"))
         event.register_function(event, "Muon_dRTrigMuon", partial(
-            obj_drtrig, coll="Muon", ref="TrigObjMuon",
+            obj_drtrig, coll="Muon", ref="TrigObj", ref_selection="ev, source, nsig: ev.TrigObj_id==13",
         ))
         event.register_function(event, "Electron_dRTrigElectron", partial(
-            obj_drtrig, coll="Electron", ref="TrigObjElectron",
+            obj_drtrig, coll="Electron", ref="TrigObj", ref_selection="ev, source, nsig: ev.TrigObj_id==11",
         ))
 
         for objname, selection, xclean in self.selections:
