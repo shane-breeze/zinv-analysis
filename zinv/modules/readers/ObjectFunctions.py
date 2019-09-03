@@ -271,21 +271,21 @@ def tau_pt_shift(ev, source, nsig):
     # see https://twiki.cern.ch/twiki/bin/view/CMS/TauIDRecommendation13TeV#Tau_energy_scale
     # corrections summed in quad to uncertainties are still dominated by
     # uncertainties, so lets use the quad
-    @nb.njit(["float32[:](float32[:],int32[:])"])
+    @nb.njit(["float32[:](float32[:],float32[:])"])
     def nb_tau_pt_err(tau_pt, tau_dm):
-        tau_pt_err = np.zeros_like(tau_pt, dtype=float32)
+        tau_pt_err = np.zeros_like(tau_pt, dtype=np.float32)
         for idx in range(len(tau_pt)):
             pt_err = 0.
-            if tau_dm[idx] in [0]:
+            if (-0.5<tau_dm[idx]) and (tau_dm[idx]<0.5):
                 pt_err = 0.012 #0.010
-            elif tau_dm[idx] in [1, 2]:
+            elif (0.5<tau_dm[idx]) and (tau_dm[idx]<2.5):
                 pt_err = 0.010 #0.009
-            elif tau_dm[idx] in [10]:
+            elif (9.5<tau_dm[idx]) and (tau_dm[idx]<10.5):
                 pt_err = 0.011 #0.011
             tau_pt_err[idx] = pt_err*tau_pt[idx]
         return tau_pt_err
 
-    tau_pt_err = nb_tau_pt_shift_err(
+    tau_pt_err = nb_tau_pt_err(
         ev.Tau_pt.content, ev.Tau_decayMode.content,
     )
     shift = ((source=="tauPtScale")*tau_pt_err/ev.Tau_pt.content).astype(np.float32)

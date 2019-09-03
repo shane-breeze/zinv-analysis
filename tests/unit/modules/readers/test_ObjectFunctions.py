@@ -216,6 +216,8 @@ def test_jet_dphimet(module, event, inputs, outputs):
             "starts": [0, 1, 2],
             "stops":  [1, 2, 4],
             "mpt":    [20., 40., 60., 80.],
+            "meta":   [-2.3, -2.0, 0., 2.5],
+            "merr":   [0.1, 0.2, 0.3, 0.],
             "evvars": {
                 "ptErr": [1., 2., 4., 8.],
             },
@@ -227,28 +229,34 @@ def test_jet_dphimet(module, event, inputs, outputs):
             "starts": [0, 1, 2],
             "stops":  [1, 2, 4],
             "mpt":    [20., 40., 60., 80.],
+            "meta":   [-2.3, -2.0, 0., 2.5],
+            "merr":   [0.1, 0.2, 0.3, 0.],
             "evvars": {
                 "ptErr": [1., 2., 4., 8.],
             },
         }, {
-            "mptshift": [21., 42., 64., 88.],
+            "mptshift": [20.1, 40.2, 60.3, 80.],
         }], [{
             "nsig":   -1,
             "source": 'muonPtScale',
             "starts": [0, 1, 2],
             "stops":  [1, 2, 4],
             "mpt":    [20., 40., 60., 80.],
+            "meta":   [-2.3, -2.0, 0., 2.5],
+            "merr":   [0.1, 0.2, 0.3, 0.],
             "evvars": {
                 "ptErr": [1., 2., 4., 8.],
             },
         }, {
-            "mptshift": [19., 38., 56., 72.],
+            "mptshift": [19.9, 39.8, 59.7, 80.],
         }], [{
             "nsig":   -1,
             "source": 'someRandomThing',
             "starts": [0, 1, 2],
             "stops":  [1, 2, 4],
             "mpt":    [20., 40., 60., 80.],
+            "meta":   [-2.3, -2.0, 0., 2.5],
+            "merr":   [0.1, 0.2, 0.3, 0.],
             "evvars": {
                 "ptErr": [1., 2., 4., 8.],
             },
@@ -264,11 +272,19 @@ def test_objfunc_muptshift(module, event, inputs, outputs):
     event.Muon.pt = awk.JaggedArray(
         inputs["starts"], inputs["stops"], np.array(inputs["mpt"], dtype=np.float32),
     )
+    event.Muon.eta = awk.JaggedArray(
+        inputs["starts"], inputs["stops"], np.array(inputs["meta"], dtype=np.float32),
+    )
 
     for key, val in inputs["evvars"].items():
         jagarr = awk.JaggedArray(inputs["starts"], inputs["stops"], np.array(val, dtype=np.float32))
         setattr(event.Muon, key, jagarr)
         setattr(event, "Muon_{}".format(key), jagarr)
+
+    pt_err = awk.JaggedArray(
+        inputs["starts"], inputs["stops"], np.array(inputs["merr"], dtype=np.float32),
+    )
+    event.Muon.ptErrV2 = mock.MagicMock(return_value=pt_err)
 
     module.begin(event)
     mptshift = event.Muon_ptShift(event, event.source, event.nsig)
@@ -450,6 +466,7 @@ def test_objfunc_yptshift(module, event, inputs, outputs):
             "starts": [0, 1, 2],
             "stops":  [1, 2, 4],
             "tpt":    [20., 40., 60., 80.],
+            "tdm":    [0, 1, 2, 3],
             "evvars": {
                 "energyErr": [1., 2., 4., 8.],
             },
@@ -461,28 +478,31 @@ def test_objfunc_yptshift(module, event, inputs, outputs):
             "starts": [0, 1, 2],
             "stops":  [1, 2, 4],
             "tpt":    [20., 40., 60., 80.],
+            "tdm":    [0, 1, 2, 3],
             "evvars": {
                 "energyErr": [1., 2., 4., 8.],
             },
         }, {
-            "tptshift": [20., 40., 60., 80.],
+            "tptshift": [20.24, 40.4, 60.6, 80.],
         }], [{
             "nsig":   -1,
             "source": 'tauPtScale',
             "starts": [0, 1, 2],
             "stops":  [1, 2, 4],
             "tpt":    [20., 40., 60., 80.],
+            "tdm":    [0, 1, 2, 3],
             "evvars": {
                 "energyErr": [1., 2., 4., 8.],
             },
         }, {
-            "tptshift": [20., 40., 60., 80.],
+            "tptshift": [19.76, 39.6, 59.4, 80.],
         }], [{
             "nsig":   -1,
             "source": 'someRandomThing',
             "starts": [0, 1, 2],
             "stops":  [1, 2, 4],
             "tpt":    [20., 40., 60., 80.],
+            "tdm":    [0, 1, 2, 3],
             "evvars": {
                 "energyErr": [1., 2., 4., 8.],
             },
@@ -498,6 +518,9 @@ def test_objfunc_tptshift(module, event, inputs, outputs):
     tpt = awk.JaggedArray(inputs["starts"], inputs["stops"], np.array(inputs["tpt"], dtype=np.float32))
     event.Tau_pt = tpt
     event.Tau.pt = tpt
+    tdm = awk.JaggedArray(inputs["starts"], inputs["stops"], np.array(inputs["tdm"], dtype=np.float32))
+    event.Tau_decayMode = tdm
+    event.Tau.decayMode = tdm
 
     for key, val in inputs["evvars"].items():
         jagarr = awk.JaggedArray(inputs["starts"], inputs["stops"], np.array(val, dtype=np.float32))
