@@ -289,8 +289,9 @@ def test_objfunc_muptshift(module, event, inputs, outputs):
             "starts": [0, 1, 2],
             "stops":  [1, 2, 4],
             "ept":    [20., 40., 60., 80.],
+            "eeta":   [0., 1., 2., 3.],
             "evvars": {
-                "energyErr": [1., 2., 4., 8.],
+                "energyErr": [1., 3.08616127, 15.04878276, 80.54129597],
             },
         }, {
             "eptshift": [20., 40., 60., 80.],
@@ -300,8 +301,9 @@ def test_objfunc_muptshift(module, event, inputs, outputs):
             "starts": [0, 1, 2],
             "stops":  [1, 2, 4],
             "ept":    [20., 40., 60., 80.],
+            "eeta":   [0., 1., 2., 3.],
             "evvars": {
-                "energyErr": [1., 2., 4., 8.],
+                "energyErr": [1., 3.08616127, 15.04878276, 80.54129597],
             },
         }, {
             "eptshift": [21., 42., 64., 88.],
@@ -311,8 +313,9 @@ def test_objfunc_muptshift(module, event, inputs, outputs):
             "starts": [0, 1, 2],
             "stops":  [1, 2, 4],
             "ept":    [20., 40., 60., 80.],
+            "eeta":   [0., 1., 2., 3.],
             "evvars": {
-                "energyErr": [1., 2., 4., 8.],
+                "energyErr": [1., 3.08616127, 15.04878276, 80.54129597],
             },
         }, {
             "eptshift": [19., 38., 56., 72.],
@@ -322,8 +325,9 @@ def test_objfunc_muptshift(module, event, inputs, outputs):
             "starts": [0, 1, 2],
             "stops":  [1, 2, 4],
             "ept":    [20., 40., 60., 80.],
+            "eeta":   [0., 1., 2., 3.],
             "evvars": {
-                "energyErr": [1., 2., 4., 8.],
+                "energyErr": [1., 3.08616127, 15.04878276, 80.54129597],
             },
         }, {
             "eptshift": [20., 40., 60., 80.],
@@ -336,6 +340,9 @@ def test_objfunc_eptshift(module, event, inputs, outputs):
 
     event.Electron.pt = awk.JaggedArray(
         inputs["starts"], inputs["stops"], np.array(inputs["ept"], dtype=np.float32),
+    )
+    event.Electron.eta = awk.JaggedArray(
+        inputs["starts"], inputs["stops"], np.array(inputs["eeta"], dtype=np.float32),
     )
 
     for key, val in inputs["evvars"].items():
@@ -362,8 +369,9 @@ def test_objfunc_eptshift(module, event, inputs, outputs):
             "starts": [0, 1, 2],
             "stops":  [1, 2, 4],
             "ypt":    [20., 40., 60., 80.],
+            "yeta":   [0., 1., 2., 3.],
             "evvars": {
-                "energyErr": [1., 2., 4., 8.],
+                "energyErr": [1., 3.08616127, 15.04878276, 80.54129597],
             },
         }, {
             "yptshift": [20., 40., 60., 80.],
@@ -373,8 +381,9 @@ def test_objfunc_eptshift(module, event, inputs, outputs):
             "starts": [0, 1, 2],
             "stops":  [1, 2, 4],
             "ypt":    [20., 40., 60., 80.],
+            "yeta":   [0., 1., 2., 3.],
             "evvars": {
-                "energyErr": [1., 2., 4., 8.],
+                "energyErr": [1., 3.08616127, 15.04878276, 80.54129597],
             },
         }, {
             "yptshift": [21., 42., 64., 88.],
@@ -384,8 +393,9 @@ def test_objfunc_eptshift(module, event, inputs, outputs):
             "starts": [0, 1, 2],
             "stops":  [1, 2, 4],
             "ypt":    [20., 40., 60., 80.],
+            "yeta":   [0., 1., 2., 3.],
             "evvars": {
-                "energyErr": [1., 2., 4., 8.],
+                "energyErr": [1., 3.08616127, 15.04878276, 80.54129597],
             },
         }, {
             "yptshift": [19., 38., 56., 72.],
@@ -395,8 +405,9 @@ def test_objfunc_eptshift(module, event, inputs, outputs):
             "starts": [0, 1, 2],
             "stops":  [1, 2, 4],
             "ypt":    [20., 40., 60., 80.],
+            "yeta":   [0., 1., 2., 3.],
             "evvars": {
-                "energyErr": [1., 2., 4., 8.],
+                "energyErr": [1., 3.08616127, 15.04878276, 80.54129597],
             },
         }, {
             "yptshift": [20., 40., 60., 80.],
@@ -410,6 +421,10 @@ def test_objfunc_yptshift(module, event, inputs, outputs):
     event.Photon.pt = awk.JaggedArray(
         inputs["starts"], inputs["stops"], np.array(inputs["ypt"], dtype=np.float32),
     )
+    event.Photon.eta = awk.JaggedArray(
+        inputs["starts"], inputs["stops"], np.array(inputs["yeta"], dtype=np.float32),
+    )
+
 
     for key, val in inputs["evvars"].items():
         jagarr = awk.JaggedArray(inputs["starts"], inputs["stops"], np.array(val, dtype=np.float32))
@@ -442,7 +457,7 @@ def test_objfunc_yptshift(module, event, inputs, outputs):
             "tptshift": [20., 40., 60., 80.],
         }], [{
             "nsig":   1,
-            "source": 'tauEnergyScale',
+            "source": 'tauPtScale',
             "starts": [0, 1, 2],
             "stops":  [1, 2, 4],
             "tpt":    [20., 40., 60., 80.],
@@ -453,7 +468,7 @@ def test_objfunc_yptshift(module, event, inputs, outputs):
             "tptshift": [20., 40., 60., 80.],
         }], [{
             "nsig":   -1,
-            "source": 'tauEnergyScale',
+            "source": 'tauPtScale',
             "starts": [0, 1, 2],
             "stops":  [1, 2, 4],
             "tpt":    [20., 40., 60., 80.],
@@ -582,9 +597,11 @@ def test_objfunc_tptshift(module, event, inputs, outputs):
 )
 def test_objfunc_metshift(module, event, inputs, outputs):
     event.Electron_pt = awk.JaggedArray.fromiter([[],[],[]]).astype(np.float32)
+    event.Electron_eta = awk.JaggedArray.fromiter([[],[],[]]).astype(np.float32)
     event.Muon_pt = awk.JaggedArray.fromiter([[],[],[]]).astype(np.float32)
     event.Tau_pt = awk.JaggedArray.fromiter([[],[],[]]).astype(np.float32)
     event.Photon_pt = awk.JaggedArray.fromiter([[],[],[]]).astype(np.float32)
+    event.Photon_eta = awk.JaggedArray.fromiter([[],[],[]]).astype(np.float32)
 
     def sele(ev, source, nsig, attr):
         return awk.JaggedArray.fromiter([[],[],[]]).astype(np.float32)
