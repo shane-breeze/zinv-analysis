@@ -76,7 +76,7 @@ def process_results(results, outdir):
 def run(
     sequence, datasets, name, outdir, tempdir, mode, batch_opts, ncores,
     nblocks_per_dataset, nblocks_per_process, nfiles_per_dataset,
-    nfiles_per_process, blocksize, cachesize, quiet, sample,
+    nfiles_per_process, blocksize, cachesize, quiet, dryrun, sample,
     predetermined_nevents_in_file,
 ):
     process = AtUproot(
@@ -98,7 +98,7 @@ def run(
         results = pysge.mp_submit(tasks, ncores=ncores)
     elif mode=="sge":
         results = pysge.sge_submit(
-            tasks, name, tempdir, options=batch_opts,
+            tasks, name, tempdir, options=batch_opts, dryrun=dryrun,
             sleep=5, request_resubmission_options=True,
             return_files=True,
         )
@@ -110,7 +110,7 @@ def analyse(
     mode="multiprocessing", batch_opts="-q hep.q", ncores=0,
     nblocks_per_dataset=-1, nblocks_per_process=-1, nfiles_per_dataset=-1,
     nfiles_per_process=1, blocksize=1_000_000, cachesize=8,
-    quiet=False, sample=None,
+    quiet=False, dryrun=False, sample=None,
 ):
     outdir = os.path.abspath(outdir)
     dataset_cfg = os.path.abspath(dataset_cfg)
@@ -153,12 +153,9 @@ def analyse(
         for f, n in zip(d.files, d.file_nevents)
     }
 
-    # Pass any other options through to the datasets
-    #for d in datasets:
-    #    pass
     return run(
         sequence, datasets, name, outdir, tempdir, mode, batch_opts, ncores,
         nblocks_per_dataset, nblocks_per_process, nfiles_per_dataset,
-        nfiles_per_process, blocksize, cachesize, quiet, sample,
+        nfiles_per_process, blocksize, cachesize, quiet, dryrun, sample,
         predetermined_nevents_in_file,
     )

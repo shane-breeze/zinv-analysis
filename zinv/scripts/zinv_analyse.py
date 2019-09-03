@@ -57,6 +57,8 @@ def parse_args():
                         help="Branch cache size")
     parser.add_argument("--quiet", default=False, action='store_true',
                         help="Keep progress report quiet")
+    parser.add_argument("--dryrun", default=False, action='store_true',
+                        help="Don't submit the jobs to a batch system")
     parser.add_argument("--sample", default=None, type=str,
                         help="Select some sample (comma delimited). Can "
                         "selected from (data, mc and more)")
