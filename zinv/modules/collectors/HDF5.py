@@ -51,7 +51,7 @@ class HDF5Reader(object):
                 "failed",
                 os.path.basename(self.path),
             ) + ".{:05d}".format(fail_idx)
-            while os.path.exists(fail_idx):
+            while os.path.exists(failed_path):
                 fail_idx += 1
                 failed_path = failed_path[:-5] + "{:05d}".format(fail_idx)
 
@@ -96,13 +96,16 @@ class HDF5Reader(object):
                     if source != "" else
                     self.name
                 )
-            else:
+            elif vlabel.lower() in ["up", "down"]:
                 nsig = 1. if vlabel.lower()=="up" else -1.
                 table_name = (
                     "_".join([self.name, "{}{}".format(source, vlabel)])
                     if source != "" else
                     self.name
                 )
+            else:
+                nsig = 0.
+                table_name = self.name
 
             opts = (source, nsig)
             for df in self.chunk_events(event, opts=opts, chunksize=int(1e7)):
