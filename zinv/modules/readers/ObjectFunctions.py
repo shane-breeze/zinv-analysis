@@ -60,7 +60,25 @@ def tau_dphimet(ev, source, nsig, coll):
     )
 
 def muon_pt_shift(ev, source, nsig):
-    shift = ((source=="muonPtScale")*ev.Muon.ptErrV2(ev, source, nsig).content/ev.Muon.pt.content).astype(np.float32)
+    @nb.njit(["float32[:](float32[:],float32[:])"])
+    def nb_muon_pt_err_v2(muon_pt, muon_eta):
+        muon_pt_err = np.zeros_like(muon_pt, dtype=np.float32)
+        for idx in range(len(muon_pt)):
+            # see https://twiki.cern.ch/twiki/bin/view/CMS/MuonReferenceScaleResolRun2#RefRun
+            pt_err = 0.
+            if abs(muon_eta[idx])<1.2:
+                pt_err = 0.004
+            elif abs(muon_eta[idx])<2.1:
+                pt_err = 0.009
+            elif muon_eta[idx]>=2.1:
+                pt_err = 0.017
+            else:
+                pt_err = 0.027
+            muon_pt_err[idx] = pt_err*muon_pt[idx]
+        return muon_pt_err
+
+    muon_pt_err = nb_muon_pt_err_v2(ev.Muon.pt.content, ev.Muon.eta.content)
+    shift = ((source=="muonPtScale")*muon_pt_err/ev.Muon.pt.content).astype(np.float32)
     return awk.JaggedArray(ev.Muon.pt.starts, ev.Muon.pt.stops, pt_shift_numba(
         ev.Muon.pt.content, nsig, shift, -1.*shift
     ))
@@ -175,15 +193,15 @@ def met_sumet_shift(ev, source, nsig, coll):
 
     return nb_met_sumet_shift(
         getattr(ev, "{}_sumEt".format(coll)),
-        ev.Jet_pt.content, ev.Jet_ptShift(ev, source, nsig),
+        ev.Jet_pt.content, ev.Jet_ptShift(ev, source, nsig).content,
         ev.Jet_eta.starts, ev.Jet_eta.stops,
-        ev.Electron_pt.content, ev.Electron_ptShift(ev, source, nsig),
+        ev.Electron_pt.content, ev.Electron_ptShift(ev, source, nsig).content,
         ev.Electron_eta.starts, ev.Electron_eta.stops,
-        ev.Muon_pt.content, ev.Muon_ptShift(ev, source, nsig),
+        ev.Muon_pt.content, ev.Muon_ptShift(ev, source, nsig).content,
         ev.Muon_eta.starts, ev.Muon_eta.stops,
-        ev.Photon_pt.content, ev.Photon_ptShift(ev, source, nsig),
+        ev.Photon_pt.content, ev.Photon_ptShift(ev, source, nsig).content,
         ev.Photon_eta.starts, ev.Photon_eta.stops,
-        ev.Tau_pt.content, ev.Tau_ptShift(ev, source, nsig),
+        ev.Tau_pt.content, ev.Tau_ptShift(ev, source, nsig).content,
         ev.Tau_eta.starts, ev.Tau_eta.stops,
     )
 
@@ -241,37 +259,14 @@ def obj_drtrig(ev, source, nsig, coll, ref, ref_selection=None):
         ),
     )
 
-def muon_pt_err_v2(ev, source, nsig):
-    @nb.njit(["float32[:](float32[:],float32[:])"])
-    def nb_muon_pt_err_v2(muon_pt, muon_eta):
-        muon_pt_err = np.zeros_like(muon_pt, dtype=np.float32)
-        for idx in range(len(muon_pt)):
-            # see https://twiki.cern.ch/twiki/bin/view/CMS/MuonReferenceScaleResolRun2#RefRun
-            pt_err = 0.
-            if abs(muon_eta[idx])<1.2:
-                pt_err = 0.004
-            elif abs(muon_eta[idx])<2.1:
-                pt_err = 0.009
-            elif muon_eta[idx]>=2.1:
-                pt_err = 0.017
-            else:
-                pt_err = 0.027
-            muon_pt_err[idx] = pt_err*muon_pt[idx]
-        return muon_pt_err
-
-    return awk.JaggedArray(
-        ev.Muon_eta.starts, ev.Muon_eta.stops,
-        nb_muon_pt_err_v2(
-            ev.Muon_ptShift(ev, source, nsig).content,
-            ev.Muon_eta.content,
-        ),
-    )
-
 def tau_pt_shift(ev, source, nsig):
     # see https://twiki.cern.ch/twiki/bin/view/CMS/TauIDRecommendation13TeV#Tau_energy_scale
     # corrections summed in quad to uncertainties are still dominated by
     # uncertainties, so lets use the quad
-    @nb.njit(["float32[:](float32[:],float32[:])"])
+    @nb.njit([
+        "float32[:](float32[:],float32[:])",
+        "float32[:](float32[:],int32[:])",
+    ])
     def nb_tau_pt_err(tau_pt, tau_dm):
         tau_pt_err = np.zeros_like(tau_pt, dtype=np.float32)
         for idx in range(len(tau_pt)):
@@ -298,7 +293,6 @@ class ObjectFunctions(object):
         self.__dict__.update(kwargs)
 
     def begin(self, event):
-        event.register_function(event, "Muon_ptErrV2", muon_pt_err_v2)
         event.register_function(event, "Jet_ptShift", jet_pt_shift)
         event.register_function(event, "Muon_ptShift", muon_pt_shift)
         event.register_function(event, "Electron_ptShift", ele_pt_shift)
@@ -315,10 +309,10 @@ class ObjectFunctions(object):
         event.register_function(event, "Tau_dphiMET", partial(tau_dphimet, coll="MET"))
         event.register_function(event, "Tau_dphiPuppiMET", partial(tau_dphimet, coll="PuppiMET"))
         event.register_function(event, "Muon_dRTrigMuon", partial(
-            obj_drtrig, coll="Muon", ref="TrigObj", ref_selection="ev, source, nsig: ev.TrigObj_id==13",
+            obj_drtrig, coll="Muon", ref="TrigObj", ref_selection="ev, source, nsig: (np.abs(ev.TrigObj_id)==1) | (np.abs(ev.TrigObj_id)==13)",
         ))
         event.register_function(event, "Electron_dRTrigElectron", partial(
-            obj_drtrig, coll="Electron", ref="TrigObj", ref_selection="ev, source, nsig: ev.TrigObj_id==11",
+            obj_drtrig, coll="Electron", ref="TrigObj", ref_selection="ev, source, nsig: np.abs(ev.TrigObj_id)==11",
         ))
 
         for objname, selection, xclean in self.selections:

@@ -217,7 +217,6 @@ def test_jet_dphimet(module, event, inputs, outputs):
             "stops":  [1, 2, 4],
             "mpt":    [20., 40., 60., 80.],
             "meta":   [-2.3, -2.0, 0., 2.5],
-            "merr":   [0.1, 0.2, 0.3, 0.],
             "evvars": {
                 "ptErr": [1., 2., 4., 8.],
             },
@@ -230,12 +229,11 @@ def test_jet_dphimet(module, event, inputs, outputs):
             "stops":  [1, 2, 4],
             "mpt":    [20., 40., 60., 80.],
             "meta":   [-2.3, -2.0, 0., 2.5],
-            "merr":   [0.1, 0.2, 0.3, 0.],
             "evvars": {
                 "ptErr": [1., 2., 4., 8.],
             },
         }, {
-            "mptshift": [20.1, 40.2, 60.3, 80.],
+            "mptshift": [20.54, 40.36, 60.24, 81.36],
         }], [{
             "nsig":   -1,
             "source": 'muonPtScale',
@@ -243,12 +241,11 @@ def test_jet_dphimet(module, event, inputs, outputs):
             "stops":  [1, 2, 4],
             "mpt":    [20., 40., 60., 80.],
             "meta":   [-2.3, -2.0, 0., 2.5],
-            "merr":   [0.1, 0.2, 0.3, 0.],
             "evvars": {
                 "ptErr": [1., 2., 4., 8.],
             },
         }, {
-            "mptshift": [19.9, 39.8, 59.7, 80.],
+            "mptshift": [19.46, 39.64, 59.76, 78.64],
         }], [{
             "nsig":   -1,
             "source": 'someRandomThing',
@@ -256,7 +253,6 @@ def test_jet_dphimet(module, event, inputs, outputs):
             "stops":  [1, 2, 4],
             "mpt":    [20., 40., 60., 80.],
             "meta":   [-2.3, -2.0, 0., 2.5],
-            "merr":   [0.1, 0.2, 0.3, 0.],
             "evvars": {
                 "ptErr": [1., 2., 4., 8.],
             },
@@ -280,11 +276,6 @@ def test_objfunc_muptshift(module, event, inputs, outputs):
         jagarr = awk.JaggedArray(inputs["starts"], inputs["stops"], np.array(val, dtype=np.float32))
         setattr(event.Muon, key, jagarr)
         setattr(event, "Muon_{}".format(key), jagarr)
-
-    pt_err = awk.JaggedArray(
-        inputs["starts"], inputs["stops"], np.array(inputs["merr"], dtype=np.float32),
-    )
-    event.Muon.ptErrV2 = mock.MagicMock(return_value=pt_err)
 
     module.begin(event)
     mptshift = event.Muon_ptShift(event, event.source, event.nsig)

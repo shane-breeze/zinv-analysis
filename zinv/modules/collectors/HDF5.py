@@ -76,7 +76,7 @@ class HDF5Reader(object):
             for df in self.chunk_events(event, opts=opts, chunksize=int(1e7)):
                 df.to_hdf(
                     self.path, self.name, format='table', append=True,
-                    complevel=9, complib='blosc:lz4hc',
+                    complevel=9, complib='zlib',
                 )
 
         for source, vlabel, vval in self.variations:
@@ -111,7 +111,7 @@ class HDF5Reader(object):
             for df in self.chunk_events(event, opts=opts, chunksize=int(1e7)):
                 df.to_hdf(
                     self.path, table_name, format='table', append=True,
-                    complevel=9, complib='blosc:lz4hc',
+                    complevel=9, complib='zlib',
                 )
 
     def chunk_events(self, event, opts=[], chunksize=int(1e7)):
