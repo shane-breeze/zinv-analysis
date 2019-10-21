@@ -22,6 +22,7 @@ from .WeightXsLumi import WeightXsLumi
 from .WeightPdfScale import WeightPdfScale
 from .WeightPileup import WeightPileup
 from .WeightMetTrigger import WeightMetTrigger
+from .WeightMetTrigger2 import WeightMetTrigger2
 from .WeightObjects import WeightObjects
 from .WeightBTagging import WeightBTagging
 from .WeightQcdEwk import WeightQcdEwk
