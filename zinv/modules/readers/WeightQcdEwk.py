@@ -104,7 +104,7 @@ class WeightQcdEwk(object):
 
         # Register function
         event.register_function(
-            event, "WeightQcdEwk", partial(
+            event, self.label, partial(
                 qcdewk_weight, parent=self.parent, input_paths=self.input_paths,
                 variations=self.variations, input_df=self.input_df,
             ),
