@@ -26,13 +26,41 @@ def met_shift(ev, coll):
                 mey[iev] += (jpy_old[iob] - jpy_new[iob])
 
         return CartToRad2D(mex, mey)
-    return met_shift_numba(
-        getattr(ev, "{}_ptJESOnly".format(coll)),
-        getattr(ev, "{}_phiJESOnly".format(coll)),
-        ev.Jet_ptJESOnly.content,
-        ev.Jet_pt.content, ev.Jet_phi.content,
-        ev.Jet_pt.starts, ev.Jet_pt.stops,
+
+    met = getattr(ev, "{}_ptJESOnly".format(coll))
+    mephi = getattr(ev, "{}_phiJESOnly".format(coll))
+    jpt_old = ev.Jet_ptJESOnly.content
+    jpt_new = ev.Jet_pt.content
+    jphi = ev.Jet_phi.content
+    jstarts = ev.Jet_phi.starts
+    jstops = ev.Jet_phi.stops
+    met, mephi = met_shift_numba(
+        met, mephi, jpt_old, jpt_new, jphi, jstarts, jstops,
     )
+    return met, mephi
+
+    # # Undo type-I shifts caused by jets which overlap a muon/electron/photon/tau
+    # met = getattr(ev, "{}_ptJESOnly".format(coll))
+    # mephi = getattr(ev, "{}_phiJESOnly".format(coll))
+    # jpt_old = ev.JetOverlap(ev, "", 0., "ptJESOnly").content
+    # jpt_new = (1-ev.JetOverlap(ev, "", 0., "rawFactor").content)*ev.JetOverlap(ev, "", 0., "ptJESOnly").content
+    # jphi = ev.JetOverlap(ev, "", 0., "phi").content
+    # jstarts = ev.JetOverlap(ev, "", 0., "phi").starts
+    # jstops = ev.JetOverlap(ev, "", 0., "phi").stops
+
+    # met, mephi = met_shift_numba(
+    #     met, mephi, jpt_old, jpt_new, jphi, jstarts, jstops,
+    # )
+
+    # # Include JER shifts in type-I corrected MET
+    # jpt_old = ev.JetNoOverlap(ev, "", 0., "ptJESOnly").content
+    # jpt_new = ev.JetNoOverlap(ev, "", 0., "pt").content
+    # jphi = ev.JetNoOverlap(ev, "", 0., "phi").content
+    # jstarts = ev.JetNoOverlap(ev, "", 0., "phi").starts
+    # jstops = ev.JetNoOverlap(ev, "", 0., "phi").stops
+    # return met_shift_numba(
+    #     met, mephi, jpt_old, jpt_new, jphi, jstarts, jstops,
+    # )
 
 def met_sumet_shift(ev, coll):
     @nb.jit(["float32[:](float32[:], float32[:], float32[:], int64[:], int64[:])"])
@@ -44,9 +72,19 @@ def met_sumet_shift(ev, coll):
 
     return nb_met_sumet_shift(
         getattr(ev, "{}_sumEtJESOnly".format(coll)),
-        ev.Jet_ptJESOnly.content, ev.Jet_pt.content,
-        ev.Jet_pt.starts, ev.Jet_pt.stops,
+        ev.Jet_ptJESOnly.content,
+        ev.Jet_pt.content,
+        ev.Jet_pt.starts,
+        ev.Jet_pt.stops,
     )
+
+    #return nb_met_sumet_shift(
+    #    getattr(ev, "{}_sumEtJESOnly".format(coll)),
+    #    ev.JetNoOverlap(ev, "", 0., "ptJESOnly").content,
+    #    ev.JetNoOverlap(ev, "", 0., "pt").content,
+    #    ev.JetNoOverlap(ev, "", 0., "pt").starts,
+    #    ev.JetNoOverlap(ev, "", 0., "pt").stops,
+    #)
 
 def match_jets_from_genjets(event, maxdr, ndpt):
     @nb.njit(["int64[:](float32[:],float32[:],float32[:],float32[:],int64[:],int64[:],float32[:],float32[:],float32[:],int64[:],int64[:],float32,float32)"])
