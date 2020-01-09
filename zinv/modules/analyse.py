@@ -1,6 +1,12 @@
 import os
 import inspect
+import lz4.frame
+import pickle
 import pysge
+import subprocess as sp
+import shlex
+import sys
+import re
 from cachetools import LFUCache
 
 from atuproot.atuproot_main import AtUproot
@@ -33,45 +39,60 @@ def generate_report(outdir, fname, args, values):
     with open(filepath, 'w') as f:
         f.write("\n".join(cmd_block)+"\n")
 
-    # git hash
-    filepath = os.path.join(outdir, "git_hash.txt")
-    hash = git_revision_hash()
-    with open(filepath, 'w') as f:
-        f.write(hash)
+    # # git hash
+    # filepath = os.path.join(outdir, "git_hash.txt")
+    # hash = git_revision_hash()
+    # with open(filepath, 'w') as f:
+    #     f.write(hash)
 
-    # git diff
-    filepath = os.path.join(outdir, "git_diff.txt")
-    with open(filepath, 'w') as f:
-        f.write(git_diff())
+    # # git diff
+    # filepath = os.path.join(outdir, "git_diff.txt")
+    # with open(filepath, 'w') as f:
+    #     f.write(git_diff())
 
-    # commands to checkout the hash with the diffs applied
-    string = "#!/bin/bash\n"
-    string += "git clone git@github.com:shane-breeze/zinv-analysis.git\n"
-    string += "git checkout {}\n".format(hash)
-    string += "git apply {}\n".format(os.path.abspath(filepath))
-    filepath = os.path.join(outdir, "git_checkout.sh")
-    with open(filepath, 'w') as f:
-        f.write(string)
+    # # commands to checkout the hash with the diffs applied
+    # string = "#!/bin/bash\n"
+    # string += "git clone git@github.com:shane-breeze/zinv-analysis.git\n"
+    # string += "git checkout {}\n".format(hash)
+    # string += "git apply {}\n".format(os.path.abspath(filepath))
+    # filepath = os.path.join(outdir, "git_checkout.sh")
+    # with open(filepath, 'w') as f:
+    #     f.write(string)
 
 def process_results(results, outdir):
     dfs = []
-    for res in results:
+    for path in results:
+        if isinstance(path, str):
+            with lz4.frame.open(path, 'r') as f:
+                res = pickle.load(f)
+        else:
+            res = path
+
         df_data = []
-        for r in results[0].readers:
+        for r in res.readers:
             name = r.name
             coll = r.collect()
 
-            for k, v in coll.items():
-                df_data.append({
-                    "layer": name,
-                    "object": k,
-                    "time": pd.Timedelta(np.timedelta64(int(v), 'ns')),
-                })
-                dfs.append(pd.DataFrame(df_data))
-    df = pd.concat(dfs).groupby(["layer", "object"]).sum()
-    with open(os.path.join(outdir, "timing_report.txt"), 'w') as f:
-        f.write(df.sort_values("time", ascending=False).to_string())
+    #        for k, v in coll.items():
+    #            df_data.append({
+    #                "layer": name,
+    #                "object": k,
+    #                "time": pd.Timedelta(np.timedelta64(int(v), 'ns')),
+    #            })
+    #            dfs.append(pd.DataFrame(df_data))
+    #df = pd.concat(dfs).groupby(["layer", "object"]).sum()
+    #with open(os.path.join(outdir, "timing_report.txt"), 'w') as f:
+    #    f.write(df.sort_values("time", ascending=False).to_string())
     return results
+
+def run_command(cmd):
+    p = sp.Popen(shlex.split(cmd), stdout=sp.PIPE, stderr=sp.PIPE)
+    return p.communicate()
+
+def test_grid_proxy():
+    out, err = run_command("voms-proxy-info")
+    if len(out) == 0:
+        raise OSError("Grid proxy not found. Run voms-proxy-init -voms cms")
 
 def run(
     sequence, datasets, name, outdir, tempdir, mode, batch_opts, ncores,
@@ -79,6 +100,7 @@ def run(
     nfiles_per_process, blocksize, cachesize, quiet, dryrun, sample,
     predetermined_nevents_in_file,
 ):
+    test_grid_proxy()
     process = AtUproot(
         outdir,
         quiet = quiet,
@@ -87,6 +109,7 @@ def run(
         max_files_per_dataset = nfiles_per_dataset,
         max_files_per_process = nfiles_per_process,
         nevents_per_block = blocksize,
+        #predetermined_nevents_in_file={},
         predetermined_nevents_in_file=predetermined_nevents_in_file,
         branch_cache = LFUCache(int(cachesize*1024**3), get_size),
     )
