@@ -16,13 +16,21 @@ def pt_shift_numba(pt, nsig, up, down):
 def jet_pt_shift(ev, source, nsig):
     updo = 'Up' if nsig>=0. else 'Down'
     if source=='jerSF':
-        variation = 1. + np.abs(nsig)*getattr(ev, 'Jet_JECjerSF{}'.format(updo))
+        variation = 1. + np.abs(nsig)*getattr(ev, 'Jet_JECjerSF{}'.format(updo)).content
     elif source.startswith("jes"):
-        variation = 1. + np.abs(nsig)*ev.Jet_jesSF(ev, source, nsig)
+        variation = 1. + np.abs(nsig)*ev.Jet_jesSF(ev, source, nsig).content
     else:
-        variation = 1.
+        variation = np.ones_like(ev.Jet_pt.content)
 
-    return ev.Jet_pt * variation
+    #mask = (
+    #    ev.Jet_XCleanMaskMuonVeto(ev, source, nsig)
+    #    & ev.Jet_XCleanMaskElectronVeto(ev, source, nsig)
+    #    & ev.Jet_XCleanMaskPhotonVeto(ev, source, nsig)
+    #    & ev.Jet_XCleanMaskTauVeto(ev, source, nsig)
+    #).content
+    #variation = np.where(mask, variation, np.ones_like(mask))
+
+    return ev.Jet_pt * awk.JaggedArray(ev.Jet_pt.starts, ev.Jet_pt.stops, variation)
 
 def jet_dphimet(ev, source, nsig, coll):
     @nb.njit(["float32[:](float32[:], float32[:], int64[:], int64[:])"])
@@ -121,12 +129,21 @@ def met_shift(ev, source, nsig, coll, attr):
     met = getattr(ev, "{}_pt".format(coll))
     mephi = getattr(ev, "{}_phi".format(coll))
 
-    # Have to apply JEC shifts
+    # Have to apply JEC shifts for jets without overlaps
     nmet, nmephi = met_shift_numba(
         met, mephi,
-        ev.Jet_pt.content, ev.Jet_ptShift(ev, source, nsig).content,
-        ev.Jet_phi.content, ev.Jet_pt.starts, ev.Jet_pt.stops,
+        ev.Jet_pt.content,
+        ev.Jet_ptShift(ev, source, nsig).content,
+        ev.Jet_phi.content,
+        ev.Jet_phi.starts,
+        ev.Jet_phi.stops,
     )
+    #    ev.JetNoOverlap(ev, source, nsig, "pt").content,
+    #    ev.JetNoOverlap(ev, source, nsig, "ptShift").content,
+    #    ev.JetNoOverlap(ev, source, nsig, "phi").content,
+    #    ev.JetNoOverlap(ev, source, nsig, "phi").starts,
+    #    ev.JetNoOverlap(ev, source, nsig, "phi").stops,
+    #)
     if source in ["eleEnergyScale"]:
         nmet, nmephi = met_shift_numba(
             nmet, nmephi,
@@ -193,8 +210,14 @@ def met_sumet_shift(ev, source, nsig, coll):
 
     return nb_met_sumet_shift(
         getattr(ev, "{}_sumEt".format(coll)),
-        ev.Jet_pt.content, ev.Jet_ptShift(ev, source, nsig).content,
-        ev.Jet_eta.starts, ev.Jet_eta.stops,
+        ev.Jet_pt.content,
+        ev.Jet_ptShift(ev, source, nsig).content,
+        ev.Jet_eta.starts,
+        ev.Jet_eta.stops,
+        #ev.JetNoOverlap(ev, source, nsig, "pt").content,
+        #ev.JetNoOverlap(ev, source, nsig, "ptShift").content,
+        #ev.JetNoOverlap(ev, source, nsig, "eta").starts,
+        #ev.JetNoOverlap(ev, source, nsig, "eta").stops,
         ev.Electron_pt.content, ev.Electron_ptShift(ev, source, nsig).content,
         ev.Electron_eta.starts, ev.Electron_eta.stops,
         ev.Muon_pt.content, ev.Muon_ptShift(ev, source, nsig).content,
@@ -205,11 +228,8 @@ def met_sumet_shift(ev, source, nsig, coll):
         ev.Tau_eta.starts, ev.Tau_eta.stops,
     )
 
-def obj_selection(ev, source, nsig, attr, name, sele, xclean=False):
+def obj_selection(ev, source, nsig, attr, name, sele):
     mask = getattr(ev, "{}_{}Mask".format(name, sele))(ev, source, nsig)
-    if xclean:
-        mask = mask & getattr(ev, "{}_XCleanMask".format(name))(ev, source, nsig)
-
     obj = getattr(ev, "{}_{}".format(name, attr))
     if callable(obj):
         obj = obj(ev, source, nsig)
@@ -315,21 +335,8 @@ class ObjectFunctions(object):
             obj_drtrig, coll="Electron", ref="TrigObj", ref_selection="ev, source, nsig: np.abs(ev.TrigObj_id)==11",
         ))
 
-        for objname, selection, xclean in self.selections:
-            if xclean:
-                event.register_function(
-                    event, selection+"NoXClean",
-                    partial(obj_selection, name=objname, sele=selection),
-                )
-                event.register_function(
-                    event, selection,
-                    partial(
-                        obj_selection, name=objname, sele=selection,
-                        xclean=True,
-                    ),
-                )
-            else:
-                event.register_function(
-                    event, selection,
-                    partial(obj_selection, name=objname, sele=selection),
-                )
+        for objname, selection in self.selections:
+            event.register_function(
+                event, selection,
+                partial(obj_selection, name=objname, sele=selection),
+            )
