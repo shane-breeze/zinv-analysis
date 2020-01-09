@@ -16,6 +16,13 @@ def BoundPhi(phi):
 def DeltaR2(deta, dphi):
     return deta**2 + BoundPhi(dphi)**2
 
+@nb.njit([
+    "float32(float32,float32)",
+    "float32[:](float32[:],float32[:])",
+])
+def DeltaR(deta, dphi):
+    return np.sqrt(DeltaR2(deta, dphi))
+
 @nb.njit(["UniTuple(float32[:],2)(float32[:],float32[:])"])
 def RadToCart2D(r, phi):
     return r*np.cos(phi), r*np.sin(phi)
