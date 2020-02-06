@@ -56,6 +56,13 @@ class HDF5ReaderNew(object):
             for _, selection in subtable.items()
         }
 
+        self.event_size_per_table = {
+            table_name: 0 for table_name in self.attributes.keys()
+        }
+        self.object_size_per_table = {
+            table_name: 0 for table_name in self.attributes.keys()
+        }
+
     def end(self):
         self.lambda_functions = None
 
@@ -84,12 +91,20 @@ class HDF5ReaderNew(object):
             attr_val = self.lambda_functions[selection](event)
             data[attr] = attr_val
 
+        if len(data) == 0:
+            return [pd.DataFrame()]
+
         if flatten:
             df = awk.topandas(awk.Table(data), flatten=True).reset_index()
             df.columns = ["parent_event", "object_id"] + list(attributes.keys())
             self.dtypes["parent_event"] = "int32"
             self.dtypes["object_id"] = "int32"
+            df.loc[:, "parent_event"] = df["parent_event"] + self.event_size_per_table[label]
         else:
             df = pd.DataFrame(data, columns=attributes.keys())
+        df = df.reset_index(drop=True)
+        df.index += self.object_size_per_table[label]
+        self.event_size_per_table[label] += event.size
+        self.object_size_per_table[label] += df.shape[0]
 
-        yield df.astype({k: self.dtypes[k] for k in attributes.keys()})
+        return [df.astype({k: self.dtypes[k] for k in attributes.keys()})]
