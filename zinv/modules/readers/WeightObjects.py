@@ -70,7 +70,9 @@ def evaluate_object_weights(
     sfdown = sf_systdown if "syst" in source.lower() else sf_statdown
     return awk.JaggedArray(
         event_vars[0].starts, event_vars[0].stops,
-        weight_numba(sf, nsig, sfup, sfdown),
+        weight_numba(sf, nsig, sfup, sfdown)
+        if name.lower()==source.lower().replace("stat", "").replace("syst", "")
+        else weight_numba(sf, 0., sfup, sfdown)
     )
 
 class WeightObjects(object):
