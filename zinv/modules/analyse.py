@@ -102,7 +102,8 @@ def run(
             sleep=5, request_resubmission_options=True,
             return_files=True,
         )
-    return process_results(results, outdir)
+    return results
+    #return process_results(results, outdir)
 
 def analyse(
     dataset_cfg, sequence_cfg, event_selection_cfg, physics_object_cfg,
@@ -122,12 +123,14 @@ def analyse(
 
     if not os.path.exists(outdir):
         os.makedirs(outdir)
-        os.makedirs(os.path.join(outdir, "failed"))
+    faildir = os.path.join(outdir, "failed")
+    if not os.path.exists(faildir):
+        os.makedirs(faildir)
 
-    frame = inspect.currentframe()
-    args, _, _, values = inspect.getargvalues(frame)
-    fname = inspect.getframeinfo(frame)[2]
-    generate_report(outdir, fname, args, values)
+    #frame = inspect.currentframe()
+    #args, _, _, values = inspect.getargvalues(frame)
+    #fname = inspect.getframeinfo(frame)[2]
+    #generate_report(outdir, fname, args, values)
 
     sequence = build_sequence(
         sequence_cfg, outdir, event_selection_cfg, physics_object_cfg,
